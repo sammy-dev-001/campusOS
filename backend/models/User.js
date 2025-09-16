@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -32,17 +33,11 @@ const userSchema = new mongoose.Schema({
     minlength: [2, 'Display name must be at least 2 characters'],
     maxlength: [50, 'Display name cannot exceed 50 characters']
   },
-  bio: {
+  firstName: {
     type: String,
     trim: true,
-    maxlength: [500, 'Bio cannot exceed 500 characters'],
-    default: ''
+    maxlength: [50, 'First name cannot exceed 50 characters']
   },
-  groups: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Group',
-    default: []
-  }],
   lastName: {
     type: String,
     trim: true,
@@ -65,6 +60,7 @@ const userSchema = new mongoose.Schema({
   },
   bio: {
     type: String,
+    trim: true,
     maxlength: [500, 'Bio cannot exceed 500 characters'],
     default: ''
   },
@@ -158,6 +154,11 @@ const userSchema = new mongoose.Schema({
     lastUsed: Date,
     _id: false
   }],
+  groups: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Group',
+    default: []
+  }],
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
@@ -175,13 +176,14 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Indexes are already defined in the schema options (unique: true)
-// Removing duplicate index definitions to avoid warnings
+// Indexes
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
 
 // Pre-save hook to set fullName and handle timestamps
 userSchema.pre('save', function(next) {
   // Set fullName if first or last name exists
-  if (this.isModified('firstName') || this.isModified('lastName')) {
+  if ((this.isModified('firstName') || this.isModified('lastName')) && (this.firstName || this.lastName)) {
     this.fullName = `${this.firstName || ''} ${this.lastName || ''}`.trim();
   }
   
@@ -200,12 +202,12 @@ userSchema.pre('save', function(next) {
   next();
 });
 
-// Virtual for user's initials
+// Add initials virtual
 userSchema.virtual('initials').get(function() {
   if (this.firstName && this.lastName) {
     return `${this.firstName[0]}${this.lastName[0]}`.toUpperCase();
   }
-  return this.username.substring(0, 2).toUpperCase();
+  return this.username ? this.username.substring(0, 2).toUpperCase() : 'US';
 });
 
 // Method to check if user has a specific role

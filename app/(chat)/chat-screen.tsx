@@ -4,17 +4,53 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../../components/ThemedText';
 import { API_BASE_URL } from '../../config/api';
-import { Message, useChat } from '../../contexts/ChatContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useUser } from '../../contexts/UserContext';
+import { Message, useChat } from '../../src/contexts/ChatContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
+import { useUser } from '../../src/contexts/UserContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 const ChatScreen = () => {
   const { id: chatId } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
   const { user } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const navigation = useNavigation();
   const flatListRef = useRef<FlatList>(null);
+  
+  // Utility function to get other participant's info
+  const getOtherParticipant = useCallback((participants: any[] = [], currentUserId?: string) => {
+    if (!participants || !Array.isArray(participants) || !currentUserId) {
+      console.log('Invalid participants or currentUserId');
+      return { username: 'Unknown User', profilePic: '' };
+    }
+
+    // Find the first participant that's not the current user
+    const otherParticipant = participants.find(p => {
+      const userId = p.user?._id || p.user?.id;
+      return userId && userId !== currentUserId;
+    });
+
+    if (!otherParticipant?.user) {
+      console.log('No other participant found or participant has no user data');
+      return { username: 'Unknown User', profilePic: '' };
+    }
+
+    return {
+      username: otherParticipant.user.username || 'Unknown User',
+      profilePic: otherParticipant.user.profilePic || otherParticipant.user.profilePicture || '',
+      displayName: otherParticipant.user.displayName || otherParticipant.user.name || 'Unknown User'
+    };
+  }, []);
+  
+  // Show loading while checking auth state
+  if (auth.isLoading || !auth.isAuthenticated) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
   
   // Get chats from the chat context
   const { chats, messages, sendMessage, activeChat, setActiveChat, markAsRead, sendTypingIndicator } = useChat();
@@ -149,27 +185,50 @@ const ChatScreen = () => {
   const renderMessage = useCallback(({ item }: { item: Message }) => {
     const isCurrentUser = item.senderId === user?.id;
     const messageStatus = item.status || 'sent';
+    const otherUser = getOtherParticipant(currentChat?.participants, user?.id);
     
     return (
       <View 
         style={[
           styles.messageBubble,
           isCurrentUser ? styles.currentUserBubble : styles.otherUserBubble,
-          { backgroundColor: isCurrentUser ? theme.primary : theme.card },
+          { 
+            backgroundColor: isCurrentUser ? theme.primary : theme.card,
+            alignSelf: isCurrentUser ? 'flex-end' : 'flex-start',
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            maxWidth: '80%',
+            marginVertical: 4,
+            padding: 12,
+            borderRadius: 18,
+            borderBottomLeftRadius: isCurrentUser ? 18 : 4,
+            borderBottomRightRadius: isCurrentUser ? 4 : 18,
+          },
         ]}
       >
-        {!isCurrentUser && item.sender?.profilePicture && (
+        {!isCurrentUser && otherUser.profilePic ? (
           <Image
-            source={{ uri: `${API_BASE_URL}${item.sender.profilePicture}` }}
+            source={{ uri: otherUser.profilePic }}
             style={styles.avatar}
           />
-        )}
-        <View style={styles.messageContent}>
+        ) : null}
+        
+        <View style={{ flex: 1 }}>
           {!isCurrentUser && (
-            <ThemedText style={styles.senderName}>
-              {item.sender?.username || 'Unknown'}
+            <ThemedText 
+              style={[
+                styles.senderName, 
+                { 
+                  color: isCurrentUser ? theme.background : theme.primary,
+                  marginBottom: 4,
+                  fontWeight: '600',
+                }
+              ]}
+            >
+              {otherUser.username}
             </ThemedText>
           )}
+          
           <ThemedText 
             style={[
               styles.messageText,
@@ -178,14 +237,32 @@ const ChatScreen = () => {
           >
             {item.content}
           </ThemedText>
-          <View style={styles.messageFooter}>
+          
+          <View 
+            style={[
+              styles.messageFooter,
+              { 
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                marginTop: 4,
+              }
+            ]}
+          >
             <ThemedText 
               style={[
                 styles.timestamp,
-                { color: isCurrentUser ? theme.background : theme.text },
+                { 
+                  color: isCurrentUser ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)',
+                  fontSize: 12,
+                  marginRight: 4,
+                }
               ]}
             >
-              {new Date(item.timestamp || item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              }) : '??:??'}
             </ThemedText>
             {isCurrentUser && (
               <View style={styles.statusContainer}>
@@ -271,9 +348,31 @@ const ChatScreen = () => {
         data={messages[chatId!] || []}
         keyExtractor={(item) => item.id || item.tempId || Math.random().toString()}
         renderItem={renderMessage}
-        contentContainerStyle={styles.messagesContainer}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        contentContainerStyle={[
+          styles.messagesContainer,
+          { paddingHorizontal: 12, paddingTop: 12 }
+        ]}
+        onContentSizeChange={() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }}
+        onLayout={() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        removeClippedSubviews={true}
+        initialNumToRender={20}
+        maxToRenderPerBatch={10}
+        windowSize={21}
+        updateCellsBatchingPeriod={50}
+        onEndReachedThreshold={0.5}
+        ListEmptyComponent={
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 40 }}>
+            <ThemedText style={{ color: theme.text, opacity: 0.7 }}>
+              No messages yet. Start the conversation!
+            </ThemedText>
+          </View>
+        }
       />
       
       <View style={[styles.inputContainer, { backgroundColor: theme.card }]}>
@@ -308,6 +407,55 @@ const ChatScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  messageBubble: {
+    marginVertical: 4,
+    padding: 12,
+    borderRadius: 18,
+    maxWidth: '80%',
+  },
+  currentUserBubble: {
+    alignSelf: 'flex-end',
+    borderBottomRightRadius: 4,
+  },
+  otherUserBubble: {
+    alignSelf: 'flex-start',
+    borderBottomLeftRadius: 4,
+  },
+  messageContent: {
+    flex: 1,
+  },
+  senderName: {
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  messageText: {
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  messageFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  timestamp: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusIcon: {
+    marginLeft: 2,
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+    marginTop: 2,
+  },
   headerContainer: {
     flex: 1,
     justifyContent: 'center',

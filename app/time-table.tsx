@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
-import { useTheme } from '../contexts/ThemeContext';
-import { ClassData, useTimetable } from '../contexts/TimetableContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
+import { ClassData, useTimetable } from '../src/contexts/TimetableContext';
+import { Colors } from '../src/constants/Colors';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -38,10 +39,12 @@ const formatTimeRangeToAMPM = (timeRange: string) => {
 };
 
 export default function TimeTableScreen() {
-  const { theme } = useTheme();
-  const { classes, isLoading, deleteClass } = useTimetable();
+  const { theme, isDark } = useTheme();
+  const { classes, deleteClass, isLoading } = useTimetable();
+  
+  // Memoize styles to prevent unnecessary recalculations
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const router = useRouter();
-  const styles = getStyles(theme);
 
   const getClassesForDay = (day: string) => {
     return classes.filter(cls => cls.dayOfWeek === day);
@@ -62,51 +65,59 @@ export default function TimeTableScreen() {
     );
   };
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyStateContainer}>
-      <Ionicons name="calendar-outline" size={60} color={theme.secondary} style={styles.emptyStateIcon} />
-      <Text style={styles.emptyStateTitle}>Your Timetable is Empty</Text>
-      <Text style={styles.emptyStateSubtitle}>
-        Tap the button below to add your first class and get organized.
-      </Text>
-    </View>
-  );
-
-  const renderClassCard = (cls: ClassData) => (
-    <View key={cls.id} style={styles.classCard}>
-      <View style={styles.classCardHeader}>
-        <Text style={styles.classTitle}>{cls.subjectName}</Text>
-        <TouchableOpacity onPress={() => handleDeletePress(cls.id, cls.subjectName)} style={styles.deleteButton}>
-           <Ionicons name="ellipsis-vertical" size={20} color={theme.secondary} />
-        </TouchableOpacity>
+  const renderEmptyState = () => {
+    const iconColor = isDark ? Colors.dark.textSecondary : Colors.light.textSecondary;
+    return (
+      <View style={styles.emptyStateContainer}>
+        <Ionicons name="calendar-outline" size={60} color={iconColor} style={styles.emptyStateIcon} />
+        <ThemedText style={styles.emptyStateTitle}>Your Timetable is Empty</ThemedText>
+        <ThemedText style={styles.emptyStateSubtitle}>
+          Tap the button below to add your first class and get organized.
+        </ThemedText>
       </View>
-      {cls.courseCode && <Text style={styles.classCourseCode}>{cls.courseCode}</Text>}
+    );
+  };
 
-      <View style={styles.classDetailsContainer}>
-        <View style={styles.classDetailRow}>
-          <Ionicons name="time-outline" size={16} color={theme.secondary} />
-          <Text style={styles.classDetailText}>{formatTimeRangeToAMPM(cls.time)}</Text>
+  const renderClassCard = (cls: ClassData) => {
+    const iconColor = isDark ? Colors.dark.textSecondary : Colors.light.textSecondary;
+    const textColor = isDark ? Colors.dark.text : Colors.light.text;
+    
+    return (
+      <View key={cls.id} style={styles.classCard}>
+        <View style={styles.classCardHeader}>
+          <ThemedText style={[styles.classTitle, { color: textColor }]}>{cls.subjectName}</ThemedText>
+          <TouchableOpacity onPress={() => handleDeletePress(cls.id, cls.subjectName)} style={styles.deleteButton}>
+            <Ionicons name="ellipsis-vertical" size={20} color={iconColor} />
+          </TouchableOpacity>
         </View>
-        <View style={styles.classDetailRow}>
-          <Ionicons name="location-outline" size={16} color={theme.secondary} />
-          <Text style={styles.classDetailText}>{cls.venue}</Text>
-        </View>
-        {cls.lecturerName && (
+        {cls.courseCode && <ThemedText style={styles.classCourseCode}>{cls.courseCode}</ThemedText>}
+
+        <View style={styles.classDetailsContainer}>
           <View style={styles.classDetailRow}>
-            <Ionicons name="person-outline" size={16} color={theme.secondary} />
-            <Text style={styles.classDetailText}>{cls.lecturerName}</Text>
+            <Ionicons name="time-outline" size={16} color={iconColor} />
+            <ThemedText style={styles.classDetailText}>{formatTimeRangeToAMPM(cls.time)}</ThemedText>
           </View>
-        )}
+          <View style={styles.classDetailRow}>
+            <Ionicons name="location-outline" size={16} color={iconColor} />
+            <ThemedText style={styles.classDetailText}>{cls.venue}</ThemedText>
+          </View>
+          {cls.lecturerName && (
+            <View style={styles.classDetailRow}>
+              <Ionicons name="person-outline" size={16} color={iconColor} />
+              <ThemedText style={styles.classDetailText}>{cls.lecturerName}</ThemedText>
+            </View>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.text} />
+          <Ionicons name="arrow-back" size={24} color={isDark ? Colors.dark.text : Colors.light.text} />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Timetable</ThemedText>
         <TouchableOpacity onPress={() => router.push('/add-class')} style={styles.headerAddButton}>

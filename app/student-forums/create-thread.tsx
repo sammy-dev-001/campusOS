@@ -100,7 +100,7 @@ export default function CreateForumThreadScreen() {
           content: content.trim(),
           category: categoryPicker,
           author_id: user.id,
-          author_name: isAnonymous ? 'Anonymous' : user.display_name || user.username,
+          author_name: isAnonymous ? 'Anonymous' : `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
           tags,
         }),
       });

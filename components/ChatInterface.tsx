@@ -11,8 +11,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../src/contexts/AuthContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
 import { ThemedText } from './ThemedText';
 
 interface Message {

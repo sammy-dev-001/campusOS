@@ -1,0 +1,959 @@
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ResizeMode, Video } from 'expo-av';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import * as React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { API_BASE_URL } from '../../src/config/api';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
+import { useUser } from '../../src/contexts/UserContext';
+
+interface MediaFormData {
+  uri: string;
+  type: string;
+  name: string;
+}
+
+const AVATAR_COLORS = ['#4D96FF', '#8A2BE2', '#FF6B6B', '#FFD93D', '#6BCB77', '#FFB86B'];
+
+function getInitials(name?: string) {
+  if (!name) return '??';
+  const names = name.split(' ');
+  if (names.length > 1) {
+    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
+function getAvatarColor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function extractHashtags(text: string) {
+  const regex = /#(\w+)/g;
+  const tags = [];
+  let match;
+  while ((match = regex.exec(text))) {
+    tags.push(match[1]);
+  }
+  return tags;
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  headerBlack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#121212',
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  backButton: {
+    padding: 8,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  userInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userAvatarText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  userName: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  userTime: {
+    color: '#888',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  input: {
+    flex: 1,
+    color: 'white',
+    fontSize: 16,
+    padding: 12,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    marginBottom: 16,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  hashtagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  hashtagChip: {
+    flexDirection: 'row',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  hashtagText: {
+    color: '#4D96FF',
+    fontSize: 14,
+    marginRight: 6,
+  },
+  mediaPreview: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 8,
+    marginBottom: 16,
+    backgroundColor: '#1E1E1E',
+    overflow: 'hidden',
+  },
+  mediaContent: {
+    width: '100%',
+    height: '100%',
+  },
+  captionInput: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    padding: 12,
+    color: 'white',
+    fontSize: 14,
+    marginBottom: 16,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  mediaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  mediaButtonText: {
+    color: 'white',
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  postButton: {
+    backgroundColor: '#4D96FF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    opacity: 0.8,
+  },
+  postButtonActive: {
+    opacity: 1,
+  },
+  postButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+ 
+  
+});
+
+const CreatePostScreen = () => {
+  // State management
+  const [content, setContent] = useState('');
+  const [showMediaModal, setShowMediaModal] = useState(false);
+  const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [imageMeta, setImageMeta] = useState<MediaFormData | null>(null);
+  const [videoMeta, setVideoMeta] = useState<MediaFormData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [modalCaption, setModalCaption] = useState('');
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [editedImageUri, setEditedImageUri] = useState<string | null>(null);
+  
+  // Refs
+  const contentRef = useRef('');
+  const debounceTimeout = useRef<number | null>(null);
+  const renderCount = useRef(0);
+  const videoRef = useRef<Video>(null);
+  
+  // Track render data
+  const renderData = useRef({
+    lastLogTime: 0,
+    lastState: {
+      showMediaModal: false,
+      mediaType: null as 'image' | 'video' | null,
+      hasImage: false,
+      hasVideo: false,
+      contentLength: 0,
+      modalCaptionLength: 0
+    }
+  });
+
+  // Hooks
+  const { theme, isDark } = useTheme();
+  const router = useRouter();
+  const { user } = useUser();
+  const { isAuthenticated } = useAuth();
+
+  // Track render count and state changes
+  useEffect(() => {
+    const now = Date.now();
+    const currentState = {
+      showMediaModal,
+      mediaType,
+      hasImage: !!imageUri,
+      hasVideo: !!videoUri,
+      contentLength: content?.length || 0,
+      modalCaptionLength: modalCaption?.length || 0
+    };
+
+    // Only log if state actually changed and it's been at least 100ms since last log
+    if (JSON.stringify(renderData.current.lastState) !== JSON.stringify(currentState) && 
+        now - renderData.current.lastLogTime > 100) {
+      renderCount.current += 1;
+      console.log(`Render #${renderCount.current}`, currentState);
+      
+      renderData.current = {
+        lastLogTime: now,
+        lastState: currentState
+      };
+    }
+
+    // safety check for too many renders
+    if (renderCount.current > 20) {
+      console.error('Potential infinite render loop detected!');
+      console.trace('Render trace');
+      // Instead of debugger which can cause issues, just return early
+      return;
+    }
+  }, [showMediaModal, mediaType, imageUri, videoUri, content, modalCaption]);
+
+  const handleContentChange = useCallback((text: string) => {
+    contentRef.current = text;
+    
+    // Clear any existing timeout
+    if (debounceTimeout.current !== null) {
+      clearTimeout(debounceTimeout.current);
+      debounceTimeout.current = null;
+    }
+    
+    // Set a new timeout to update the state
+    debounceTimeout.current = window.setTimeout(() => {
+      setContent(text);
+    }, 100);
+  }, []);
+
+  // Open image crop/rotate modal after picking image
+  const handlePickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to access your photos and videos.');
+        return;
+      }
+      // Back-compat: prefer new MediaType if available, else fall back to MediaTypeOptions
+      const mediaTypesCompat: any = (ImagePicker as any).MediaType?.All ?? ImagePicker.MediaTypeOptions.All;
+      const result = await ImagePicker.launchImageLibraryAsync({
+        // Prefer new API, fallback to old to satisfy current SDK version
+        mediaTypes: mediaTypesCompat,
+        allowsEditing: false,
+        quality: 1,
+      });
+      if (!result.canceled) {
+        const asset = result.assets[0];
+        const type = asset.type;
+        const mimeType = (asset as any).mimeType || (type === 'video' ? 'video/mp4' : 'image/jpeg');
+        const fileName = (asset as any).fileName || (asset.uri?.split('/').pop() ?? (type === 'video' ? 'video.mp4' : 'image.jpg'));
+        if (type === 'video' || asset.uri.match(/\.(mp4|mov|avi|mkv)$/i)) {
+          setVideoUri(asset.uri);
+          setImageUri(null);
+          setVideoMeta({ uri: asset.uri, type: mimeType, name: fileName });
+          setImageMeta(null);
+          setMediaType('video');
+          setShowMediaModal(true);
+          setModalCaption('');
+        } else if (type === 'image') {
+          setImageUri(asset.uri);
+          setVideoUri(null);
+          setImageMeta({ uri: asset.uri, type: mimeType, name: fileName });
+          setVideoMeta(null);
+          setMediaType('image');
+          setShowMediaModal(true);
+          setModalCaption('');
+        }
+      }
+
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick media');
+      console.error(error);
+    }
+  };
+
+  // Image rotate logic (no cropping)
+  const handleRotateImage = async (direction: 'left' | 'right') => {
+    if (!imageUri && !editedImageUri) return;
+    const uri = editedImageUri || imageUri;
+    if (!uri) return; // Add null check for TypeScript
+    const angle = direction === 'left' ? -90 : 90;
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ rotate: angle }],
+      { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    setEditedImageUri(result.uri);
+  };
+
+  // Track confirmation state with a ref to prevent multiple triggers
+  const confirmedRef = useRef(false);
+  const isMounted = useRef(true);
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
+  const resetForm = useCallback(async () => {
+    if (!isMounted.current) return;
+    
+    // Use a ref to track if we're already resetting
+    const resetInProgress = React.useRef(false);
+    
+    if (resetInProgress.current) return;
+    resetInProgress.current = true;
+    
+    try {
+      await new Promise(resolve => {
+        // Batch state updates
+        setContent('');
+        setImageUri(null);
+        setEditedImageUri(null);
+        setVideoUri(null);
+        setImageMeta(null);
+        setVideoMeta(null);
+        setMediaType(null);
+        setModalCaption('');
+        setLoading(false);
+        
+        // Ensure we don't get stuck in a loop
+        setTimeout(() => {
+          if (isMounted.current) {
+            resetInProgress.current = false;
+          }
+          resolve(true);
+        }, 100);
+      });
+    } catch (error) {
+      console.error('Error in resetForm:', error);
+      resetInProgress.current = false;
+    }
+  }, []);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      if (debounceTimeout.current !== null) {
+        clearTimeout(debounceTimeout.current);
+        debounceTimeout.current = null;
+      }
+    };
+  }, []);
+
+  // Confirm media in modal
+  const handleConfirmMedia = React.useCallback(() => {
+    if (!isMounted.current || confirmedRef.current) return;
+    
+    confirmedRef.current = true;
+    
+    // Batch state updates
+    setShowMediaModal(false);
+    
+    if (modalCaption !== content) {
+      setContent(modalCaption);
+    }
+    
+    // Reset the confirmation flag after a delay
+    const timer = setTimeout(() => {
+      if (isMounted.current) {
+        confirmedRef.current = false;
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [modalCaption, content]);
+
+  // Cancel media modal
+  const handleCancelMedia = React.useCallback(() => {
+    if (!isMounted.current) return;
+    
+    // Close modal first
+    setShowMediaModal(false);
+    
+    // Reset all media states in a single batch
+    requestAnimationFrame(() => {
+      if (!isMounted.current) return;
+      setEditedImageUri(null);
+      setImageUri(null);
+      setVideoUri(null);
+      setImageMeta(null);
+      setVideoMeta(null);
+      setMediaType(null);
+      setModalCaption('');
+    });
+  }, []);
+
+  // Upload media to server with better error handling and logging
+  const uploadToCloudinary = async (uri: string, type: string = 'image/jpeg', name: string = 'upload.jpg') => {
+    console.log('Starting file upload...');
+    console.log('File details:', { uri, type, name });
+    
+    try {
+      const formData = new FormData();
+      
+      // Create a file object that works with React Native
+      const file = {
+        uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+        type: type || 'image/jpeg',
+        name: name || 'upload.jpg',
+      };
+      
+      // Create media metadata
+      const mediaObject = {
+        url: 'temporary', // Will be replaced by backend
+        mediaType: type.startsWith('image/') ? 'image' : 'video',
+        altText: 'User uploaded content',
+        publicId: `post_${Date.now()}`,
+        width: 0,
+        height: 0,
+      };
+      
+      formData.append('media', file as any);
+      formData.append('mediaData', JSON.stringify(mediaObject));
+      
+      console.log('FormData created with media file');
+
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        const error = new Error('No authentication token found');
+        console.error(error);
+        throw error;
+      }
+
+      // Use the posts endpoint for media uploads
+  const uploadUrl = `${API_BASE_URL}/posts`;
+      console.log('Uploading to:', uploadUrl);
+      
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+        body: formData,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('Response status:', response.status);
+      
+      // Handle non-JSON responses
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.log('Non-JSON response:', text);
+        throw new Error(`Unexpected response format: ${text.substring(0, 100)}`);
+      }
+
+      const responseData = await response.json();
+      console.log('Upload response:', responseData);
+      
+      if (!response.ok) {
+        const error = new Error(responseData.message || `Server responded with ${response.status}`);
+        console.error('Upload failed:', error);
+        throw error;
+      }
+
+      // Return the complete post data from the server
+      return responseData;
+      
+    } catch (error: any) {
+      console.error('Upload error details:', {
+        message: error?.message || 'Unknown error',
+        name: error?.name || 'Error',
+        stack: error?.stack || 'No stack trace',
+      });
+      
+      // Provide more specific error messages for common issues
+      if (error?.name === 'AbortError') {
+        throw new Error('Upload timed out. Please check your internet connection.');
+      } else if (error?.message?.includes('Network request failed')) {
+        throw new Error('Network error. Please check your internet connection.');
+      } else if (error?.message?.includes('Unexpected token')) {
+        throw new Error('Invalid server response. The server might be experiencing issues.');
+      }
+      
+      throw new Error(error?.message || 'An unknown error occurred during upload');
+    }
+  };
+
+  const handlePost = async () => {
+    // Only check for empty content if there's no media
+    if (!content.trim() && !imageUri && !videoUri) {
+      Alert.alert('Error', 'Please add some content or media to your post');
+      return;
+    }
+
+    // Prevent multiple submissions
+    if (loading) return;
+    
+    setLoading(true);
+
+    try {
+      // If we have media, upload it first
+      if (imageUri || videoUri) {
+        if (!imageUri && !videoUri) {
+          throw new Error('No valid media to upload');
+        }
+        
+        const uri = imageUri ? (editedImageUri || imageUri) : videoUri!;
+        const result = await uploadToCloudinary(
+          uri,
+          imageUri ? 'image/jpeg' : 'video/mp4',
+          imageUri ? `post_${Date.now()}.jpg` : `video_${Date.now()}.mp4`
+        );
+        
+        console.log('Post created successfully with media:', result);
+        
+        // Reset form state first
+        setContent('');
+        setImageUri(null);
+        setVideoUri(null);
+        setEditedImageUri(null);
+        setLoading(false);
+        
+        // Use navigation with a small delay to ensure state updates complete
+        setTimeout(() => {
+          if (isMounted.current) {
+            router.replace({
+              pathname: '/(tabs)',
+              params: { refresh: Date.now() }
+            });
+          }
+        }, 50);
+        
+        return;
+      }
+      
+      // Handle text-only post
+      if (content.trim()) {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/posts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            content: content.trim(),
+            media: []
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to create post');
+        }
+
+        const result = await response.json();
+        console.log('Post created successfully:', result);
+        
+        // Reset form state
+        setContent('');
+        setImageUri(null);
+        setVideoUri(null);
+        setEditedImageUri(null);
+        setMediaType(null);
+        setShowMediaModal(false);
+        setLoading(false);
+        
+        // Show success message and stay on the same screen
+        Alert.alert('Success', 'Your post has been created!');
+      }
+    } catch (error: any) {
+      console.error('Error creating post:', error);
+      Alert.alert('Error', error?.message || 'Failed to create post');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (videoUri && !showMediaModal) {
+      console.log('Video Preview URI:', videoUri);
+    }
+    // We'll move the JSX to the component's return statement
+    // and handle the modal visibility through state
+    return () => {
+      // Cleanup function if needed
+    };
+  }, [videoUri, showMediaModal, mediaType]);
+
+  // Handle video preview modal
+  if (mediaType === 'video' && videoUri && showMediaModal) {
+    return (
+      <View style={[styles.container, { backgroundColor: '#121212' }]}>
+        <View style={styles.headerBlack}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Create Post</Text>
+          <View style={{ width: 24 }} />
+        </View>
+        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 32 }}>
+          <View style={styles.userInfoRow}>
+            {user?.profile_picture ? (
+              <Image source={{ uri: user.profile_picture }} style={styles.userAvatar} />
+            ) : (
+            <View style={[styles.userAvatar, { backgroundColor: getAvatarColor(user?.display_name || user?.username || '') }]}> 
+              <Text style={styles.userAvatarText}>{getInitials(user?.display_name || user?.username || '')}</Text>
+            </View>
+          )}
+          <View style={{ marginLeft: 10 }}>
+            <Text style={styles.userName}>{user?.display_name || user?.username || 'User'}</Text>
+            <Text style={styles.userTime}>Now</Text>
+          </View>
+        </View>
+        {/* Only show the main input if no image is selected */}
+        {!(editedImageUri || imageUri) && (
+          <TextInput
+            style={styles.input}
+            textAlignVertical="top"
+            placeholder="What's on your mind?"
+            placeholderTextColor="#A0A0A0"
+            multiline
+            value={content}
+            onChangeText={setContent}
+          />
+        )}
+        {extractHashtags(content).length > 0 && (
+          <View style={styles.hashtagRow}>
+            {extractHashtags(content).map((tag, idx) => (
+              <View key={tag + idx} style={[styles.hashtagChip, { backgroundColor: idx % 2 === 0 ? '#232323' : '#222D44' }]}> 
+                <Text style={styles.hashtagText}>#{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {/* Show preview only after confirming in modal */}
+        {(editedImageUri || imageUri) && !showMediaModal && (
+          <View style={styles.mediaPreview}>
+            {((editedImageUri || imageUri) && (
+              <Image
+                source={{ uri: (editedImageUri || imageUri) ?? undefined }}
+                style={{ width: '100%', height: 300, borderRadius: 10 }}
+                resizeMode="contain"
+                onError={() => Alert.alert('Error', 'Failed to load image preview')}
+              />
+            ))}
+            <TouchableOpacity style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }} onPress={() => { setImageUri(null); setEditedImageUri(null); }}>
+              <Ionicons name="close-circle" size={28} color="#FF6B6B" />
+            </TouchableOpacity>
+          </View>
+        )}
+        {videoUri && !showMediaModal && (
+          <View style={styles.mediaPreview}>
+            <View style={{ flex: 1, width: '100%' }}>
+              <Video
+                ref={videoRef}
+                source={{ uri: videoUri }}
+                style={styles.mediaContent}
+                resizeMode={ResizeMode.CONTAIN}
+                isLooping
+                shouldPlay={isVideoPlaying}
+                onError={(error) => {
+                  console.error('Video error:', error);
+                  Alert.alert('Error', 'Failed to load video preview');
+                }}
+                onLoadStart={() => setIsVideoReady(false)}
+                onReadyForDisplay={() => {
+                  setIsVideoReady(true);
+                  if (isVideoPlaying) {
+                    videoRef.current?.playAsync().catch(console.error);
+                  }
+                }}
+                useNativeControls={false}
+                onPlaybackStatusUpdate={(status) => {
+                  if (status.isLoaded) {
+                    setIsVideoPlaying(status.isPlaying);
+                  }
+                }}
+              />
+              <TouchableOpacity 
+                style={styles.videoOverlay}
+                activeOpacity={1}
+                onPress={async () => {
+                  if (!isVideoReady) return;
+                  try {
+                    if (isVideoPlaying) {
+                      await videoRef.current?.pauseAsync();
+                      setIsVideoPlaying(false);
+                    } else {
+                      await videoRef.current?.playAsync();
+                      setIsVideoPlaying(true);
+                    }
+                  } catch (error) {
+                    console.error('Error toggling video playback:', error);
+                    Alert.alert('Error', 'Could not control video playback');
+                  }
+                }}
+              >
+                <Ionicons
+                  name={isVideoPlaying ? 'pause-circle' : 'play-circle'}
+                  size={64}
+                  color="rgba(255,255,255,0.9)"
+                />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 4 }}
+              onPress={() => {
+                setVideoUri(null);
+                setIsVideoPlaying(false);
+              }}
+            >
+              <Ionicons name="close-circle" size={24} color="#FF6B6B" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+                justifyContent: 'center', alignItems: 'center', zIndex: 9,
+                backgroundColor: 'rgba(0,0,0,0.1)'
+              }}
+              onPress={() => {
+                setIsVideoPlaying((prev) => {
+                  if (prev) videoRef.current?.pauseAsync();
+                  else videoRef.current?.playAsync();
+                  return !prev;
+                });
+              }}
+              activeOpacity={0.5}
+            >
+              <Ionicons
+                name={isVideoPlaying ? 'pause-circle' : 'play-circle'}
+                size={56}
+                color="rgba(255,255,255,0.7)"
+                style={{ opacity: 0.8 }}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
+        {/* Remove the extra X on editedImageUri/imageUri preview (keep only above) */}
+        {(editedImageUri || imageUri) && !showMediaModal && (
+          <View style={{ position: 'relative', alignSelf: 'center' }}>
+            <Image source={{ uri: editedImageUri || imageUri || undefined }} style={styles.mediaPreview} resizeMode={"contain" as any} />
+            {/* Removed X here */}
+          </View>
+        )}
+        {(editedImageUri || imageUri) && (
+          <TextInput
+            style={[styles.captionInput, { marginTop: 8 }]}
+            placeholder="Write a caption..."
+            placeholderTextColor="#888"
+            value={content || ''}
+            onChangeText={setContent}
+            multiline
+          />
+        )}
+        <View style={styles.actionsRow}>
+          <TouchableOpacity 
+            onPress={handlePickImage}
+            style={styles.mediaButton}
+          >
+            <MaterialCommunityIcons name="image-plus" size={24} color="#4D96FF" />
+            <Text style={styles.mediaButtonText}>Add Photo/Video</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity
+          onPress={handlePost}
+          style={[styles.postButton, loading && { opacity: 0.7 }]}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.postButtonText}>Post</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+      {/* Media Modal for editing/preview before confirming */}
+      {showMediaModal && (
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.95)',
+          zIndex: 100,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <View style={{ width: '90%', maxHeight: '90%', backgroundColor: '#181A20', borderRadius: 16, padding: 16 }}>
+            {mediaType && (
+              <>
+                <Image
+                  source={{ uri: editedImageUri || imageUri! }}
+                  style={{ width: 300, height: 300, alignSelf: 'center', borderRadius: 12, marginBottom: 12 }}
+                  resizeMode="contain"
+                />
+                <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}>
+                  <TouchableOpacity onPress={() => handleRotateImage('left')} style={{ marginHorizontal: 10 }}>
+                    <Ionicons name="refresh" size={28} color="#4D96FF" style={{ transform: [{ scaleX: -1 }] }} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleRotateImage('right')} style={{ marginHorizontal: 10 }}>
+                    <Ionicons name="refresh" size={28} color="#4D96FF" />
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+            {mediaType === 'video' && videoUri && (
+              <View style={{ position: 'relative', width: 300, height: 300, alignSelf: 'center', borderRadius: 12, marginBottom: 12 }}>
+                <Video
+                  ref={videoRef}
+                  source={{ uri: videoUri }}
+                  style={{ width: 300, height: 300, borderRadius: 12 }}
+                  resizeMode={ResizeMode.CONTAIN}
+                  isLooping
+                  shouldPlay={isVideoPlaying}
+                  onError={() => Alert.alert('Error', 'Failed to load video preview')}
+                />
+                <TouchableOpacity
+                  style={{
+                    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+                    justifyContent: 'center', alignItems: 'center', zIndex: 9,
+                    backgroundColor: 'rgba(0,0,0,0.1)'
+                  }}
+                  onPress={() => {
+                    setIsVideoPlaying((prev) => {
+                      if (prev) videoRef.current?.pauseAsync();
+                      else videoRef.current?.playAsync();
+                      return !prev;
+                    });
+                  }}
+                  activeOpacity={0.5}
+                >
+                  <Ionicons
+                    name={isVideoPlaying ? 'pause-circle' : 'play-circle'}
+                    size={56}
+                    color="rgba(255,255,255,0.7)"
+                    style={{ opacity: 0.8 }}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+            <TextInput
+              style={{
+                minHeight: 60,
+                borderRadius: 10,
+                backgroundColor: '#232323',
+                color: '#fff',
+                fontSize: 16,
+                padding: 12,
+                marginBottom: 12,
+              }}
+              placeholder="Write a caption..."
+              placeholderTextColor="#A0A0A0"
+              multiline
+              value={modalCaption}
+              onChangeText={setModalCaption}
+            />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TouchableOpacity onPress={handleCancelMedia} style={{ padding: 12, backgroundColor: '#333', borderRadius: 8 }}>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleConfirmMedia} style={{ padding: 12, backgroundColor: '#4D96FF', borderRadius: 8 }}>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Use & Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+};
+}
+export default CreatePostScreen;

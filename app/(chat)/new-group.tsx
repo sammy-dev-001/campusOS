@@ -1,13 +1,14 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../../components/ThemedText';
-import { API_BASE_URL } from '../../config/api';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useUser } from '../../contexts/UserContext';
+import { API_BASE_URL } from '../../src/constants/Config';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 
 interface User {
   id: string;
@@ -48,7 +49,7 @@ export default function NewGroupScreen() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/users/search?q=${searchQuery}`);
+      const response = await fetch(`${API_BASE_URL}/users/search?q=${searchQuery}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch users');
@@ -130,19 +131,25 @@ export default function NewGroupScreen() {
       
       // Log the request data being sent
       console.log('Request body:', requestBody);
-      console.log('Sending request to:', `${API_URL}/chat-groups`);
+      console.log('Sending request to:', `${API_BASE_URL}/chat-groups`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
       
       try {
-        const response = await fetch(`${API_URL}/chat-groups`, {
+        const token = await AsyncStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/chats`, {
           method: 'POST',
           headers: {
-            'Accept': 'application/json',
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(requestBody),
+          body: JSON.stringify({
+            participants: participantIds,
+            isGroupChat: true,
+            name: groupName.trim(),
+            groupImage: groupImage || null
+          }),
           signal: controller.signal,
         });
         
@@ -197,8 +204,16 @@ export default function NewGroupScreen() {
     }
   };
 
+  // Define theme colors based on the current theme
+  const themeColors = {
+    background: theme.background,
+    card: theme.card,
+    text: theme.text,
+    secondary: theme.secondary,
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <Stack.Screen
         options={{
           title: 'Create Group',
@@ -221,21 +236,21 @@ export default function NewGroupScreen() {
         }}
       />
 
-      <View style={[styles.groupInfoContainer, { backgroundColor: theme.card }]}>
+      <View style={[styles.groupInfoContainer, { backgroundColor: themeColors.card }]}>
         <TouchableOpacity style={styles.imagePickerButton} onPress={handlePickImage}>
           {groupImage ? (
             <Image source={{ uri: groupImage }} style={styles.groupImage} />
           ) : (
-            <View style={[styles.groupImagePlaceholder, { backgroundColor: theme.secondary }]}>
-              <Ionicons name="camera" size={24} color={theme.text} />
+            <View style={[styles.groupImagePlaceholder, { backgroundColor: themeColors.secondary }]}>
+              <Ionicons name="camera" size={24} color={themeColors.text} />
             </View>
           )}
         </TouchableOpacity>
 
         <TextInput
-          style={[styles.groupNameInput, { color: theme.text, backgroundColor: theme.background }]}
+          style={[styles.groupNameInput, { color: themeColors.text, backgroundColor: themeColors.background }]}
           placeholder="Group name"
-          placeholderTextColor={theme.secondary}
+          placeholderTextColor={themeColors.secondary}
           value={groupName}
           onChangeText={setGroupName}
         />
@@ -247,12 +262,12 @@ export default function NewGroupScreen() {
         )}
       </View>
 
-      <View style={[styles.searchSection, { backgroundColor: theme.card }]}>
-        <Ionicons name="search" size={20} color={theme.secondary} style={styles.searchIcon} />
+      <View style={[styles.searchSection, { backgroundColor: themeColors.card }]}>
+        <Ionicons name="search" size={20} color={themeColors.secondary} style={styles.searchIcon} />
         <TextInput
-          style={[styles.searchInput, { color: theme.text }]}
+          style={[styles.searchInput, { color: themeColors.text }]}
           placeholder="Search people..."
-          placeholderTextColor={theme.secondary}
+          placeholderTextColor={themeColors.secondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -267,7 +282,7 @@ export default function NewGroupScreen() {
           keyExtractor={item => `selected-${item.id}`}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.selectedUserChip, { backgroundColor: theme.card }]}
+              style={[styles.selectedUserChip, { backgroundColor: themeColors.card }]}
               onPress={() => {
                 setSelectedUsers(prev => prev.filter(u => u.id !== item.id));
                 if (searchQuery) fetchUsers();
@@ -276,12 +291,12 @@ export default function NewGroupScreen() {
               {item.profilePicture ? (
                 <Image source={{ uri: item.profilePicture }} style={styles.selectedUserImage} />
               ) : (
-                <View style={[styles.selectedUserInitial, { backgroundColor: theme.secondary }]}>
+                <View style={[styles.selectedUserInitial, { backgroundColor: themeColors.secondary }]}>
                   <ThemedText>{item.displayName[0].toUpperCase()}</ThemedText>
                 </View>
               )}
               <ThemedText style={styles.selectedUserName}>{item.displayName}</ThemedText>
-              <Ionicons name="close-circle" size={16} color={theme.text} />
+              <Ionicons name="close-circle" size={16} color={themeColors.text} />
             </TouchableOpacity>
           )}
         />
@@ -297,7 +312,7 @@ export default function NewGroupScreen() {
           keyExtractor={item => `user-${item.id}`}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.userItem, { backgroundColor: theme.card }]}
+              style={[styles.userItem, { backgroundColor: themeColors.card }]}
               onPress={() => {
                 setSelectedUsers(prev => [...prev, item]);
                 setUsers(prev => prev.filter(u => u.id !== item.id));
@@ -306,7 +321,7 @@ export default function NewGroupScreen() {
               {item.profilePicture ? (
                 <Image source={{ uri: item.profilePicture }} style={styles.userImage} />
               ) : (
-                <View style={[styles.userInitial, { backgroundColor: theme.secondary }]}>
+                <View style={[styles.userInitial, { backgroundColor: themeColors.secondary }]}>
                   <ThemedText>{item.displayName[0].toUpperCase()}</ThemedText>
                 </View>
               )}

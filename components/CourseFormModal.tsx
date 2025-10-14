@@ -11,7 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { Course } from '../contexts/GpaContext';
+import { Course } from '../src/contexts/GpaContext';
 
 interface CourseFormModalProps {
   visible: boolean;

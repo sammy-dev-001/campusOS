@@ -1,16 +1,33 @@
-import React, { useState, useContext } from 'react';
-import { View, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform, Alert } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ThemedText } from '../components/ThemedText';
-import { useTheme } from '../contexts/ThemeContext';
-import { createPoll } from '../services/pollService';
-import { useAuth } from '../contexts/AuthContext';
 import * as Haptics from 'expo-haptics';
+import { Stack, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ThemedText } from '../components/ThemedText';
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
+import { createPoll } from '../services/pollService';
 
 export default function CreatePollScreen() {
   const router = useRouter();
-  const { theme } = useTheme();
+  const { isDark, theme } = useTheme();
+  
+  // Get the appropriate theme colors based on the current theme
+  const themeColors = isDark ? {
+    background: '#121212',
+    text: '#FFFFFF',
+    primary: '#BB86FC',
+    secondary: '#03DAC6',
+    border: '#333333',
+    card: '#1E1E1E',
+  } : {
+    background: '#FFFFFF',
+    text: '#000000',
+    primary: '#6200EE',
+    secondary: '#03DAC6',
+    border: '#E0E0E0',
+    card: '#F5F5F5',
+  };
   const { user } = useAuth();
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
@@ -84,27 +101,47 @@ export default function CreatePollScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Stack.Screen
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <Stack.Screen 
         options={{
           title: 'Create Poll',
+          headerShown: true,
+          headerTransparent: false,
+          headerStyle: {
+            backgroundColor: themeColors.background,
+          },
+          headerTitleStyle: {
+            color: themeColors.text,
+            fontSize: 17,
+            fontWeight: '600',
+          },
+          headerShadowVisible: false,
+          contentStyle: {
+            paddingTop: Platform.OS === 'ios' ? 44 : 0,
+          },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
-              <Ionicons name="close" size={24} color={theme.text} />
+            <TouchableOpacity 
+              onPress={() => router.back()}
+              style={styles.headerButton}
+            >
+              <Ionicons name="close" size={24} color={themeColors.text} />
             </TouchableOpacity>
           ),
           headerRight: () => (
             <TouchableOpacity 
               onPress={handleCreatePoll}
               disabled={isSubmitting || !question.trim() || options.filter(opt => opt.trim() !== '').length < 2}
+              style={styles.headerButton}
             >
               <ThemedText 
                 style={[
                   styles.createButton, 
                   { 
                     color: (isSubmitting || !question.trim() || options.filter(opt => opt.trim() !== '').length < 2) 
-                      ? theme.secondary 
-                      : theme.primary 
+                      ? themeColors.secondary 
+                      : themeColors.primary,
+                    fontWeight: '600',
+                    fontSize: 17,
                   }
                 ]}
               >
@@ -112,10 +149,6 @@ export default function CreatePollScreen() {
               </ThemedText>
             </TouchableOpacity>
           ),
-          headerStyle: {
-            backgroundColor: theme.background,
-          },
-          headerTintColor: theme.text,
         }}
       />
 
@@ -183,6 +216,10 @@ export default function CreatePollScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   scrollView: {
     flex: 1,

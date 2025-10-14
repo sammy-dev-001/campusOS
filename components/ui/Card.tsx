@@ -1,12 +1,12 @@
 import React from 'react';
 import {
-  View,
-  StyleSheet,
-  ViewStyle,
-  TouchableOpacity,
-  TouchableOpacityProps,
+    StyleSheet,
+    TouchableOpacity,
+    TouchableOpacityProps,
+    View,
+    ViewStyle,
 } from 'react-native';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 
 interface CardProps extends TouchableOpacityProps {
   variant?: 'elevated' | 'outlined' | 'filled';

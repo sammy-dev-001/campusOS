@@ -14,8 +14,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { useTheme } from '../contexts/ThemeContext';
-import { useTimetable } from '../contexts/TimetableContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
+import { useTimetable } from '../src/contexts/TimetableContext';
 
 const DAYS_OF_WEEK = [
   'Monday',
@@ -50,44 +50,34 @@ export default function AddClassForm() {
   };
 
   const formatTimeInput = (input: string) => {
-    // Remove all non-numeric characters except colon
-    const cleaned = input.replace(/[^0-9:]/g, '');
+    // Remove all non-numeric characters
+    const numbersOnly = input.replace(/\D/g, '');
     
-    // If input is just numbers, format it
-    if (/^\d+$/.test(cleaned)) {
-      const num = parseInt(cleaned);
+    // If input is empty, return empty string
+    if (numbersOnly.length === 0) return '';
+    
+    // Get first 4 digits (HHMM)
+    const digits = numbersOnly.slice(0, 4);
+    
+    // Format based on number of digits
+    if (digits.length <= 2) {
+      // Just hours, no colon yet
+      return digits;
+    } else if (digits.length === 3) {
+      // We have 3 digits - show hours and first minute digit after colon
+      const hours = parseInt(digits.slice(0, 2));
+      const validHours = Math.min(Math.max(0, hours), 23);
+      const firstMinuteDigit = digits[2];
+      return `${validHours.toString().padStart(2, '0')}:${firstMinuteDigit}`;
+    } else {
+      // We have 4 digits - show full time
+      const hours = parseInt(digits.slice(0, 2));
+      const validHours = Math.min(Math.max(0, hours), 23);
+      const minutes = digits.slice(2, 4);
+      const validMinutes = Math.min(parseInt(minutes), 59).toString().padStart(2, '0');
       
-      // If it's a single digit, assume it's hours
-      if (num < 10) {
-        return `${num.toString().padStart(2, '0')}:00`;
-      }
-      // If it's 2 digits and could be hours
-      else if (num < 24) {
-        return `${num.toString().padStart(2, '0')}:00`;
-      }
-      // If it's 3+ digits, treat first 2 as hours, rest as minutes
-      else {
-        const hours = Math.floor(num / 100);
-        const minutes = num % 100;
-        if (hours < 24 && minutes < 60) {
-          return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        }
-      }
+      return `${validHours.toString().padStart(2, '0')}:${validMinutes}`;
     }
-    
-    // If it already has a colon, format it properly
-    if (cleaned.includes(':')) {
-      const parts = cleaned.split(':');
-      if (parts.length === 2) {
-        const hours = parseInt(parts[0]) || 0;
-        const minutes = parseInt(parts[1]) || 0;
-        if (hours < 24 && minutes < 60) {
-          return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        }
-      }
-    }
-    
-    return cleaned;
   };
 
   const handleStartTimeChange = (text: string) => {
@@ -324,7 +314,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 50, // Increased from 20 to 50 to position below the camera notch
     paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#333',

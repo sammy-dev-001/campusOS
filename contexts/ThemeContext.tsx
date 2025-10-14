@@ -1,63 +1,76 @@
-import React, { createContext, useContext, useState } from 'react';
-import { Colors } from '../constants/Colors';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export interface Theme {
-  background: string;
-  text: string;
-  primary: string;
-  secondary: string;
-  card: string;
-  border: string;
-  error: string;
-}
+type Theme = 'light' | 'dark' | 'system';
 
-interface ThemeContextType {
+type ThemeContextType = {
+  theme: 'light' | 'dark';
+  themePreference: Theme;
+  setThemePreference: (theme: Theme) => void;
   isDark: boolean;
-  toggleTheme: () => void;
-  theme: Theme;
-}
-
-// Default theme values
-const defaultTheme: Theme = {
-  background: Colors.light.background,
-  text: Colors.light.text,
-  primary: Colors.light.primary,
-  secondary: Colors.light.textSecondary,
-  card: Colors.light.card,
-  border: Colors.light.border,
-  error: Colors.light.error,
 };
 
-const ThemeContext = createContext<ThemeContextType>({
-  isDark: false,
-  toggleTheme: () => {},
-  theme: defaultTheme,
-});
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [isDark, setIsDark] = useState(true); // Set dark mode as default
+export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const systemColorScheme = useColorScheme();
+  const [themePreference, setThemePreference] = useState<Theme>('system');
+  
+  // Determine the actual theme to use
+  const theme = themePreference === 'system' 
+    ? systemColorScheme || 'light' 
+    : themePreference;
 
-  const toggleTheme = () => {
-    setIsDark(prev => !prev);
-  };
+  // Load saved theme preference
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem('themePreference');
+        if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
+          setThemePreference(savedTheme);
+        }
+      } catch (error) {
+        console.error('Failed to load theme preference', error);
+      }
+    };
 
-  const theme: Theme = {
-    background: isDark ? Colors.dark.background : Colors.light.background,
-    text: isDark ? Colors.dark.text : Colors.light.text,
-    primary: isDark ? Colors.dark.primary : Colors.light.primary,
-    secondary: isDark ? Colors.dark.textSecondary : Colors.light.textSecondary,
-    card: isDark ? Colors.dark.card : Colors.light.card,
-    border: isDark ? Colors.dark.border : Colors.light.border,
-    error: isDark ? Colors.dark.error : Colors.light.error,
+    loadThemePreference();
+  }, []);
+
+  // Save theme preference when it changes
+  useEffect(() => {
+    const saveThemePreference = async () => {
+      try {
+        await AsyncStorage.setItem('themePreference', themePreference);
+      } catch (error) {
+        console.error('Failed to save theme preference', error);
+      }
+    };
+
+    saveThemePreference();
+  }, [themePreference]);
+
+  const value = {
+    theme,
+    themePreference,
+    setThemePreference,
+    isDark: theme === 'dark',
   };
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme, theme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
-}
+};
 
-export function useTheme() {
-  return useContext(ThemeContext);
-}
+export const useTheme = (): ThemeContextType => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+
+export default ThemeContext;

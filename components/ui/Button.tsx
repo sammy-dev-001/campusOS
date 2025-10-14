@@ -7,8 +7,7 @@ import {
     TouchableOpacityProps,
     ViewStyle,
 } from 'react-native';
-import { Colors } from '../../constants/Colors';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 import { ThemedText } from '../ThemedText';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'secondaryButton';
@@ -53,7 +52,7 @@ export function Button({
       case 'ghost':
         return 'transparent';
       case 'secondaryButton':
-        return Colors.light.secondary;
+        return theme.secondary;
       default:
         return theme.primary;
     }

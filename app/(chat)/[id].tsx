@@ -1,4 +1,4 @@
-  import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -9,8 +9,9 @@ import { ActivityIndicator, Alert, FlatList, Image, Keyboard, KeyboardAvoidingVi
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import MediaViewer from '../../components/MediaViewer';
 import { API_BASE_URL } from '../../config/api';
-import { useAuth } from '../../contexts/AuthContext';
-import { Chat, Message, useChat } from '../../contexts/ChatContext';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { Chat, Message, useChat } from '../../src/contexts/ChatContext';
+import { ChatWrapper } from './_chat-wrapper';
 
 function getInitials(name?: string) {
   if (!name) return '??';
@@ -52,6 +53,7 @@ function getUserAvatar(u?: any): string | undefined {
   if (!u) return undefined;
   const uu = u?.user ? u.user : u; // support nested user objects
   const candidates = [
+    uu?.profilePic,
     uu?.profilePicture,
     uu?.profile_picture,
     uu?.avatar,
@@ -68,10 +70,10 @@ function getUserAvatar(u?: any): string | undefined {
   return normalizeAvatarUrl(first);
 }
 
-export default function ChatScreen() {
+function ChatScreenContent() {
   const { id } = useLocalSearchParams();
-  const { user } = useAuth();
-  const { chats, messages, sendMessage, fetchMessages, socket } = useChat();
+  const { user, token, isInitialized } = useAuth();
+  const { chats, messages, sendMessage, fetchMessages, socket, deleteMessage } = useChat();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
@@ -96,32 +98,49 @@ export default function ChatScreen() {
 
   // Find the chat from context or fetch it
   useEffect(() => {
+    // Only fetch details when we either have the chat in context OR when
+    // the authenticated user and token are available. This prevents firing
+    // an unauthenticated request (causing 401) if the effect runs before
+    // auth state is initialized.
     const contextChat = (chats || []).find((c: any) => c.id?.toString() === id?.toString());
     if (contextChat) {
       setCurrentChat(contextChat);
-    } else if (id && user?.id) {
-      const fetchChatDetails = async () => {
-        try {
-          const res = await fetch(`${API_BASE_URL}/chats/${id}?userId=${user.id}`);
-          if (res.ok) {
-            const chatData = await res.json();
-            setCurrentChat(chatData);
-          } else {
-            const errorData = await res.json().catch(() => ({ message: 'Could not parse error response' }));
-            console.error('Failed to fetch chat details:', res.status, errorData);
-          }
-        } catch (error) {
-          console.error('Error fetching chat details:', error);
-        }
-      };
-      fetchChatDetails();
+      return;
     }
-  }, [id, chats, user?.id]);
+
+    // If auth isn't initialized yet, or we don't have a user id or token yet, wait.
+    if (!isInitialized) {
+      console.log('[ChatDetail] deferring fetch until auth is initialized', { id });
+      return;
+    }
+    if (!id || !user?.id) return;
+    if (!token) {
+      console.log('[ChatDetail] deferring fetch until token is available', { id, userId: user?.id });
+      return;
+    }
+
+    const fetchChatDetails = async () => {
+      try {
+        const headers: any = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+        const res = await fetch(`${API_BASE_URL}/chats/${id}?userId=${user.id}`, { headers });
+        if (res.ok) {
+          const chatData = await res.json();
+          setCurrentChat(chatData);
+        } else {
+          const errorData = await res.json().catch(() => ({ message: 'Could not parse error response' }));
+          console.error('Failed to fetch chat details:', res.status, errorData);
+        }
+      } catch (error) {
+        console.error('Error fetching chat details:', error);
+      }
+    };
+    fetchChatDetails();
+  }, [id, chats, user?.id, token, isInitialized]);
 
   // Fetch messages when chat ID changes
   useEffect(() => {
     if (id) fetchMessages(id as string);
-  }, [id, fetchMessages]);
+  }, [id, fetchMessages]); // Added fetchMessages to dependencies to ensure it's called when it changes
 
   // Messages for this chat
   const chatMessages = Array.isArray(messages?.[id as string]) ? messages[id as string] : [];
@@ -140,7 +159,7 @@ export default function ChatScreen() {
     for (const m of chatMessages) {
       const key = m?.id != null
         ? `id:${m.id}`
-        : `f:${m?.mediaUrl || ''}|${m?.content || ''}|${m?.timestamp || ''}`;
+        : `f:${m?.mediaUrl || ''}|${m?.content || ''}|${m?.createdAt || ''}`;
       if (seen.has(key)) continue;
       seen.add(key);
       out.push(m);
@@ -170,9 +189,31 @@ export default function ChatScreen() {
 
   const isGroup = !!currentChat?.isGroup || currentChat?.type === 'study_group' || currentChat?.type === 'group';
   const participants = Array.isArray(currentChat?.participants) ? currentChat.participants : [];
-  const otherUser = !isGroup
-    ? participants.find((u: any) => u?.id !== user?.id)
+  // Helper to normalize a user object from various shapes: { _id, id, username, displayName, profilePic, profile_picture }
+  const normalizeUser = (u: any) => {
+    if (!u) return null;
+    const src = u?.user ? u.user : u;
+    const id = src?._id ?? src?.id ?? src?.userId ?? '';
+    const username = src?.username ?? src?.name ?? src?.displayName ?? '';
+    const displayName = src?.displayName ?? src?.display_name ?? src?.name ?? src?.username ?? '';
+    const profilePic = src?.profilePic ?? src?.profile_picture ?? src?.profilePicture ?? src?.avatar ?? src?.image ?? null;
+    return {
+      raw: src,
+      id: id ? String(id) : '',
+      username,
+      displayName,
+      profilePic,
+    };
+  };
+
+  // Create a normalized participants list for consistent lookups
+  const normalizedParticipants = participants.map((p: any) => normalizeUser(p)).filter(Boolean) as any[];
+  // Participants from the API are often objects like { user: { _id, username, profilePic }, ... }
+  // Normalize by finding the participant whose nested user id is not the current user id.
+  const otherParticipant = !isGroup
+    ? normalizedParticipants.find((p: any) => p?.id && String(p.id) !== String(user?.id))
     : null;
+  const otherUser = otherParticipant ? otherParticipant.raw : null;
 
   if (!currentChat || !participants.length) {
     return (
@@ -185,7 +226,7 @@ export default function ChatScreen() {
 
   // Debug log for troubleshooting name issues
   console.log('Participants:', participants);
-  console.log('OtherUser:', otherUser);
+  console.log('OtherUser (resolved):', otherUser);
   console.log('CurrentChat:', currentChat);
   console.log('IsGroup:', isGroup);
 
@@ -218,7 +259,9 @@ export default function ChatScreen() {
       ? 'image/jpeg'
       : safeName.toLowerCase().endsWith('.png')
         ? 'image/png'
-        : 'application/octet-stream');
+        : safeName.toLowerCase().endsWith('.mp4')
+          ? 'video/mp4'
+          : 'application/octet-stream');
 
     let uploadUri = fileUri;
     // On Android, camera/library often returns content:// URIs which are not always uploadable.
@@ -238,7 +281,8 @@ export default function ChatScreen() {
       } else if (safeType.startsWith('video/') && Platform.OS === 'android' && fileUri.startsWith('content://')) {
         // Copy content URI video to cache file path to ensure fetch can read it
         try {
-          const dest = `${FileSystem.cacheDirectory}upload-${Date.now()}.mp4`;
+          const ext = safeName.split('.').pop() || 'mp4';
+          const dest = `${FileSystem.cacheDirectory}upload-${Date.now()}.${ext}`;
           console.log('[ChatDetail] normalize video via copy to cache', { dest });
           await FileSystem.copyAsync({ from: fileUri, to: dest });
           uploadUri = dest;
@@ -250,38 +294,27 @@ export default function ChatScreen() {
       console.warn('[ChatDetail] image normalization failed, using original uri', normErr);
     }
 
-    const formData = new FormData();
-    formData.append('file', {
-      uri: uploadUri,
-      name: safeName,
-      type: safeType,
-    } as any);
-
     try {
-      console.log('[ChatDetail] uploading file:', { uri: uploadUri, name: safeName, type: safeType });
-      const res = await fetch(`${API_BASE_URL}/api/upload`, {
-        method: 'POST',
-        body: formData,
-        // Let fetch set the correct multipart Content-Type with boundary
+      console.log('[ChatDetail] uploading file to Cloudinary:', { uri: uploadUri, name: safeName, type: safeType });
+      
+      // Import the upload utility
+      const { uploadToCloudinary } = await import('../../utils/fileUpload');
+      
+      // Upload to Cloudinary
+      const result = await uploadToCloudinary({
+        uri: uploadUri,
+        type: safeType.startsWith('image/') ? 'image' : safeType.startsWith('video/') ? 'video' : 'document',
+        name: safeName,
+        mimeType: safeType,
       });
-
-      if (res.ok) {
-        const json = await res.json();
-        const fileUrl = json?.fileUrl;
-        console.log('[ChatDetail] upload success url=', fileUrl);
-        return fileUrl;
-      } else {
-        const text = await res.text().catch(() => '');
-        console.warn('[ChatDetail] upload failed', res.status, text);
-        if (isMounted.current) {
-          Alert.alert('Upload Failed', `Error ${res.status}: ${text || 'There was an error uploading your file.'}`);
-        }
-        return null;
-      }
+      
+      console.log('[ChatDetail] Cloudinary upload success:', result.url);
+      return result.url;
+      
     } catch (error) {
       console.error('File upload error:', error);
       if (isMounted.current) {
-        Alert.alert('Upload Error', 'An unexpected error occurred during upload.');
+        Alert.alert('Upload Error', error instanceof Error ? error.message : 'An unexpected error occurred during upload.');
       }
       return null;
     }
@@ -596,23 +629,56 @@ export default function ChatScreen() {
   };
 
   // Message bubble
-  const renderMessage = ({ item, index }: { item: Message, index: number }) => {
-    const isOwn = user != null && item != null && String(item.senderId) === String(user.id);
+  const renderMessage = ({ item, index }: { item: any, index: number }) => {
+    // Log the raw message item with all its properties
+    console.log('Message item:', {
+      ...item,
+      // Add any nested objects that might be getting stringified as [Object]
+      sender: item.sender,
+      user: item.user,
+      participants: item.participants,
+    });
+    
+    // Log the timestamp fields we have access to
+  const timestampFields = ['createdAt', 'timestamp', 'date', 'time', 'sentAt', 'created'];
+  const timestamps: Record<string, any> = {};
+    timestampFields.forEach(field => {
+      if (item[field] !== undefined) {
+        timestamps[field] = {
+          value: item[field],
+          type: typeof item[field],
+          asDate: new Date(item[field]).toString(),
+          isValid: !isNaN(new Date(item[field]).getTime())
+        };
+      }
+    });
+    console.log('Message timestamps:', timestamps);
+    
+  const isOwn = user != null && item != null && String(item.senderId) === String(user.id);
     // Prefer embedded sender object if present; else find in participants; else fall back to otherUser for 1:1 chats
+    // Resolve sender: prefer explicit sender object, then try participants list (which may have nested .user), then fall back to otherUser
+    const participantMatch = normalizedParticipants.find((p: any) => p?.id && String(p.id) === String(item?.senderId) || p?.id && String(p.id) === String(item?.sender?._id || item?.sender?.id));
+    const resolvedFromParticipant = participantMatch ? participantMatch.raw : null;
     const sender = isOwn
       ? user
-      : ((item as any)?.sender
-          || participants.find((u: any) => String(u.id) === String(item.senderId))
-          || otherUser);
+      : ((item as any)?.sender || resolvedFromParticipant || otherUser);
+    
+    // Get sender's display name or username
+    const senderName = sender?.displayName || sender?.username || 'Unknown User';
+    const showSenderName = !isOwn && senderName !== 'Unknown User';
+    
     const initials = isOwn
       ? ''
-      : getInitials((sender as any)?.displayName || (sender as any)?.display_name || (sender as any)?.username);
+      : getInitials(senderName);
+      
     const avatar = isOwn
       ? null
       : getUserAvatar(sender);
+      
     if (!isOwn) {
-      console.log('[BubbleAvatar] resolved', { senderId: item?.senderId, avatar });
+      console.log('[BubbleAvatar] resolved', { senderId: item?.senderId, senderName, avatar });
     }
+    
     const mediaUrl = item?.mediaUrl ? normalizeUrl(item.mediaUrl) : undefined;
 
     return (
@@ -642,10 +708,47 @@ export default function ChatScreen() {
         )}
         {/* Bubble */}
         <View style={{ flex: 1, alignItems: isOwn ? 'flex-end' : 'flex-start' }}>
-          <View style={[
-            styles.bubble,
-            isOwn ? styles.bubbleOwn : styles.bubbleOther
-          ]}>
+          {showSenderName && (
+            <Text style={[
+              styles.senderName,
+              isOwn ? styles.senderNameOwn : styles.senderNameOther
+            ]}>
+              {senderName}
+            </Text>
+          )}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onLongPress={() => {
+              // Contextual menu for message actions
+              const msgId = item?.tempId || item?.id;
+              const options: any[] = [];
+              if (item?.status === 'failed') {
+                options.push({ text: 'Retry', onPress: () => {
+                  Alert.alert('Retry message?', 'Do you want to retry sending this message?', [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Retry', onPress: async () => {
+                        try {
+                          if (msgId) await deleteMessage(msgId, id as string);
+                        } catch (e) { console.warn('retry cleanup failed', e); }
+                        try { sendMessage(id as string, { content: item.content, type: item.type, mediaUrl: item.mediaUrl }); } catch (e) { console.error('retry send failed', e); }
+                      }
+                    }
+                  ]);
+                } });
+              }
+              options.push({ text: 'Delete', onPress: async () => {
+                try { const msgId2 = item?.tempId || item?.id; if (msgId2) await deleteMessage(msgId2, id as string); } catch (e) { console.error('delete failed', e); }
+              } });
+              options.push({ text: 'Cancel', style: 'cancel' });
+              // Present as a simple Alert with options
+              Alert.alert('Message actions', '', options as any[]);
+            }}
+            style={[
+              styles.bubble,
+              isOwn ? styles.bubbleOwn : styles.bubbleOther,
+              showSenderName ? (isOwn ? styles.bubbleOwnWithName : styles.bubbleOtherWithName) : {}
+            ]}
+          >
             {(item.type === 'image' || item.type === 'video') && mediaUrl ? (
               <TouchableOpacity onPress={() => {
                 if (item.type === 'image' || item.type === 'video') {
@@ -671,15 +774,51 @@ export default function ChatScreen() {
             {item?.content ? (
               <Text style={styles.bubbleText}>{item.content}</Text>
             ) : null}
+            {/* Sending / failed indicators */}
+            {item?.status === 'sending' && (
+              <View style={{ marginTop: 6 }}>
+                <ActivityIndicator size="small" color={isOwn ? '#fff' : '#FFD600'} />
+              </View>
+            )}
+            {item?.status === 'failed' && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                <Text style={[styles.bubbleMeta, { color: '#ff6b6b', marginRight: 8 }]}>Failed to send</Text>
+                <TouchableOpacity onPress={() => {
+                  Alert.alert('Retry message?', 'Do you want to retry sending this message?', [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Retry', onPress: async () => {
+                        try {
+                          const msgId = item?.tempId || item?.id;
+                          if (msgId) await deleteMessage(msgId, id as string);
+                        } catch (e) { console.warn('retry cleanup failed', e); }
+                        try { sendMessage(id as string, { content: item.content, type: item.type, mediaUrl: item.mediaUrl }); } catch (e) { console.error('retry send failed', e); }
+                      }
+                    }
+                  ]);
+                }}>
+                  <Text style={[styles.bubbleMeta, { color: '#FFD600' }]}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <Text style={[
               styles.bubbleTime,
               isOwn ? styles.bubbleTimeOwn : styles.bubbleTimeOther
             ]}>
-              {item?.timestamp
-                ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              {item?.createdAt
+                ? (() => {
+                    try {
+                      const date = new Date(item.createdAt);
+                      return isNaN(date.getTime()) 
+                        ? '??' 
+                        : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    } catch (e) {
+                      console.error('Error formatting date:', e, 'Value:', item.createdAt);
+                      return '??';
+                    }
+                  })()
                 : ''}
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
         {/* No avatar for own messages */}
         {isOwn && <View style={styles.avatarWrap} />}
@@ -729,7 +868,7 @@ export default function ChatScreen() {
             const idKey = item && (item as any).id != null ? String((item as any).id) : null;
             if (idKey) return idKey;
             const a = (item as any) || {};
-            const parts = [a.mediaUrl, a.content, a.timestamp].filter(Boolean);
+            const parts = [a.mediaUrl, a.content, a.createdAt].filter(Boolean);
             return parts.length ? parts.join('|') : `msg-${idx}`;
           }}
           contentContainerStyle={styles.messages}
@@ -835,6 +974,14 @@ export default function ChatScreen() {
   );
 }
 
+export default function ChatScreen() {
+  return (
+    <ChatWrapper>
+      <ChatScreenContent />
+    </ChatWrapper>
+  );
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#181A20' },
   header: {
@@ -847,6 +994,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#23242A',
   },
+  senderName: {
+    fontSize: 12,
+    marginBottom: 2,
+    marginLeft: 8,
+  },
+  senderNameOwn: {
+    textAlign: 'right',
+    marginRight: 8,
+    color: '#B0D2FF',
+  },
+  senderNameOther: {
+    textAlign: 'left',
+    marginLeft: 8,
+    color: '#B0B0B0',
+  },
   headerBack: { marginRight: 8, padding: 4 },
   headerAvatar: {
     width: 36, height: 36, borderRadius: 18,
@@ -855,7 +1017,11 @@ const styles = StyleSheet.create({
   headerAvatarText: { color: '#FFD600', fontWeight: 'bold', fontSize: 16 },
   headerTitle: { color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 12, flexShrink: 1 },
   messages: { padding: 16, paddingBottom: 8 },
-  messageRow: { marginBottom: 16, width: '100%' },
+  messageRow: { 
+    marginBottom: 8, 
+    width: '100%',
+    paddingHorizontal: 8,
+  },
   avatarWrap: { width: 36, height: 36, marginHorizontal: 4, justifyContent: 'flex-end' },
   avatar: {
     width: 36, height: 36, borderRadius: 18,
@@ -867,13 +1033,55 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 12,
     marginBottom: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  bubbleOwn: { backgroundColor: '#2196F3', alignSelf: 'flex-end', borderTopRightRadius: 6 },
-  bubbleOther: { backgroundColor: '#23242A', alignSelf: 'flex-start', borderTopLeftRadius: 6 },
-  bubbleText: { color: '#fff', fontSize: 15 },
-  bubbleTime: { fontSize: 11, alignSelf: 'flex-end', marginTop: 4 },
-  bubbleTimeOwn: { color: '#B0D2FF' },
-  bubbleTimeOther: { color: '#B0B0B0' },
+  bubbleOwn: { 
+    backgroundColor: '#2196F3', 
+    alignSelf: 'flex-end', 
+    borderTopRightRadius: 6,
+    marginBottom: 4,
+  },
+  bubbleOther: { 
+    backgroundColor: '#23242A', 
+    alignSelf: 'flex-start', 
+    borderTopLeftRadius: 6,
+    marginBottom: 4,
+  },
+  bubbleOwnWithName: {
+    borderTopRightRadius: 6,
+    borderTopLeftRadius: 18,
+  },
+  bubbleOtherWithName: {
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 18,
+  },
+  bubbleText: { 
+    color: '#fff', 
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  bubbleMeta: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  bubbleTime: { 
+    fontSize: 11, 
+    alignSelf: 'flex-end', 
+    marginTop: 4,
+    opacity: 0.8,
+  },
+  bubbleTimeOwn: { 
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'right',
+  },
+  bubbleTimeOther: { 
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'left',
+  },
   bubbleImageContainer: { 
     width: 200, 
     height: 120, 

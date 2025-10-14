@@ -17,7 +17,9 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { Announcement, AnnouncementCategory, useAnnouncements } from '../contexts/AnnouncementContext';
+import { useAuth } from '../src/contexts/AuthContext';
+import { Announcement, AnnouncementCategory, useAnnouncements } from '../src/contexts/AnnouncementContext';
+import { API_BASE_URL } from '../src/constants/Config';
 
 const CATEGORY_OPTIONS: AnnouncementCategory[] = ['General', 'Academic', 'Social', 'Emergency'];
 const CURRENT_USER_ID = 'user1'; // Replace with actual user ID from context if available
@@ -173,11 +175,11 @@ function AnnouncementDetailModal({ visible, onClose, announcement, onEdit, onDel
                 if (Platform.OS === 'web') {
                   window.open(announcement.attachmentUrl, '_blank');
                 } else {
-                  WebBrowser.openBrowserAsync(
-                    announcement.attachmentUrl.startsWith('http')
-                      ? announcement.attachmentUrl
-                      : `http://172.26.95.216:3001${announcement.attachmentUrl}`
-                  );
+                  const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+                  const url = announcement.attachmentUrl.startsWith('http')
+                    ? announcement.attachmentUrl
+                    : `${baseUrl}${announcement.attachmentUrl}`;
+                  WebBrowser.openBrowserAsync(url);
                 }
               }}
             >
@@ -214,12 +216,12 @@ export default function AnnouncementsScreen() {
 
   useEffect(() => {
     if (selectedAnnouncement) {
-      const updated = announcements.find(a => a.id === selectedAnnouncement.id);
+      const updated = announcements.find((a: Announcement) => a.id === selectedAnnouncement.id);
       if (updated) setSelectedAnnouncement(updated);
     }
   }, [announcements]);
 
-  const filtered = announcements.filter(a => activeFilter === 'All' || a.category === activeFilter);
+  const filtered = announcements.filter((a: Announcement) => activeFilter === 'All' || a.category === activeFilter);
 
   const handleLike = (id: number) => {
     console.log('Like button pressed for announcement:', id);

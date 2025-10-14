@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
-import { useAuth } from '../../contexts/AuthContext';
-import { Chat, Message, Participant, useChat } from '../../contexts/ChatContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { API_BASE_URL } from '../../constants/Config';
+import { API_BASE_URL } from '../../src/constants/Config';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { Chat, Message, useChat } from '../../src/contexts/ChatContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 
 // Extend the Chat interface to include any additional properties needed for the UI
 interface ChatItem extends Omit<Chat, 'lastMessage' | 'updatedAt'> {
@@ -17,8 +17,6 @@ interface ChatItem extends Omit<Chat, 'lastMessage' | 'updatedAt'> {
   lastMessage: Message | null;  // Make it required but allow null
   // Add any additional properties specific to the UI here
   avatar?: string;
-  // Add timestamp for UI display
-  timestamp?: string;
   // Add any other UI-specific properties here
 }
 
@@ -61,6 +59,25 @@ export default function MessageScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Load chats when the screen is focused
+  React.useEffect(() => {
+    const loadChats = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await fetchChats();
+      } catch (err) {
+        console.error('Failed to load chats:', err);
+        setError(err as Error);
+        setErrorMessage('Failed to load chats. Please pull down to refresh.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadChats();
+  }, []);
 
   // Sort chats by most recent activity (last message or chat creation time)
   const sortedChats = useMemo(() => {
@@ -96,17 +113,26 @@ export default function MessageScreen() {
   };
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchChats();
-    setRefreshing(false);
+    try {
+      setRefreshing(true);
+      setError(null);
+      await fetchChats();
+    } catch (err) {
+      console.error('Failed to refresh chats:', err);
+      setError(err as Error);
+      setErrorMessage('Failed to refresh chats. Please try again.');
+    } finally {
+      setRefreshing(false);
+    }
   }, [fetchChats]);
 
-  useFocusEffect(
-    useCallback(() => {
-      setLoading(true);
-      fetchChats().finally(() => setLoading(false));
-    }, [fetchChats])
-  );
+  // Temporarily disabled to prevent infinite loop
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     setLoading(true);
+  //     fetchChats().finally(() => setLoading(false));
+  //   }, []) // Removed fetchChats from dependencies to prevent infinite loop
+  // );
 
   const renderRightActions = (item: Chat) => (
     <TouchableOpacity
@@ -152,7 +178,7 @@ export default function MessageScreen() {
     };
 
     const lastMessage = item.lastMessage;
-    const lastMessageTime = lastMessage?.timestamp ? formatTimeAgo(lastMessage.timestamp) : '';
+    const lastMessageTime = lastMessage?.createdAt ? formatTimeAgo(lastMessage.createdAt) : '';
     const avatarUri = item.isGroup
       ? item.avatar ? getProfilePictureUrl(item.avatar) : null
       : otherParticipant?.profilePicture ? getProfilePictureUrl(otherParticipant.profilePicture) : null;
@@ -212,9 +238,9 @@ export default function MessageScreen() {
           <View style={styles.chatInfo}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <ThemedText style={[styles.chatName, { color: theme.text }]}>{displayName}</ThemedText>
-              {(item.timestamp || item.lastMessage?.createdAt) && (
+              {item.lastMessage?.createdAt && (
                 <ThemedText style={styles.chatTime}>
-                  {formatTimeAgo(item.timestamp || item.lastMessage?.createdAt || '')}
+                  {formatTimeAgo(item.lastMessage.createdAt)}
                 </ThemedText>
               )}
             </View>
@@ -332,6 +358,17 @@ export default function MessageScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 8,
   },
   header: {
     flexDirection: 'row',

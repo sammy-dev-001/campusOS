@@ -1,5 +1,5 @@
 import { Button, Text, View } from 'react-native';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
 
 export default function LoginScreen({ navigation }) {
   const { theme } = useTheme();

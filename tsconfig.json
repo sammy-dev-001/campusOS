@@ -2,12 +2,52 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "baseUrl": "."
+    "esModuleInterop": true,
+    "jsx": "react-native",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "target": "es2015",
+    "lib": ["es2015", "es2017", "dom"],
+    "downlevelIteration": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/contexts/*": ["./contexts/*"],
+      "@/components/*": ["./components/*"],
+      "@/constants/*": ["./constants/*"]
+    },
+    "types": ["node", "jest"],
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "skipDefaultLibCheck": true
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "./app/**/*.ts",
+    "./app/**/*.tsx",
+    "./components/**/*.tsx",
+    "./contexts/**/*.tsx",
+    "./hooks/**/*.ts",
+    "./services/**/*.ts",
+    "./types/**/*.d.ts",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/node_modules/**",
+    "**/__tests__",
+    "**/__mocks__",
+    "**/dist",
+    "**/build",
+    "**/.expo",
+    "**/.next",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }

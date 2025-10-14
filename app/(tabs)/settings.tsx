@@ -3,15 +3,14 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { API_BASE_URL } from '../../config/api';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useUser } from '../../contexts/UserContext';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
+import { useUser } from '../../src/contexts/UserContext';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, setUser } = useUser();
-  const { logout, user: authUser, isAuthenticated } = useAuth();
+  const { logout, user: authUser, isAuthenticated, updateProfilePicture } = useAuth();
   const [avatar, setAvatar] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -28,71 +27,37 @@ export default function SettingsScreen() {
         aspect: [1, 1],
         quality: 0.8,
       });
-      if (!result.canceled && result.assets[0] && user?.id) {
-        setUploading(true);
-        setError('');
-        let uri = result.assets[0].uri;
-        // Compress the image before upload
-        try {
-          const manipulated = await ImageManipulator.manipulateAsync(
-            uri,
-            [{ resize: { width: 400, height: 400 } }],
-            { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
-          );
-          uri = manipulated.uri;
-        } catch (manipErr) {
-          console.warn('Image compression failed, uploading original:', manipErr);
-        }
-        setAvatar(uri);
-        // Upload to backend
-        const formData = new FormData();
-        formData.append('profile_picture', {
-          uri,
-          name: uri.split('/').pop() || 'profile.jpg',
-          type: 'image/jpeg',
-        } as any);
-        const res = await fetch(`${API_BASE_URL}/users/${user.id}/profile-picture`, {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'multipart/form-data',
-          },
-          body: formData,
-        });
-        if (!res.ok) throw new Error('Failed to upload profile picture');
-        const data = await res.json();
-        setLastResponse(data);
-        console.log('Profile upload response:', data);
-        if (!data.profile_picture) throw new Error('No profile_picture in response');
-        // Update user context
-        setUser({ ...user, profile_picture: data.profile_picture });
-        // Also update AuthContext
-        if (authUser) {
-          authUser.profile_picture = data.profile_picture;
-        }
-        // Refetch user profile from backend to ensure all fields are up to date
-        try {
-          const userRes = await fetch(`${API_BASE_URL}/users/${user.id}`);
-          if (userRes.ok) {
-            const freshUser = await userRes.json();
-            setUser({
-              ...user,
-              profile_picture: freshUser.profile_picture,
-              display_name: freshUser.display_name,
-              username: freshUser.username,
-            } as any);
-            if (authUser) {
-              authUser.profile_picture = freshUser.profile_picture;
-            }
-          }
-        } catch (fetchErr) {
-          console.warn('Failed to refetch user profile:', fetchErr);
-        }
-        setAvatar(null);
-        console.log('Set user.profilePicture to:', data.profile_picture);
+
+      if (result.canceled || !result.assets?.[0]?.uri) {
+        return; // User cancelled the image picker
+      }
+
+      setUploading(true);
+      setError('');
+      
+      try {
+        // Compress and resize the image
+        const manipulated = await ImageManipulator.manipulateAsync(
+          result.assets[0].uri,
+          [{ resize: { width: 400, height: 400 } }],
+          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
+        // Update the avatar preview
+        setAvatar(manipulated.uri);
+
+        // Use the updateProfilePicture function from AuthContext
+        await updateProfilePicture(manipulated.uri);
+        
+        // If we reach here, the upload was successful
+        setAvatar(null); // Clear the temporary avatar state
+      } catch (e: any) {
+        console.error('Error processing image:', e);
+        setError(e.message || 'Failed to process the image.');
       }
     } catch (e: any) {
-      setError(e.message || 'Failed to pick or upload image.');
+      console.error('Error picking image:', e);
+      setError('Failed to pick an image. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -114,10 +79,7 @@ export default function SettingsScreen() {
                 <ActivityIndicator size="large" color="#4D96FF" />
               </View>
             ) : user && user.profile_picture ? (
-              <>
-                <Image source={{ uri: user.profile_picture }} style={styles.avatarImage} />
-                <Text style={{ color: '#888', fontSize: 10, marginTop: 2 }}>{user.profile_picture}</Text>
-              </>
+              <Image source={{ uri: user.profile_picture }} style={styles.avatarImage} />
             ) : avatar ? (
               <Image source={{ uri: avatar }} style={styles.avatarImage} />
             ) : (

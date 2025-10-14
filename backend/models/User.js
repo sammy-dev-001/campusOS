@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
-const userSchema = new mongoose.Schema({
+// Define schema without any virtuals first
+const userSchemaDefinition = {
   username: {
     type: String,
     required: [true, 'Username is required'],
@@ -50,6 +51,8 @@ const userSchema = new mongoose.Schema({
     minlength: [2, 'Full name must be at least 2 characters'],
     maxlength: [100, 'Full name cannot exceed 100 characters']
   },
+  // ... (rest of the schema fields remain the same)
+  // [Previous schema fields continue...]
   profilePic: {
     type: String,
     default: ''
@@ -164,21 +167,30 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: Date,
   emailVerificationToken: String,
   emailVerificationExpires: Date
-}, {
+};
+
+// Create schema with options
+const userSchema = new mongoose.Schema(userSchemaDefinition, {
   timestamps: true,
   toJSON: {
-    virtuals: true,
+    virtuals: false,
     transform: function (doc, ret) {
       delete ret.password;
       delete ret.__v;
+      // Manually add the initials if needed
+      if (doc.firstName && doc.lastName) {
+        ret.initials = `${doc.firstName[0]}${doc.lastName[0]}`.toUpperCase();
+      } else if (doc.username) {
+        ret.initials = doc.username.substring(0, 2).toUpperCase();
+      } else {
+        ret.initials = 'US';
+      }
       return ret;
     }
   }
 });
 
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
+// Indexes are automatically created for fields with unique: true
 
 // Pre-save hook to set fullName and handle timestamps
 userSchema.pre('save', function(next) {
@@ -200,14 +212,6 @@ userSchema.pre('save', function(next) {
   }
   
   next();
-});
-
-// Add initials virtual
-userSchema.virtual('initials').get(function() {
-  if (this.firstName && this.lastName) {
-    return `${this.firstName[0]}${this.lastName[0]}`.toUpperCase();
-  }
-  return this.username ? this.username.substring(0, 2).toUpperCase() : 'US';
 });
 
 // Method to check if user has a specific role
@@ -253,9 +257,12 @@ userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
   try {
-    // Hash the password with cost of 12
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
+    // Skip hashing if the password is already hashed
+    if (!this.password.startsWith('$2a$') && !this.password.startsWith('$2b$')) {
+      // Hash the password with cost of 12
+      const salt = await bcrypt.genSalt(12);
+      this.password = await bcrypt.hash(this.password, salt);
+    }
     
     // Set passwordChangedAt if not a new user
     if (!this.isNew) {
@@ -281,6 +288,7 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   return false;
 };
 
+// Create and export the model
 const User = mongoose.model('User', userSchema);
 
 export default User;

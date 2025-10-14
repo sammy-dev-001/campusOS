@@ -16,8 +16,11 @@ import {
 import WebView from 'react-native-webview';
 
 import DocumentUploadModal from '../components/DocumentUploadModal';
-import { useAuth } from '../contexts/AuthContext';
-import { Document, DocumentType, useDocuments } from '../contexts/DocumentContext';
+import { useAuth } from '../src/contexts/AuthContext';
+import { withAuth } from '../src/components/withAuth';
+import { useEffect } from 'react';
+import { router } from 'expo-router';
+import { Document, DocumentType, useDocuments } from '../src/contexts/DocumentContext';
 
 type ActiveTab = DocumentType;
 
@@ -69,17 +72,18 @@ function PdfViewerModal({ visible, onClose, uri }: { visible: boolean, onClose: 
     );
   } else {
     // On mobile, open in system browser and close modal
-    React.useEffect(() => {
+    useEffect(() => {
       if (visible && uri) {
         WebBrowser.openBrowserAsync(uri);
         onClose();
       }
-    }, [visible, uri]);
+    }, [visible, uri, onClose]);
+    
     return null;
   }
 }
 
-export default function NotesPastQuestionsScreen() {
+function NotesPastQuestionsScreen() {
   const { user } = useAuth();
   const { documents, addDocument, updateDocument, deleteDocument, downloadDocument, isLoading } = useDocuments();
   
@@ -87,7 +91,6 @@ export default function NotesPastQuestionsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDoc, setEditingDoc] = useState<Document | null>(null);
-
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewingUri, setViewingUri] = useState<string | null>(null);
   
@@ -246,6 +249,12 @@ export default function NotesPastQuestionsScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#121212' },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
     headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
     uploadButton: { padding: 8 },

@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const API_BASE_URL = 'http://172.26.95.216:3001';
+const { API_BASE_URL } = require('./constants/Config');
 
 // Test user credentials
 const testUser = {

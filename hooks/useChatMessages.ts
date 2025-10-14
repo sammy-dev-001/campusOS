@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../src/contexts/WebSocketContext';
 
 type Message = {
   id: string;

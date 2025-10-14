@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useColorScheme } from '../hooks/useColorScheme';
+import { useColorScheme } from '../src/hooks/useColorScheme';
 import { ThemedText } from './ThemedText';
 
 type IconName = 'home' | 'home-outline' | 'chatbubble' | 'chatbubble-outline' | 

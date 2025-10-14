@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 // Using a simple text input for date selection to avoid native module issues
 const DateInput = ({ value, onChange, minDate = new Date() }: { value: Date, onChange: (date: Date) => void, minDate?: Date }) => {
   const [date, setDate] = useState(value);
@@ -73,11 +74,8 @@ export function CreatePollModal({ visible, onClose, onSubmit }: CreatePollModalP
     { id: (Date.now() + 1).toString(), text: '' },
   ]);
   const [isMultipleChoice, setIsMultipleChoice] = useState(false);
-  const [expiresAt, setExpiresAt] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() + 1); // Default to 1 day from now
-    return date;
-  });
+  const [expiresAt, setExpiresAt] = useState<Date>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // Default: 1 week from now
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addOption = () => {

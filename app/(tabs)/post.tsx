@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ResizeMode, Video } from 'expo-av';
 import * as NavigationBar from 'expo-navigation-bar';
@@ -5,9 +6,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActionSheetIOS, ActivityIndicator, Alert, Animated, FlatList, Image, Modal, PanResponder, PanResponderInstance, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
-import { useAuth } from '../../contexts/AuthContext';
-import { useThemeColor } from '../../hooks/useThemeColor';
-
+import { useAuth } from '../../src/contexts/AuthContext';
+import { useThemeColor } from '../../src/hooks/useThemeColor';
 interface Post {
   id: number;
   userId: number;
@@ -23,6 +23,8 @@ interface Post {
     display_name: string;
     profile_picture: string;
   };
+  createdAt?: string;
+  publishedAt?: string;
 }
 
 interface Comment {
@@ -38,9 +40,11 @@ interface Comment {
   likes_count: number;
   parent_comment_id?: number | null;
   replies?: Comment[];
+  createdAt?: string;
+  publishedAt?: string;
 }
 
-import { API_BASE_URL } from '../../config/api';
+import { api } from '../../services/api';
 
 const AVATAR_COLORS = ['#4D96FF', '#8A2BE2', '#FF6B6B', '#FFD93D', '#6BCB77', '#FFB86B'];
 // Feature flag: use native player controls in feed (same as fullscreen)
@@ -105,7 +109,10 @@ export default function PostScreen() {
   // Removed legacy fullscreen modal state (using native player fullscreen instead)
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
+  // Comments state is now a Record where keys are post IDs and values are Comment arrays
+  // Comments state is now a Record where keys are post IDs and values are Comment arrays
+  const [comments, setComments] = useState<Record<number, Comment[]>>({});
+  const commentsList = selectedPost ? comments[selectedPost.id] || [] : [];
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [showPostOptions, setShowPostOptions] = useState<{ visible: boolean, post: Post | null }>({ visible: false, post: null });
@@ -136,6 +143,7 @@ export default function PostScreen() {
   const hideTimersRef = useRef<{ [key: number]: ReturnType<typeof setTimeout> | null }>({});
   // Mute state per post
   const [mutedMap, setMutedMap] = useState<{ [key: number]: boolean }>({});
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   // Auto-hide controls when a video starts playing
   useEffect(() => {
@@ -256,13 +264,32 @@ export default function PostScreen() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data: Post[] = await response.json();
+      const response = await api.posts.getPosts(1, 20); // Get first page with 20 posts
+      // The response should be an array of posts or an object with a posts property
+      const postsRaw = Array.isArray(response) ? response : response?.data || [];
+      // Map backend post objects to the Post interface
+      const postsData: Post[] = postsRaw.map((p: any) => ({
+        id: p.id ?? p._id ?? 0,
+        userId: p.userId ?? p.author?._id ?? 0,
+        username: p.username ?? p.author?.username ?? '',
+        content: p.content ?? '',
+        timestamp: p.timestamp ?? p.createdAt ?? p.publishedAt ?? '',
+        media_url: p.media_url ?? (Array.isArray(p.media) && p.media.length > 0 ? p.media[0].url : undefined),
+        likes_count: typeof p.likes_count === 'number' ? p.likes_count : (Array.isArray(p.likes) ? p.likes.length : 0),
+        comments_count: typeof p.comments_count === 'number' ? p.comments_count : (Array.isArray(p.comments) ? p.comments.length : 0),
+        is_liked: p.is_liked ?? false,
+        author: {
+          username: p.author?.username ?? '',
+          display_name: p.author?.display_name ?? p.author?.username ?? '',
+          profile_picture: p.author?.profile_picture ?? p.author?.profilePic ?? ''
+        },
+        createdAt: p.createdAt,
+        publishedAt: p.publishedAt
+      }));
       // Sort posts by timestamp in descending order
-      const sortedData = data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const sortedData = postsData.sort((postA: Post, postB: Post) => 
+        new Date(postB.timestamp).getTime() - new Date(postA.timestamp).getTime()
+      );
       setPosts(sortedData);
     } catch (error: any) {
       console.error("Failed to fetch posts:", error);
@@ -273,32 +300,31 @@ export default function PostScreen() {
     }
   };
 
-  const handleLike = async (postId: number) => {
+  const handleLike = async (postId: number | string) => {
     if (!user?.id) {
       Alert.alert('Error', 'Please log in to like posts.');
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${postId}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: user.id }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to like post');
-      }
-
-      const result = await response.json();
+      // Ensure both postId and userId are strings for the API call
+      const postIdStr = typeof postId === 'number' ? postId.toString() : postId;
+      const userIdStr = user.id.toString();
+      const response = await api.posts.likePost(postIdStr, { userId: userIdStr });
+      
       setPosts(posts.map(post => {
-        if (post.id === postId) {
+        // Compare IDs as strings to handle both string and number IDs
+        if (String(post.id) === String(postId)) {
+          // If the response contains the updated post, use its data
+          // Otherwise, toggle the like status locally
+          const updatedPost = response.data || response;
+          const isLiked = updatedPost.likes?.includes?.(user.id) ?? !post.is_liked;
+          // Ensure likes_count is always a valid number
+          const currentLikes = typeof post.likes_count === 'number' && !isNaN(post.likes_count) ? post.likes_count : 0;
           return {
             ...post,
-            likes_count: result.liked ? post.likes_count + 1 : post.likes_count - 1,
-            is_liked: result.liked
+            is_liked: isLiked,
+            likes_count: isLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1)
           };
         }
         return post;
@@ -309,34 +335,54 @@ export default function PostScreen() {
     }
   };
 
-  const handleComment = async () => {
-    if (!user?.id || !user?.username || !selectedPost) {
-      Alert.alert('Error', 'Please log in to comment.');
-      return;
+  const handleComment = async (postId: number, comment: string) => {
+    if (!user?.id) {
+      Alert.alert('Error', 'Please log in to comment on posts.');
+      return false;
     }
-    if (!commentText.trim()) {
-      Alert.alert('Error', 'Please enter a comment.');
-      return;
-    }
+
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${selectedPost.id}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-        userId: user.id,
-        username: user.username,
-          content: commentText.trim(),
-          parent_comment_id: null
-        }),
+      const response = await api.posts.commentOnPost(postId, {
+        content: comment,
+        userId: user.id
       });
-      if (!response.ok) throw new Error('Failed to add comment');
-      // Instead of adding just the new comment, re-fetch all comments
-      await fetchComments(selectedPost.id);
-      setCommentText('');
-      setPosts(posts.map(post => post.id === selectedPost.id ? { ...post, comments_count: post.comments_count + 1 } : post));
+      
+      // The backend should return the created comment with all necessary fields
+      const responseData = response.data || response;
+      
+      const newComment: Comment = {
+        id: responseData._id || responseData.id || Date.now(),
+        post_id: postId,
+        user_id: responseData.author || user.id,
+        username: user.username || 'Anonymous',
+        display_name: user.display_name || user.username || 'User',
+        profile_picture: user.profile_picture || '',
+        content: responseData.content || comment,
+        timestamp: responseData.createdAt || new Date().toISOString(),
+        is_liked: false,
+        likes_count: 0,
+        parent_comment_id: null,
+        replies: []
+      };
+      
+      // Update the comments for this post
+      setComments(prev => ({
+        ...prev,
+        [postId]: [newComment, ...(prev[postId] || [])]
+      }));
+      
+      // Update the comments count in the posts list
+      setPosts(prevPosts => prevPosts.map(post => 
+        post.id === postId 
+          ? { ...post, comments_count: (post.comments_count || 0) + 1 }
+          : post
+      ));
+      
+      return true;
     } catch (error) {
-      console.error('Error adding comment:', error);
-      Alert.alert('Error', 'Failed to add comment.');
+      console.error('Error posting comment:', error);
+      Alert.alert('Error', 'Failed to post comment.');
+      return false;
     }
   };
 
@@ -349,25 +395,50 @@ export default function PostScreen() {
       Alert.alert('Error', 'Please enter a reply.');
       return;
     }
+
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${selectedPost.id}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          username: user.username,
-          content: replyText.trim(),
-          parent_comment_id: parentId
-        }),
+      const response = await api.posts.replyToComment(parentId, {
+        content: replyText.trim(),
+        userId: user.id
       });
-      if (!response.ok) throw new Error('Failed to add reply');
-      // Instead of adding just the new reply, re-fetch all comments
-      await fetchComments(selectedPost.id);
+      
+      const newReply: Comment = {
+        ...(response.data || response),
+        id: response.data?.id || Date.now(),
+        post_id: selectedPost.id,
+        user_id: user.id,
+        username: user.username || 'Anonymous',
+        display_name: user.display_name || user.username || 'User',
+        profile_picture: user.profile_picture || '',
+        content: replyText.trim(),
+        timestamp: new Date().toISOString(),
+        is_liked: false,
+        likes_count: 0,
+        parent_comment_id: parentId,
+        replies: []
+      };
+      
+      // Update the comments for this post
+      setComments(prev => {
+        const currentComments = prev[selectedPost.id] || [];
+        return {
+          ...prev,
+          [selectedPost.id]: [newReply, ...currentComments]
+        };
+      });
+      
+      // Update the comments count in the posts list
+      setPosts(prevPosts => prevPosts.map(post => 
+        post.id === selectedPost.id
+          ? { ...post, comments_count: (post.comments_count || 0) + 1 }
+          : post
+      ));
+      
       setReplyingTo(null);
       setReplyText('');
     } catch (error) {
-      console.error('Error adding reply:', error);
-      Alert.alert('Error', 'Failed to add reply.');
+      console.error('Error posting reply:', error);
+      Alert.alert('Error', 'Failed to post reply.');
     }
   };
 
@@ -378,34 +449,36 @@ export default function PostScreen() {
     }
 
     try {
-      console.log('Liking comment:', { commentId, userId: user.id });
-      const response = await fetch(`${API_BASE_URL}/comments/${commentId}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-        }),
+      // Using the posts API to like a comment
+      const response = await api.posts.likeComment(commentId, { userId: user.id });
+      
+      // The response should contain the updated comment data
+      const updatedComment = response.data || response;
+      
+      // Update the comments in the UI
+      setComments(prev => {
+        const updatedComments = { ...prev };
+        
+        // Find which post contains this comment
+        for (const postId in updatedComments) {
+          const commentIndex = updatedComments[postId].findIndex(c => c.id === commentId);
+          if (commentIndex !== -1) {
+            // Create a new array with the updated comment
+            const updatedPostComments = [...updatedComments[postId]];
+            updatedPostComments[commentIndex] = {
+              ...updatedPostComments[commentIndex],
+              is_liked: updatedComment.is_liked,
+              likes_count: updatedComment.likes_count || updatedPostComments[commentIndex].likes_count
+            };
+            
+            // Update the comments for this post
+            updatedComments[postId] = updatedPostComments;
+            break;
+          }
+        }
+        
+        return updatedComments;
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Failed to like comment:', errorData);
-        throw new Error(errorData.message || 'Failed to like comment');
-      }
-
-      const data = await response.json();
-      console.log('Comment like response:', data);
-
-      // Update the comment in the state
-      setComments(prevComments => 
-        prevComments.map(comment => 
-          comment.id === commentId 
-            ? { ...comment, is_liked: data.liked, likes_count: data.likes_count }
-            : comment
-        )
-      );
     } catch (error) {
       console.error('Error liking comment:', error);
       Alert.alert('Error', 'Failed to like comment.');
@@ -414,16 +487,59 @@ export default function PostScreen() {
 
   const fetchComments = async (postId: number) => {
     try {
-      console.log('Fetching comments for post:', postId);
-      const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments?userId=${user?.id || 0}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch comments');
+      // Check if user is authenticated
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        console.warn('No authentication token found. User may need to log in again.');
+        // You might want to trigger a re-authentication flow here
+        Alert.alert('Authentication Required', 'Please log in to view comments');
+        return;
       }
-      const data = await response.json();
-      console.log('Received comments:', data);
-      setComments(buildCommentTree(data));
-    } catch (error) {
+      
+      console.log(`[API] Fetching comments for post ${postId}`);
+      const response = await api.posts.getComments(postId);
+      const commentsData = Array.isArray(response) ? response : response?.data?.comments || [];
+      
+      // Transform comments to ensure they have all required fields
+      const processedComments = commentsData.map((comment: Comment) => ({
+        ...comment,
+        is_liked: comment.is_liked || false,
+        likes_count: comment.likes_count || 0,
+        parent_comment_id: comment.parent_comment_id || null,
+        replies: comment.replies || []
+      }));
+      
+      console.log(`[API] Fetched ${processedComments.length} comments for post ${postId}`);
+      
+      setComments(prev => ({
+        ...prev,
+        [postId]: processedComments
+      }));
+    } catch (error: any) {
       console.error('Error fetching comments:', error);
+      
+      // Handle specific error cases
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        
+        if (error.response.status === 401) {
+          // Handle unauthorized (token expired or invalid)
+          Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
+          // Consider triggering a re-authentication flow here
+        } else {
+          Alert.alert('Error', 'Failed to load comments. Please try again.');
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+        Alert.alert('Connection Error', 'Could not connect to the server. Please check your internet connection.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error setting up request:', error.message);
+        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      }
     }
   };
 
@@ -434,18 +550,38 @@ export default function PostScreen() {
     fetchComments(post.id);
   };
 
-  const handleDeletePost = async (postId: number) => {
+  const deletePost = async (postId: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete post');
-      }
+      await api.posts.deletePost(postId.toString());
       setPosts(posts.filter(post => post.id !== postId));
-      Alert.alert('Deleted', 'Post deleted successfully.');
+      return true;
     } catch (error) {
       console.error('Error deleting post:', error);
+      Alert.alert('Error', 'Failed to delete post.');
+      return false;
+    }
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    if (!user?.id) {
+      Alert.alert('Error', 'Please log in to delete posts.');
+      return;
+    }
+
+    try {
+      const success = await deletePost(postId);
+      if (success) {
+        // Remove the post from the list
+        setPosts(prev => prev.filter(post => post.id !== postId));
+        // Remove any comments for this post
+        setComments(prev => {
+          const newComments = { ...prev };
+          delete newComments[postId];
+          return newComments;
+        });
+      }
+    } catch (error) {
+      console.error('Error handling post deletion:', error);
       Alert.alert('Error', 'Failed to delete post.');
     }
   };
@@ -503,7 +639,9 @@ export default function PostScreen() {
 
   // Restore formatTimestamp for post time display
   const formatTimestamp = (timestamp: string) => {
+    if (!timestamp) return '';
     const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '';
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     if (diffInSeconds < 0) {
@@ -601,6 +739,8 @@ export default function PostScreen() {
         }
       });
     };
+    // Use the first available date field
+    const postTimestamp = item.timestamp || item.createdAt || item.publishedAt || '';
     return (
       <View style={[styles.postCard, { backgroundColor: '#1E1E1E' }]}> 
         <View style={styles.postHeaderRow}>
@@ -613,7 +753,7 @@ export default function PostScreen() {
           )}
           <View style={{ flex: 1 }}>
             <Text style={styles.postName}>{item.author?.display_name || item.author?.username || item.username}</Text>
-            <Text style={styles.postTime}>{formatTimestamp(item.timestamp)}</Text>
+            <Text style={styles.postTime}>{formatTimestamp(postTimestamp)}</Text>
           </View>
           <TouchableOpacity onPress={() => {
             if (user?.id === item.userId) {
@@ -895,7 +1035,7 @@ export default function PostScreen() {
                 <Ionicons name="checkmark-circle" size={14} color="#4D96FF" style={{ marginLeft: 4 }} />
               )} */}
               <ThemedText style={{ color: '#888', fontSize: 12, marginLeft: 8 }} type="default">
-                {formatTimestamp(comment.timestamp)}
+                {formatTimestamp(comment.timestamp || comment.createdAt || comment.publishedAt || '')}
           </ThemedText>
         </View>
             {/* Content */}
@@ -1161,12 +1301,12 @@ export default function PostScreen() {
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.commentsList}>
-              {comments.length === 0 ? (
+              {!selectedPost || !comments[selectedPost.id] || comments[selectedPost.id].length === 0 ? (
                 <ThemedText style={styles.emptyText} type="default">
                   No comments yet. Be the first to comment!
                 </ThemedText>
               ) : (
-                comments.map(comment => renderCommentTree(comment))
+                comments[selectedPost.id].map(comment => renderCommentTree(comment))
               )}
             </ScrollView>
             <View style={styles.commentInputContainer}>
@@ -1180,7 +1320,12 @@ export default function PostScreen() {
               />
               <TouchableOpacity 
                 style={[styles.commentButton, { backgroundColor: primaryColor }]}
-                onPress={handleComment}
+                onPress={() => {
+                if (selectedPost && commentText.trim()) {
+                  handleComment(selectedPost.id, commentText);
+                  setCommentText('');
+                }
+              }}
               >
                 <Ionicons name="send" size={24} color="#FFFFFF" />
               </TouchableOpacity>

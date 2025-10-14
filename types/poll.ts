@@ -24,6 +24,8 @@ export type CreatePollData = {
   isMultipleChoice: boolean;
   expiresAt: Date;
   createdBy: string;
+  groupId?: string;
+  description?: string;
 };
 
 export type VoteData = {

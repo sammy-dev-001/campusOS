@@ -1,8 +1,8 @@
 // app/(tabs)/index.tsx
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, TouchableWithoutFeedback } from 'react-native';
 import {
   Image,
@@ -10,6 +10,10 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  StyleProp,
+  ViewStyle,
+  TextStyle,
+  ImageStyle,
   Text,
   TextInput,
   TouchableOpacity,
@@ -18,13 +22,59 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '../../components/ThemedText';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useTimetable } from '../../contexts/TimetableContext';
+import { useUser } from '../../src/contexts/UserContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 
-const ICON_SIZE = 28;
+interface ClassItem {
+  id: string;
+  time: string;
+  subjectName: string;
+  courseCode?: string;
+  venue?: string;
+}
 
-// Mock Data
+const studyGroups = [
+    {
+      id: 'cs-majors-1',
+      icon: 'flower-tulip-outline',
+      title: 'CS Majors Club',
+      members: 15,
+      description: 'Discussions, coding challenges & tech talks',
+      iconColor: '#ffb3ba', // A pinkish color for the tulip
+    },
+    {
+      id: 'creative-writing-2',
+      icon: 'creation',
+      title: 'Creative Writing',
+      members: 8,
+      description: 'Share your stories and get feedback.',
+      iconColor: '#8ecae6', // A blue/teal color
+    },
+];
+
+interface UserProfile {
+  id: number;
+  username: string;
+  display_name: string;
+  firstName?: string;
+  lastName?: string;
+  profile_picture?: string;
+  email?: string;
+  bio?: string;
+}
+
+// Constants
+const ICON_SIZE = 24;
+
+// Navigation grid items
+const navGridItems = [
+  { label: 'Tutor or Study Group', icon: 'account-group-outline' },
+  { label: 'Time Table', icon: 'calendar-month-outline' },
+  { label: 'Notes and Past questions', icon: 'book-open-outline' },
+  { label: 'Polls and surveys', icon: 'poll' }
+];
+
+// Quick actions
 const quickActions = [
   {
     label: 'Announcements',
@@ -38,51 +88,61 @@ const quickActions = [
   },
   {
     label: 'GPA Tracker',
-    icon: 'stats-chart-outline',
-    color: '#6BCB77',
+    icon: 'school-outline',
+    color: '#4D96FF',
   },
   {
     label: 'Menu',
     icon: 'menu-outline',
-    color: '#4D96FF',
+    color: '#6BCB77',
   },
-];
-
-const navGridItems = [
-    { label: 'Tutor or Study Group', icon: 'account-group-outline' },
-    { label: 'Time Table', icon: 'calendar-month-outline' },
-    { label: 'Notes and Past questions', icon: 'book-open-outline' },
-    { label: 'Polls and surveys', icon: 'poll' }
-]
-
-const studyGroups = [
-    {
-      icon: 'flower-tulip-outline',
-      title: 'CS Majors Club',
-      members: 15,
-      description: 'Discussions, coding challenges & tech talks',
-      iconColor: '#ffb3ba', // A pinkish color for the tulip
-    },
-    {
-      icon: 'creation',
-      title: 'Creative Writing',
-      members: 8,
-      description: 'Share your stories and get feedback.',
-      iconColor: '#8ecae6', // A blue/teal color
-    },
 ];
 
 export default function HomeScreen() {
   const { theme } = useTheme();
-  const { user } = useAuth();
-  const { getTodaysClasses } = useTimetable();
+  const { user } = useUser();
   const { width } = useWindowDimensions();
   const router = useRouter();
-  const isDesktop = width > 768;
+  const searchParams = useLocalSearchParams();
   
-  const styles = stylesFn(theme, isDesktop);
+  // Get user's display name, falling back to username
+  const userDisplayName = React.useMemo(() => {
+    if (!user) return 'Student';
+    return user.display_name || user.username || 'Student';
+  }, [user]);
+  
+  // Get today's classes - this is a mock function
+  const getTodaysClasses = () => [];
+  
+  // Use theme values directly from the theme object
+  const themeColors = React.useMemo(() => ({
+    background: theme.background,
+    card: theme.card,
+    text: theme.text,
+    secondary: theme.textSecondary,
+  }), [theme]);
+  const isDesktop = width > 768;
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Get the refresh parameter from the URL
+  const refresh = searchParams.refresh as string | undefined;
+  
+  // Force refresh when the refresh parameter changes
+  useEffect(() => {
+    if (refresh) {
+      // Force a re-render by updating the refresh key
+      setRefreshKey(prev => prev + 1);
+      
+      // Remove the refresh parameter from the URL
+      const newParams = { ...searchParams };
+      delete newParams.refresh;
+      router.setParams(newParams);
+    }
+  }, [refresh, searchParams, router]);
+  
+  const styles = stylesFn(themeColors, isDesktop);
 
-  const todayClasses = getTodaysClasses();
+  const [todayClasses, setTodayClasses] = useState<ClassItem[]>([]);
 
   const handleQuickActionPress = (actionLabel: string) => {
     switch (actionLabel) {
@@ -140,7 +200,7 @@ export default function HomeScreen() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <MaterialCommunityIcons name="school-outline" size={30} color={theme.text} />
+              <MaterialCommunityIcons name="school-outline" size={30} color={themeColors.text} />
               <ThemedText style={styles.logoText}>CampusOS</ThemedText>
             </View>
             <View style={styles.avatar}>
@@ -151,7 +211,7 @@ export default function HomeScreen() {
                 />
               ) : (
                 <ThemedText style={styles.avatarText}>
-                  {getInitials(user?.display_name ?? user?.username ?? '')}
+                  {getInitials(`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || '')}
                 </ThemedText>
               )}
             </View>
@@ -159,13 +219,14 @@ export default function HomeScreen() {
 
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={theme.secondary} style={styles.searchIcon} />
+            <Ionicons name="search" size={20} color={themeColors.secondary} style={{marginRight: 10}} />
             <TextInput
               placeholder="Search courses, groups..."
-              placeholderTextColor={theme.secondary}
-              style={styles.searchInput}
+              placeholderTextColor={themeColors.secondary}
+              style={[styles.searchInput, { color: themeColors.text }]}
             />
           </View>
+
 
           {/* Quick Actions Grid */}
           <View style={styles.quickActionsGrid}>
@@ -205,7 +266,7 @@ export default function HomeScreen() {
                     <Text style={styles.classCourse}>{item.courseCode}</Text>
                   )}
                   <View style={styles.classLocationContainer}>
-                    <Ionicons name="location-outline" size={16} color={theme.secondary} />
+                    <Ionicons name="location-outline" size={16} color={themeColors.secondary} />
                     <Text style={styles.classLocation}>{item.venue}</Text>
                   </View>
                   <TouchableOpacity style={styles.classButton}>
@@ -242,7 +303,7 @@ export default function HomeScreen() {
                   style={styles.navGridItem}
                   onPress={() => handleNavGridPress(item.label)}
                 >
-                  <MaterialCommunityIcons name={item.icon as any} size={32} color={theme.text} />
+                  <MaterialCommunityIcons name={item.icon as any} size={32} color={themeColors.text} />
                   <Text style={styles.navGridLabel}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -287,7 +348,21 @@ export default function HomeScreen() {
           <ThemedText style={styles.sectionTitle}>Study Groups</ThemedText>
           <View style={styles.studyGroupsGrid}>
             {studyGroups.map((group, index) => (
-              <View key={index} style={styles.studyGroupCard}>
+              <TouchableOpacity 
+                key={index} 
+                style={styles.studyGroupCard}
+                onPress={() => router.push({
+                  pathname: '/group-details/[id]',
+                  params: { 
+                    id: group.id || index.toString(),
+                    title: group.title,
+                    description: group.description,
+                    members: group.members,
+                    icon: group.icon,
+                    iconColor: group.iconColor
+                  }
+                })}
+              >
                 <View style={styles.studyGroupHeader}>
                   <View style={[styles.studyGroupIcon, { backgroundColor: group.iconColor }]}> 
                     <MaterialCommunityIcons name={group.icon as any} size={24} color="#000" />
@@ -295,14 +370,14 @@ export default function HomeScreen() {
                   <ThemedText style={styles.studyGroupTitle}>{group.title}</ThemedText>
                 </View>
                 <View style={styles.studyGroupInfo}>
-                  <Ionicons name="people-outline" size={16} color={theme.secondary} />
+                  <Ionicons name="people-outline" size={16} color={themeColors.secondary} />
                   <ThemedText style={styles.studyGroupMeta}>{group.members} Members</ThemedText>
                 </View>
                 <ThemedText style={styles.studyGroupDescription}>{group.description}</ThemedText>
-                <TouchableOpacity style={styles.studyGroupButton}>
-                  <ThemedText style={styles.studyGroupButtonText}>Join Now</ThemedText>
-                </TouchableOpacity>
-              </View>
+                <View style={styles.studyGroupButton}>
+                  <ThemedText style={styles.studyGroupButtonText}>View Group</ThemedText>
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -311,34 +386,111 @@ export default function HomeScreen() {
   );
 };
 
-const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
+interface ThemeColors {
+  background: string;
+  card: string;
+  text: string;
+  secondary: string;
+}
+
+interface Styles {
+  container: ViewStyle;
+  contentContainer: ViewStyle;
+  section: ViewStyle;
+  sectionHeader: ViewStyle;
+  sectionTitle: TextStyle;
+  headerLeft: ViewStyle;
+  logoText: TextStyle;
+  avatar: ViewStyle;
+  avatarImage: ImageStyle;
+  avatarText: TextStyle;
+  searchContainer: ViewStyle;
+  searchIcon: ViewStyle;
+  searchInput: TextStyle;
+  quickActionsGrid: ViewStyle;
+  quickActionItem: ViewStyle;
+  quickActionIconContainer: ViewStyle;
+  quickActionLabel: TextStyle;
+  classesScroll: ViewStyle;
+  classCard: ViewStyle;
+  classTimeContainer: ViewStyle;
+  classTime: TextStyle;
+  classTitle: TextStyle;
+  classCourse: TextStyle;
+  classLocationContainer: ViewStyle;
+  classLocation: TextStyle;
+  classButton: ViewStyle;
+  classButtonText: TextStyle;
+  addClassCard: ViewStyle;
+  addClassText: TextStyle;
+  noClassesContainer: ViewStyle;
+  noClassesText: TextStyle;
+  addSubjectsButton: ViewStyle;
+  addSubjectsButtonText: TextStyle;
+  navHubContainer: ViewStyle;
+  navGrid: ViewStyle;
+  navGridItem: ViewStyle;
+  navGridLabel: TextStyle;
+  centerButtonContainer: ViewStyle;
+  centerButton: ViewStyle;
+  centerButtonText: TextStyle;
+  centerButtonSubText: TextStyle;
+  aiAssistantCard: ViewStyle;
+  aiIconContainer: ViewStyle;
+  aiTitle: TextStyle;
+  aiSubtitle: TextStyle;
+  aiButton: ViewStyle;
+  aiButtonText: TextStyle;
+  studyGroupsGrid: ViewStyle;
+  studyGroupCard: ViewStyle;
+  studyGroupHeader: ViewStyle;
+  studyGroupIcon: ViewStyle;
+  studyGroupTitle: TextStyle;
+  studyGroupInfo: ViewStyle;
+  studyGroupMeta: TextStyle;
+  studyGroupDescription: TextStyle;
+  studyGroupButton: ViewStyle;
+  studyGroupButtonText: TextStyle;
+  header: ViewStyle;
+}
+
+const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<Styles>({
   container: {
     flex: 1,
-    backgroundColor: '#121212', // Force dark background as per design
+    backgroundColor: '#121212',
     paddingTop: Platform.OS === 'android' ? 25 : 0,
-  },
+  } as ViewStyle,
   contentContainer: {
     width: '100%',
-    maxWidth: isDesktop ? 1200 : undefined,
-    alignSelf: 'center',
-  },
-  header: {
+    maxWidth: isDesktop ? 1200 : '100%',
+  } as ViewStyle,
+  section: {
+    marginBottom: 24,
+  } as ViewStyle,
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 10,
-  },
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  } as ViewStyle,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.text,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  } as TextStyle,
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
+  } as ViewStyle,
   logoText: {
     fontSize: 24,
     fontWeight: 'bold',
     marginLeft: 8,
-  },
+    color: theme.text,
+  } as TextStyle,
   avatar: {
     width: 40,
     height: 40,
@@ -347,18 +499,18 @@ const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-  },
+  } as ViewStyle,
   avatarImage: {
     width: 40,
     height: 40,
     borderRadius: 20,
     resizeMode: 'cover',
-  },
+  } as ImageStyle,
   avatarText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-  },
+  } as TextStyle,
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,29 +520,31 @@ const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
     paddingHorizontal: 15,
     height: 50,
     marginTop: 10,
-  },
+  } as ViewStyle,
   searchIcon: {
     marginRight: 10,
-  },
+  } as any, // Using any to bypass the Ionicons style type issue
   searchInput: {
     flex: 1,
     color: theme.text,
     fontSize: 16,
-  },
+    padding: 0,
+    userSelect: 'text' as const,
+  } as TextStyle,
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: isDesktop ? 'flex-start' : 'space-around',
     marginHorizontal: 10,
     marginTop: 25,
-  },
+  } as ViewStyle,
   quickActionItem: {
     width: isDesktop ? 'auto' : '23%',
     flexGrow: isDesktop ? 1 : 0,
     alignItems: 'center',
     marginBottom: 20,
     marginHorizontal: isDesktop ? 10 : 0,
-  },
+  } as ViewStyle,
   quickActionIconContainer: {
     width: 60,
     height: 60,
@@ -399,78 +553,71 @@ const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
-  },
+  } as ViewStyle,
   quickActionLabel: {
     fontSize: 12,
     textAlign: 'center',
     color: theme.secondary,
     flexShrink: 1,
-  },
-  sectionTitle: {
-      fontSize: 20,
-    fontWeight: 'bold',
-      marginHorizontal: 20,
-      marginTop: 20,
-      marginBottom: 15,
-  },
+  } as TextStyle,
   classesScroll: {
-      paddingLeft: 20,
-      paddingRight: 10,
-  },
+    paddingLeft: 20,
+    paddingRight: 10,
+  } as ViewStyle,
   classCard: {
-      backgroundColor: '#1E1E1E',
-      borderRadius: 20,
-      padding: 15,
-      width: 250,
-      marginRight: 15,
-  },
+    backgroundColor: '#1E1E1E',
+    borderRadius: 20,
+    padding: 15,
+    width: 250,
+    marginRight: 15,
+  } as ViewStyle,
   classTimeContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: 'rgba(77, 150, 255, 0.2)',
-      borderRadius: 20,
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      alignSelf: 'flex-start',
-      marginBottom: 15,
-  },
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(77, 150, 255, 0.2)',
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    alignSelf: 'flex-start',
+    marginBottom: 15,
+  } as ViewStyle,
   classTime: {
-      color: '#A7C7E7',
-      marginLeft: 5,
-      fontWeight: 'bold',
-  },
+    color: '#A7C7E7',
+    marginLeft: 5,
+    fontWeight: 'bold',
+  } as TextStyle,
   classTitle: {
-      color: theme.text,
-      fontSize: 22,
-      fontWeight: 'bold',
-  },
+    color: theme.text,
+    fontSize: 22,
+    fontWeight: 'bold',
+  } as TextStyle,
   classCourse: {
-      color: theme.secondary,
-      fontSize: 16,
-      marginBottom: 10,
-  },
+    color: theme.secondary,
+    fontSize: 16,
+    marginBottom: 10,
+  } as TextStyle,
   classLocationContainer: {
     flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 'auto',
-      marginBottom: 15,
-  },
+    alignItems: 'center',
+    marginTop: 'auto',
+    marginBottom: 15,
+  } as ViewStyle,
   classLocation: {
-      color: theme.secondary,
-      fontSize: 14,
-      marginLeft: 5,
-  },
+    color: theme.secondary,
+    fontSize: 14,
+    marginLeft: 5,
+  } as TextStyle,
   classButton: {
-      backgroundColor: '#007AFF',
-      borderRadius: 10,
-      paddingVertical: 12,
-      alignItems: 'center',
-  },
+    backgroundColor: '#007AFF',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  } as ViewStyle,
   classButtonText: {
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: 16,
-  },
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  } as TextStyle,
   navHubContainer: {
     marginHorizontal: 20,
     marginTop: 30,
@@ -478,13 +625,13 @@ const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-  },
+  } as ViewStyle,
   navGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     width: '100%',
-  },
+  } as ViewStyle,
   navGridItem: {
     width: '48%',
     height: 120,
@@ -493,15 +640,15 @@ const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10,
-    marginBottom: '4%',
-  },
+    marginBottom: '4%' as any, // Using any for percentage value
+  } as ViewStyle,
   navGridLabel: {
     color: theme.text,
     textAlign: 'center',
     marginTop: 10,
     fontSize: 14,
     fontWeight: '600'
-  },
+  } as TextStyle,
   centerButtonContainer: {
     position: 'absolute',
     width: 150,
@@ -515,77 +662,77 @@ const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 10,
-  },
+  } as ViewStyle,
   centerButton: {
     width: '100%',
     height: '100%',
     borderRadius: 75,
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  } as ViewStyle,
   centerButtonText: {
     color: '#fff',
     fontSize: 22,
     fontWeight: 'bold',
     marginTop: 5,
-  },
+  } as TextStyle,
   centerButtonSubText: {
     color: '#fff',
     fontSize: 12,
     textTransform: 'lowercase',
-  },
+  } as TextStyle,
   aiAssistantCard: {
     marginHorizontal: 20,
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
     marginBottom: 20,
-  },
+  } as ViewStyle,
   aiIconContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 50,
     padding: 15,
     marginBottom: 10,
-  },
+  } as ViewStyle,
   aiTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-  },
+  } as TextStyle,
   aiSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 20,
-  },
+  } as TextStyle,
   aiButton: {
     backgroundColor: '#333',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 10,
-  },
+  } as ViewStyle,
   aiButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-  },
+  } as TextStyle,
   studyGroupsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginHorizontal: 20,
-  },
+  } as ViewStyle,
   studyGroupCard: {
     width: '48%',
     backgroundColor: '#1E1E1E',
     borderRadius: 20,
     padding: 15,
     marginBottom: 15,
-  },
+  } as ViewStyle,
   studyGroupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-  },
+  } as ViewStyle,
   studyGroupIcon: {
     width: 40,
     height: 40,
@@ -593,59 +740,62 @@ const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
-  },
+  } as ViewStyle,
   studyGroupTitle: {
     flex: 1,
     fontSize: 16,
     fontWeight: 'bold',
-  },
+    color: theme.text,
+  } as TextStyle,
   studyGroupInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 5,
-  },
+  } as ViewStyle,
   studyGroupMeta: {
     color: theme.secondary,
     marginLeft: 5,
-  },
+  } as TextStyle,
   studyGroupDescription: {
     color: theme.secondary,
     fontSize: 14,
     marginBottom: 15,
     height: 40, // for consistent card height
-  },
+  } as TextStyle,
   studyGroupButton: {
     backgroundColor: '#007AFF',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
-  },
+  } as ViewStyle,
   studyGroupButtonText: {
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: 14,
-  },
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  } as TextStyle,
   noClassesContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
     alignItems: 'center',
-  },
+    padding: 20,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    marginHorizontal: 20,
+  } as ViewStyle,
   noClassesText: {
-    color: theme.secondary,
+    color: theme.text,
+    marginBottom: 15,
     fontSize: 16,
-    marginBottom: 20,
-  },
+  } as TextStyle,
   addSubjectsButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-  },
+    backgroundColor: '#4D96FF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  } as ViewStyle,
   addSubjectsButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-  },
+  } as TextStyle,
   addClassCard: {
     width: 250,
     height: 120,
@@ -654,10 +804,17 @@ const stylesFn = (theme: any, isDesktop: boolean) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
-  },
+  } as ViewStyle,
   addClassText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
+  } as TextStyle,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#121212',
+  } as ViewStyle,
 });

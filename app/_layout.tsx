@@ -1,158 +1,157 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect } from 'react';
+import React, { Component, useEffect, useState } from 'react';
+import { ActivityIndicator, View, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import 'react-native-get-random-values';
-import 'react-native-reanimated';
+import { AnnouncementProvider } from '../src/contexts/AnnouncementContext';
+import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
+import { ChatProvider } from '../src/contexts/ChatContext';
+import { GpaProvider } from '../src/contexts/GpaContext';
+import { ThemeProvider, useTheme } from '../src/contexts/NewThemeContext';
+import { TimetableProvider } from '../src/contexts/TimetableContext';
+import { UserProvider } from '../src/contexts/UserContext';
 
-import { AnnouncementProvider } from '../contexts/AnnouncementContext';
-import { AuthProvider, useAuth } from '../contexts/AuthContext';
-import { ChatProvider } from '../contexts/ChatContext';
-import { DocumentProvider } from '../contexts/DocumentContext';
-import { GpaProvider } from '../contexts/GpaContext';
-import { ThemeProvider as CustomThemeProvider, useTheme } from '../contexts/ThemeContext';
-import { TimetableProvider } from '../contexts/TimetableContext';
-import { UserProvider } from '../contexts/UserContext';
-import { WebSocketProvider } from '../contexts/WebSocketContext';
-import { useColorScheme } from '../hooks/useColorScheme';
-import LoginSignUpScreen from '../screens/LoginSignUpScreen';
+// Error boundary component
+class ErrorBoundary extends Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
 
-function RootLayoutNav() {
-  const { theme } = useTheme();
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" />
-      <Stack.Screen name="login/index" options={{ headerShown: false }} />
-      <Stack.Screen name="add-class" options={{ headerShown: false }} />
-      <Stack.Screen 
-        name="announcements" 
-        options={{
-          title: 'Announcements',
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: theme.background,
-          },
-          headerTintColor: theme.text,
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }} 
-      />
-      <Stack.Screen 
-        name="polls-surveys" 
-        options={{
-          title: 'Polls & Surveys',
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: theme.background,
-          },
-          headerTintColor: theme.text,
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }} 
-      />
-      <Stack.Screen 
-        name="group-details/[id]" 
-        options={{
-          title: 'Group Details',
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: theme.background,
-          },
-          headerTintColor: theme.text,
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}
-      />
-      <Stack.Screen 
-        name="events" 
-        options={{
-            headerShown: false, // The screen has its own header
-        }} 
-      />
-      <Stack.Screen 
-        name="gpa-tracker" 
-        options={{
-            headerShown: false, // The screen has its own header
-        }} 
-      />
-      <Stack.Screen 
-        name="notes-past-questions" 
-        options={{
-            headerShown: false,
-        }} 
-      />
-      <Stack.Screen 
-        name="tutor-study-group" 
-        options={{
-            headerShown: false,
-        }} 
-      />
-      <Stack.Screen name="forum-category" options={{ headerShown: false }} />
-    </Stack>
-  );
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Text style={{ color: 'red', fontSize: 16, textAlign: 'center' }}>
+            Something went wrong: {this.state.error?.message}
+          </Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
-function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+// Component to handle initial auth check
+function InitialAuthCheck({ children }: { children: React.ReactNode }) {
+  const auth = useAuth();
+  const [isReady, setIsReady] = useState(false);
 
-  // AuthProvider already handles loading state by returning null
-  if (!isAuthenticated) {
-    return <LoginSignUpScreen />;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isReady || !auth?.isInitialized) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
+
   return <>{children}</>;
 }
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+// Create a wrapper component for the auth content
+function AuthContent() {
+  const auth = useAuth();
+  const { theme } = useTheme();
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
+  // If we're still loading, show a loading screen
+  if (!auth || !auth.isInitialized) {
+    return (
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme?.background || '#fff'
+      }}>
+        <ActivityIndicator size="large" color={theme?.primary || '#007AFF'} />
+      </View>
+    );
   }
 
   return (
-    <CustomThemeProvider>
-      <AuthProvider>
-        <AuthGate>
-          <AnnouncementProvider>
-            <DocumentProvider>
-              <GpaProvider>
-                <TimetableProvider>
-                  <UserProvider>
-                    <WebSocketProvider>
-                      <ChatProvider>
-                        <GestureHandlerRootView style={{ flex: 1 }}>
-                          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                            <RootLayoutNav />
-                          </ThemeProvider>
-                        </GestureHandlerRootView>
-                      </ChatProvider>
-                    </WebSocketProvider>
-                  </UserProvider>
-                </TimetableProvider>
-              </GpaProvider>
-            </DocumentProvider>
-          </AnnouncementProvider>
-        </AuthGate>
-      </AuthProvider>
-    </CustomThemeProvider>
+    <View style={{ flex: 1, backgroundColor: theme?.background || '#fff' }}>
+      <Stack screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme?.background || '#fff' },
+      }}>
+        {/* Always include all screens, but control their visibility based on auth state */}
+        <Stack.Screen 
+          name="login/index" 
+          options={{ 
+            headerShown: false,
+            // Only show login screen if not authenticated
+            ...(auth.isAuthenticated && { navigationBarHidden: true })
+          }} 
+        />
+        
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false,
+            // Only show tabs if authenticated
+            ...(!auth.isAuthenticated && { navigationBarHidden: true })
+          }} 
+        />
+        
+        <Stack.Screen 
+          name="gpa-tracker" 
+          options={{ 
+            headerShown: false,
+            // Only show if authenticated
+            ...(!auth.isAuthenticated && { navigationBarHidden: true })
+          }} 
+        />
+      </Stack>
+    </View>
   );
 }
+
+// Main app component
+const App = () => {
+  return (
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AuthProvider>
+              <UserProvider>
+                <ChatProvider>
+                  <GpaProvider>
+                    <TimetableProvider>
+                      <AnnouncementProvider>
+                        <InitialAuthCheck>
+                          <AuthContent />
+                        </InitialAuthCheck>
+                      </AnnouncementProvider>
+                    </TimetableProvider>
+                  </GpaProvider>
+                </ChatProvider>
+              </UserProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
+  );
+};
+
+// Main layout component
+export default function RootLayout() {
+  return <App />;
+}
+

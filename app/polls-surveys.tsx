@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Text } from 'react-native';
-import { FAB } from 'react-native-paper';
-import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Animated, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../components/ThemedText';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
 
 // Mock data for polls
 const mockPolls = [
@@ -48,6 +47,9 @@ const PollScreen = () => {
 	const [polls, setPolls] = useState(mockPolls);
 	const [filteredPolls, setFilteredPolls] = useState(mockPolls);
 	const [searchQuery, setSearchQuery] = useState('');
+	const [fabAnim] = useState(new Animated.Value(0));
+  const [fabOpen, setFabOpen] = useState(false);
+  const [fabOptionsAnim] = useState([new Animated.Value(0), new Animated.Value(0)]);
 
 	const styles = StyleSheet.create({
 		container: {
@@ -58,7 +60,8 @@ const PollScreen = () => {
 			flexDirection: 'row',
 			justifyContent: 'space-between',
 			alignItems: 'center',
-			padding: 16,
+			padding: 12,
+			paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 12,
 			backgroundColor: '#121212',
 		},
 		headerTitle: {
@@ -225,11 +228,14 @@ const PollScreen = () => {
 			paddingTop: 12,
 			borderTopWidth: 1,
 			borderTopColor: '#333',
+			flexWrap: 'wrap',
 		},
 		creatorRow: {
 			flexDirection: 'row',
 			alignItems: 'center',
 			flex: 1,
+			minWidth: '50%',
+			marginBottom: 4,
 		},
 		creatorName: {
 			color: '#fff',
@@ -251,6 +257,7 @@ const PollScreen = () => {
 		timeLeft: {
 			color: '#9CA3AF',
 			fontSize: 12,
+			marginLeft: 'auto',
 		},
 		statsRow: {
 			flexDirection: 'row',
@@ -261,27 +268,122 @@ const PollScreen = () => {
 			fontSize: 12,
 			marginLeft: 4,
 		},
-		fab: {
-			position: 'absolute',
-			right: 24,
-			bottom: 24,
-			width: 56,
-			height: 56,
-			borderRadius: 28,
-			backgroundColor: '#3B82F6',
-			justifyContent: 'center',
-			alignItems: 'center',
-			elevation: 4,
-			shadowColor: '#000',
-			shadowOffset: { width: 0, height: 2 },
-			shadowOpacity: 0.25,
-			shadowRadius: 4,
-		},
+		fabContainer: {
+    position: 'absolute',
+    bottom: 32,
+    right: 24,
+    zIndex: 100,
+    alignItems: 'flex-end',
+  },
+  fabOption: {
+    position: 'relative',
+    right: 0,
+    zIndex: 101,
+    marginBottom: 4,
+    marginRight: 0,
+  },
+  fabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  fabButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 15,
+    marginLeft: 8,
+  },
+  fabIcon: {
+    width: 20,
+    textAlign: 'center',
+  },
+  mainFab: {
+    backgroundColor: '#3B82F6',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
 	});
 
 	const handleVote = (pollId: string, optionId: string) => {
 		setVotedPolls({ ...votedPolls, [pollId]: optionId });
 	};
+
+  const handleFabPress = () => {
+    if (!fabOpen) {
+      setFabOpen(true);
+      // Opening: animate main FAB first, then stagger the option buttons
+      Animated.parallel([
+        Animated.spring(fabAnim, {
+          toValue: 1,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+        Animated.stagger(70, fabOptionsAnim.map((_, index) => 
+          Animated.spring(fabOptionsAnim[index], {
+            toValue: 1,
+            friction: 6,
+            useNativeDriver: true,
+          })
+        ))
+      ]).start();
+    } else {
+      // Closing: animate option buttons out first, then main FAB
+      Animated.parallel([
+        ...fabOptionsAnim.map(anim => 
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 150,
+            useNativeDriver: true,
+          })
+        ),
+        Animated.timing(fabAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        })
+      ]).start(() => {
+        setFabOpen(false);
+      });
+    }
+  };
+
+  const handleFabOptionPress = (type: 'poll' | 'survey') => {
+    // Close the menu first
+    Animated.parallel(
+      fabOptionsAnim.map(anim =>
+        Animated.timing(anim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        })
+      )
+    ).start(() => {
+      Animated.timing(fabAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => {
+        setFabOpen(false);
+        // Navigate after animation completes
+        router.push(`/create-poll?type=${type}`);
+      });
+    });
+  };
 
 	useEffect(() => {
 		if (!searchQuery.trim()) {
@@ -484,25 +586,6 @@ const PollScreen = () => {
 					),
 				}}
 			/>
-			{/* Search Bar */}
-			<View style={styles.searchContainer}>
-				<View style={styles.searchInputContainer}>
-					<Ionicons
-						name="search"
-						size={20}
-						color="#9CA3AF"
-						style={styles.searchIcon}
-					/>
-					<TextInput
-						style={styles.searchInput}
-						placeholder="Search polls..."
-						placeholderTextColor="#9CA3AF"
-						value={searchQuery}
-						onChangeText={handleSearch}
-					/>
-				</View>
-			</View>
-
 			{/* Add New Poll FAB */}
 			{/* Polls List */}
 			<View style={styles.contentContainer}>
@@ -621,13 +704,71 @@ const PollScreen = () => {
 					)}
 				</ScrollView>
 			</View>
-			{/* Floating Action Button */}
-			<TouchableOpacity
-				style={styles.fab}
-				onPress={() => router.push('/create-poll')}
-			>
-				<Ionicons name="add" size={32} color="#fff" />
-			</TouchableOpacity>
+			{/* Create Poll/Survey FAB */}
+      <Animated.View
+        style={[styles.fabContainer, {
+          transform: [{ scale: fabAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] }) }],
+        }]}
+      >
+        {fabOpen && (
+          <>
+            <Animated.View
+              style={[styles.fabOption, {
+                opacity: fabOptionsAnim[0],
+                transform: [
+                  {
+                    translateY: fabOptionsAnim[0].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [8, -48],
+                    }),
+                  },
+                  { scale: fabOptionsAnim[0] },
+                ],
+              }]}
+            >
+              <TouchableOpacity
+                onPress={() => handleFabOptionPress('poll')}
+                style={[styles.fabButton, { backgroundColor: '#007AFF' }]}
+              >
+                <Ionicons name="checkbox-outline" size={20} color="#fff" style={styles.fabIcon} />
+                <Text style={styles.fabButtonText}>Create Poll</Text>
+              </TouchableOpacity>
+            </Animated.View>
+            <Animated.View
+              style={[styles.fabOption, {
+                opacity: fabOptionsAnim[1],
+                transform: [
+                  {
+                    translateY: fabOptionsAnim[1].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [8, -16],
+                    }),
+                  },
+                  { scale: fabOptionsAnim[1] },
+                ],
+              }]}
+            >
+              <TouchableOpacity
+                onPress={() => handleFabOptionPress('survey')}
+                style={[styles.fabButton, { backgroundColor: '#5856D6' }]}
+              >
+                <Ionicons name="document-text-outline" size={20} color="#fff" style={styles.fabIcon} />
+                <Text style={styles.fabButtonText}>Create Survey</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </>
+        )}
+        <TouchableOpacity
+          onPress={handleFabPress}
+          style={styles.mainFab}
+        >
+          <Ionicons 
+            name={fabOpen ? 'close' : 'add'} 
+            size={32} 
+            color="#fff" 
+          />
+        </TouchableOpacity>
+      </Animated.View>
 		</View>
 	);
 };

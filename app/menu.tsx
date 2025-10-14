@@ -10,7 +10,7 @@ import {
 
 import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
 
 const features = [
   {

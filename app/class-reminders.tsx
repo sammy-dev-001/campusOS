@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { useTimetable } from '../contexts/TimetableContext';
+import { useTimetable } from '../src/contexts/TimetableContext';
 
 export default function ClassRemindersScreen() {
   const { classes, updateClass, refreshNotifications } = useTimetable();

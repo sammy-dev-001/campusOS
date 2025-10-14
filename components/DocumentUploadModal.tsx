@@ -12,7 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { Document, DocumentType } from '../contexts/DocumentContext';
+import { Document, DocumentType } from '../src/contexts/DocumentContext';
 
 interface DocumentFormModalProps {
   visible: boolean;
@@ -103,22 +103,33 @@ export default function DocumentUploadModal({
       };
 
       if (file) {
-         const getFileType = (fileName: string) => {
-            const extension = fileName.split('.').pop()?.toLowerCase();
-            switch (extension) {
-                case 'pdf': return 'pdf';
-                case 'docx': return 'docx';
-                case 'png': return 'png';
-                case 'jpeg':
-                case 'jpg': return 'jpeg';
-                default: return 'other';
-            }
-        };
-        docData.file = {
+        // For React Native, we need to create a file-like object with the correct structure
+        const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+        const fileName = `${Date.now()}.${fileExtension}`;
+        
+        // Create a file object in the format expected by FormData
+        const fileObj = {
           uri: file.uri,
-          name: file.name,
-          type: file.mimeType || 'application/octet-stream',
+          name: fileName,
+          type: file.mimeType || getMimeType(fileExtension)
         };
+        
+        // Add the file to the form data
+        docData.file = fileObj;
+      }
+      
+      // Helper function to get MIME type from file extension
+      function getMimeType(ext: string): string {
+        const types: {[key: string]: string} = {
+          'pdf': 'application/pdf',
+          'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'doc': 'application/msword',
+          'png': 'image/png',
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'txt': 'text/plain'
+        };
+        return types[ext] || 'application/octet-stream';
       }
       
       await onSubmit(docData);
@@ -195,7 +206,7 @@ export default function DocumentUploadModal({
               </View>
             </View>
             
-            <View style={styles.inputGroup}>
+            <View style={[styles.inputGroup, { marginBottom: 30 }]}>
               <Text style={styles.label}>Uploader Name (Optional)</Text>
               <TextInput style={styles.input} value={uploaderName} onChangeText={setUploaderName} placeholder="Your name or anonymous" placeholderTextColor="#AAA" />
             </View>
@@ -221,9 +232,20 @@ const styles = StyleSheet.create({
     form: { gap: 20 },
     filePickerButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E', borderRadius: 10, padding: 15, borderWidth: 1, borderColor: '#333', borderStyle: 'dashed' },
     filePickerText: { color: '#007AFF', marginLeft: 10, flex: 1 },
-    inputGroup: { gap: 8 },
+    inputGroup: {
+        marginBottom: 16,
+        width: '100%',
+    },
     label: { color: '#fff', fontSize: 16, fontWeight: '600' },
-    input: { backgroundColor: '#1E1E1E', borderRadius: 10, padding: 15, color: '#fff', fontSize: 16, borderWidth: 1, borderColor: '#333' },
+    input: {
+        backgroundColor: '#1E1E1E',
+        color: '#fff',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        marginTop: 4,
+        width: '100%',
+    },
     pickerContainer: { backgroundColor: '#1E1E1E', borderRadius: 10, borderWidth: 1, borderColor: '#333', overflow: 'hidden' },
     picker: { color: '#fff', backgroundColor: '#1E1E1E', padding: 15 },
     row: { flexDirection: 'row', gap: 20 },

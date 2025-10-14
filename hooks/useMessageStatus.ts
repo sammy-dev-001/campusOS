@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../src/contexts/WebSocketContext';
 
 type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 

@@ -2,17 +2,16 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   RefreshControl,
   SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { API_BASE_URL } from '../../src/constants/Config';
 import { useAuth } from '../../contexts/AuthContext';
-
-const API_URL = 'http://172.26.95.216:3001';
 
 export default function GroupDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,7 +36,7 @@ export default function GroupDetailsScreen() {
     if (!id) return;
     
     try {
-      const res = await fetch(`${API_URL}/chat-groups/${id}`);
+      const res = await fetch(`${API_BASE_URL}/chat-groups/${id}`);
       if (!res.ok) throw new Error('Failed to fetch group details');
       const data = await res.json();
       setGroup(prev => ({
@@ -62,7 +61,7 @@ export default function GroupDetailsScreen() {
   const handleJoinGroup = async () => {
     try {
       if (!user?.id || !id) return;
-      const res = await fetch(`${API_URL}/chat-groups/${id}/join`, {
+      const res = await fetch(`${API_BASE_URL}/chat-groups/${id}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id })

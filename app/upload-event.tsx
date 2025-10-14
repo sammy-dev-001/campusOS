@@ -15,6 +15,18 @@ import {
 } from 'react-native';
 import { API_BASE_URL } from '../config/api';
 
+type ImageAsset = {
+  uri: string;
+  width?: number;
+  height?: number;
+  type?: string;
+  fileName?: string | null;
+  fileSize?: number | null;
+  base64?: string | null;
+  duration?: number | null;
+  exif?: Record<string, any> | null;
+};
+
 const categories = ['Social', 'Academic', 'Religious', 'Sports'];
 
 export default function UploadEventScreen() {
@@ -25,7 +37,7 @@ export default function UploadEventScreen() {
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState(categories[0]);
   const [isFeatured, setIsFeatured] = useState(false);
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState<ImageAsset | null>(null);
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -40,7 +52,18 @@ export default function UploadEventScreen() {
       quality: 0.7,
     });
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImage(result.assets[0]);
+      const asset = result.assets[0];
+      setImage({
+        uri: asset.uri,
+        width: asset.width,
+        height: asset.height,
+        type: asset.type || 'image',
+        fileName: asset.fileName || null,
+        fileSize: asset.fileSize || null,
+        base64: asset.base64 || null,
+        duration: 'duration' in asset ? (asset as any).duration : null,
+        exif: asset.exif || null
+      });
     }
   };
 
@@ -58,11 +81,16 @@ export default function UploadEventScreen() {
       formData.append('category', category);
       formData.append('isFeatured', isFeatured ? '1' : '0');
       if (image) {
-        formData.append('image', {
+        const imageUriParts = image.uri.split('.');
+        const fileType = imageUriParts[imageUriParts.length - 1];
+        
+        const imageFile = {
           uri: image.uri,
-          name: image.uri.split('/').pop() || 'event.jpg',
-          type: 'image/jpeg',
-        });
+          name: `photo.${fileType}`,
+          type: `image/${fileType}`,
+        } as unknown as Blob;
+        
+        formData.append('image', imageFile);
       }
       const res = await fetch(`${API_BASE_URL}/events`, {
         method: 'POST',

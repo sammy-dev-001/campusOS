@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
 export function withAuth<T extends object>(

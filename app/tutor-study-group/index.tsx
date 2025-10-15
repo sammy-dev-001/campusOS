@@ -1,4 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -147,10 +148,32 @@ function TutorStudyGroupScreen() {
   const fetchStudyGroups = async () => {
     try {
       if (!user?.id) return;
-      const res = await fetch(`${API_BASE_URL}/chats?type=study_group&userId=${user.id}`);
+
+      // Try to get token from AsyncStorage (AuthProvider saves it there)
+      const authRaw = await AsyncStorage.getItem('authData');
+      const token = authRaw ? (JSON.parse(authRaw).token || null) : null;
+
+      console.debug('[fetchStudyGroups] token present?', !!token);
+
+      if (!token) {
+        console.log('[fetchStudyGroups] No token available yet; skipping protected request (startup race)');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/chats?type=study_group&userId=${user.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.debug('[fetchStudyGroups] request sent, status:', res.status);
+
       const contentType = res.headers.get('content-type') || '';
       if (!res.ok) {
         const text = await res.text().catch(() => '');
+        console.error('[fetchStudyGroups] response body:', text.slice(0, 1000));
         throw new Error(`HTTP ${res.status} ${res.statusText} - ${text.slice(0, 200)}`);
       }
       let data: any = [];
@@ -188,12 +211,22 @@ function TutorStudyGroupScreen() {
   const joinGroup = async (groupId: number) => {
     try {
       if (!user?.id) return;
+
+      const authRaw = await AsyncStorage.getItem('authData');
+      const token = authRaw ? (JSON.parse(authRaw).token || null) : null;
+      console.debug('[joinGroup] token present?', !!token);
+      if (!token) {
+        console.log('[joinGroup] No token available; cannot join group');
+        return;
+      }
+
       const res = await fetch(`${API_BASE_URL}/chat-groups/${groupId}/join`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ userId: user.id })
       });
-      const bodyText = await res.text();
+      const bodyText = await res.text().catch(() => '');
+      console.debug('[joinGroup] response status:', res.status, 'body preview:', bodyText.slice(0, 200));
       if (!res.ok) {
         throw new Error(`Join failed (${res.status}): ${bodyText.slice(0, 200)}`);
       }

@@ -1,5 +1,6 @@
+import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
-import { Poll, CreatePollData, VoteData, FetchPollsParams } from '../types/poll';
+import { CreatePollData, FetchPollsParams, Poll, VoteData } from '../types/poll';
 import { getAuthToken } from '../utils/auth';
 
 type ApiError = {
@@ -14,17 +15,33 @@ const apiRequest = async <T>(
 ): Promise<T> => {
   try {
     const token = await getAuthToken();
-    if (!token) {
+    // If token is not available from storage, try axios defaults as a last resort
+    let effectiveToken = token;
+    if (!effectiveToken) {
+      try {
+        const authHeader = axios.defaults?.headers?.common?.['Authorization'] as string | undefined;
+        if (authHeader) {
+          effectiveToken = authHeader.replace(/^Bearer\s+/i, '').trim();
+          console.debug('[apiRequest] Using token from axios.defaults');
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    console.debug(`[apiRequest] token present: ${!!effectiveToken}`);
+
+    if (!effectiveToken) {
       throw { message: 'Not authenticated', status: 401 };
     }
 
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${effectiveToken}`,
       ...options.headers,
     };
 
-    const response = await fetch(`${API_BASE_URL}/api${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
     });
@@ -76,12 +93,21 @@ export const fetchPolls = async (params: FetchPollsParams = {}): Promise<Poll[]>
 
 export const createPoll = async (pollData: Omit<CreatePollData, 'createdBy'>): Promise<Poll> => {
   try {
+    // Ensure options are in the expected server shape: [{ text: string }]
+    const payloadOptions = (pollData.options || [])
+      .map(opt => typeof opt === 'string' ? { text: opt } : opt)
+      .map((o: any) => ({ text: (o.text || '').trim() }))
+      .filter((o: any) => o.text && o.text.length > 0);
+
+    const payload = {
+      ...pollData,
+      options: payloadOptions,
+      expiresAt: pollData.expiresAt.toISOString(),
+    } as any;
+
     const response = await apiRequest<Poll>('/polls', {
       method: 'POST',
-      body: JSON.stringify({
-        ...pollData,
-        expiresAt: pollData.expiresAt.toISOString(),
-      }),
+      body: JSON.stringify(payload),
     });
     
     // Notify the group about the new poll if it's a group poll

@@ -1,37 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Animated, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../components/ThemedText';
+import { fetchPolls } from '../services/pollService';
 import { useTheme } from '../src/contexts/NewThemeContext';
-
-// Mock data for polls
-const mockPolls = [
-	{
-		id: '1',
-		question: 'What time works best for the next study session?',
-		options: [
-			{ id: '1-1', text: 'Monday 6 PM', votes: 12 },
-			{ id: '1-2', text: 'Wednesday 7 PM', votes: 8 },
-			{ id: '1-3', text: 'Friday 5 PM', votes: 15 },
-		],
-		totalVotes: 35,
-		createdBy: 'CS101 Study Group',
-		endDate: '2025-09-10',
-	},
-	{
-      id: '2',
-      question: 'Which topic should we cover next?',
-      options: [
-        { id: '2-1', text: 'React Native Navigation', votes: 20 },
-        { id: '2-2', text: 'State Management', votes: 15 },
-        { id: '2-3', text: 'API Integration', votes: 10 },
-		],
-		totalVotes: 45,
-		createdBy: 'Mobile Dev Club',
-		endDate: '2025-09-15',
-	},
-];
+import { eventBus } from '../src/utils/eventBus';
+import type { Poll } from '../types/poll';
 
 // Helper function to calculate percentage
 const calculatePercentage = (votes: number, total: number): number => {
@@ -39,13 +15,26 @@ const calculatePercentage = (votes: number, total: number): number => {
   return Math.round((votes / total) * 100);
 };
 
+const formatDate = (iso?: string) => {
+	if (!iso) return 'N/A';
+	const d = new Date(iso);
+	if (isNaN(d.getTime())) return 'N/A';
+	return d.toLocaleDateString();
+};
+
 const PollScreen = () => {
 	const theme = useTheme();
 	const [votedPolls, setVotedPolls] = useState<Record<string, string>>({});
 	const [activeTab, setActiveTab] = useState<'recent' | 'trending' | 'my'>('recent');
 	const router = useRouter();
-	const [polls, setPolls] = useState(mockPolls);
-	const [filteredPolls, setFilteredPolls] = useState(mockPolls);
+	const [polls, setPolls] = useState<Poll[]>([]);
+	const [filteredPolls, setFilteredPolls] = useState<Poll[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const isFocused = useIsFocused();
+	const params = useLocalSearchParams();
+    const refreshRequested = params?.refresh
+    	? (Array.isArray(params.refresh) ? params.refresh.includes('1') : params.refresh === '1')
+    	: false;
 	const [searchQuery, setSearchQuery] = useState('');
 	const [fabAnim] = useState(new Animated.Value(0));
   const [fabOpen, setFabOpen] = useState(false);
@@ -397,11 +386,42 @@ const PollScreen = () => {
 		setFilteredPolls(filtered);
 	}, [searchQuery, polls]);
 
+	// Fetch polls when screen mounts or when it becomes focused (so newly created polls show up)
+	useEffect(() => {
+		const load = async () => {
+			try {
+				setIsLoading(true);
+				const data = await fetchPolls({ sortBy: 'newest', limit: 50 });
+				setPolls(data);
+				setFilteredPolls(data);
+			} catch (err) {
+				console.error('Failed to load polls:', err);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		if (isFocused || refreshRequested) {
+			load();
+		}
+
+		// Subscribe to optimistic created poll events
+		const off = eventBus.on('poll:created', (created: Poll) => {
+			if (!created || !created.id) return;
+			setPolls(prev => [created, ...prev]);
+			setFilteredPolls(prev => [created, ...prev]);
+		});
+
+		return () => off();
+	}, [isFocused, refreshRequested]);
+	
+
 	const PollItem = React.memo(
-		({ poll }: { poll: typeof mockPolls[0] }) => {
+		({ poll }: { poll: Poll }) => {
 			const currentVote = votedPolls[poll.id];
 			const hasVoted = !!currentVote;
-			const totalVotes = poll.options.reduce((sum, option) => sum + option.votes, 0);
+			// Compute votes per option from poll.votes array returned by the server
+			const totalVotes = poll.votes ? poll.votes.length : 0;
 
 			return (
 				<View style={styles.pollCard}>
@@ -415,7 +435,8 @@ const PollScreen = () => {
 					<View style={styles.optionsContainer}>
 						{poll.options.map((option) => {
 							const isSelected = currentVote === option.id;
-							const percentage = calculatePercentage(option.votes, totalVotes || 1);
+							const optionVotes = poll.votes ? poll.votes.filter(v => v.optionId === option.id).length : 0;
+							const percentage = calculatePercentage(optionVotes, totalVotes || 1);
 
 							return (
 								<TouchableOpacity
@@ -423,7 +444,7 @@ const PollScreen = () => {
 									style={[
 										styles.optionButton,
 										isSelected && styles.optionSelected,
-									]}
+										]}
 									onPress={() => handleVote(poll.id, option.id)}
 									activeOpacity={0.7}
 								>
@@ -431,13 +452,13 @@ const PollScreen = () => {
 										<ThemedText style={styles.optionText}>
 											{option.text}
 										</ThemedText>
-										{(hasVoted || option.votes > 0) && (
+										{(hasVoted || optionVotes > 0) && (
 											<ThemedText style={styles.percentageText}>
 												{percentage}%
 											</ThemedText>
 										)}
 									</View>
-									{(hasVoted || option.votes > 0) && (
+									{(hasVoted || optionVotes > 0) && (
 										<View style={styles.progressBarContainer}>
 											<View
 												style={[
@@ -457,7 +478,7 @@ const PollScreen = () => {
 
 					<ThemedText style={styles.voteCount}>
 						{totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} • Ends{' '}
-						{poll.endDate}
+						{formatDate(poll.expiresAt)}
 					</ThemedText>
 				</View>
 			);
@@ -465,18 +486,14 @@ const PollScreen = () => {
 	(prevProps, nextProps) => prevProps.poll.id === nextProps.poll.id
 	);
 
-	// Reset votes for a poll
+	// Reset votes for a poll (client-side only placeholder)
 	const resetVotes = (pollId: string) => {
 		setPolls((prevPolls) =>
 			prevPolls.map((poll) => {
 				if (poll.id === pollId) {
 					return {
 						...poll,
-						options: poll.options.map((option) => ({
-							...option,
-							votes: 0,
-						})),
-						totalVotes: 0,
+						votes: [],
 					};
 				}
 				return poll;
@@ -589,120 +606,25 @@ const PollScreen = () => {
 			{/* Add New Poll FAB */}
 			{/* Polls List */}
 			<View style={styles.contentContainer}>
-				<ScrollView style={styles.scrollView}>
-					{filteredPolls.length > 0 ? (
-						filteredPolls.map((poll) => (
-							<View key={poll.id} style={styles.pollCard}>
-								{/* Poll Question */}
-								<View style={styles.pollHeader}>
-									<ThemedText style={styles.pollQuestion}>{poll.question}</ThemedText>
-								</View>
-								{/* Poll Options */}
-								<View style={styles.optionsContainer}>
-									{poll.options.map((option) => {
-										const isSelected = votedPolls[poll.id] === option.id;
-										const totalVotes = poll.options.reduce(
-											(sum, o) => sum + o.votes,
-											0
-										);
-										const percentage =
-											totalVotes > 0
-												? Math.round((option.votes / totalVotes) * 100)
-												: 0;
-										const hasVoted = !!votedPolls[poll.id];
-										return (
-											<TouchableOpacity
-												key={option.id}
-												style={[
-													styles.optionButton,
-													isSelected && styles.optionSelected,
-												]}
-												onPress={() => handleVote(poll.id, option.id)}
-												activeOpacity={0.8}
-											>
-												<View style={styles.optionContent}>
-													<View style={styles.optionTopRow}>
-														<Ionicons
-															name={
-																isSelected
-																	? 'radio-button-on'
-																	: 'radio-button-off'
-															}
-															size={18}
-															color={
-																isSelected
-																	? theme.theme.primary
-																	: '#888'
-															}
-															style={{ marginRight: 8 }}
-														/>
-														<ThemedText style={styles.optionText}>
-															{option.text}
-														</ThemedText>
-													</View>
-													{hasVoted && (
-														<View style={styles.progressBarContainer}>
-															<View
-																style={[
-																	styles.progressBar,
-																	{
-																		width: `${percentage}%`,
-																		backgroundColor: theme.theme.primary,
-																	},
-																]}
-															/>
-														</View>
-													)}
-												</View>
-											</TouchableOpacity>
-										);
-									})}
-									<TouchableOpacity style={styles.voteButton}>
-										<Text style={styles.voteButtonText}>Vote</Text>
-									</TouchableOpacity>
-								</View>
-								{/* Poll Footer: Creator, Time, Comments, Participants */}
-								<View style={styles.pollFooterRow}>
-									<View style={styles.creatorRow}>
-										<Ionicons
-											name="person-circle"
-											size={22}
-											color="#fff"
-											style={{ marginRight: 4 }}
-										/>
-										<Text style={styles.creatorName}>Dr. Emily Chen</Text>
-										<View style={styles.creatorBadge}>
-											<Text style={styles.creatorBadgeText}>Creator</Text>
-										</View>
-										<Text style={styles.timeLeft}>2 days left</Text>
-									</View>
-									<View style={styles.statsRow}>
-										<Ionicons
-											name="chatbubble-ellipses-outline"
-											size={16}
-											color="#fff"
-											style={{ marginRight: 2 }}
-										/>
-										<Text style={styles.statsText}>12 Comments</Text>
-										<Ionicons
-											name="people-outline"
-											size={16}
-											color="#fff"
-											style={{ marginLeft: 12, marginRight: 2 }}
-										/>
-										<Text style={styles.statsText}>340 Participants</Text>
-									</View>
-								</View>
+				{isLoading ? (
+					<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+						<ActivityIndicator size="large" color="#3B82F6" />
+					</View>
+				) : (
+					<ScrollView style={styles.scrollView}>
+						{filteredPolls.length > 0 ? (
+							filteredPolls.map((poll) => (
+								<PollItem key={poll.id} poll={poll} />
+							))
+						) : (
+							<View style={styles.noResults}>
+								<ThemedText style={styles.noResultsText}>
+									{searchQuery ? 'No matching polls found' : 'No polls available'}
+								</ThemedText>
 							</View>
-						))
-					) : (
-						<View style={styles.noResults}>
-							<ThemedText style={styles.noResultsText}>
-								{searchQuery ? 'No matching polls found' : 'No polls available'}
-							</ThemedText>
-						</View>
-					)}
-				</ScrollView>
+						)}
+					</ScrollView>
+				)}
 			</View>
 			{/* Create Poll/Survey FAB */}
       <Animated.View

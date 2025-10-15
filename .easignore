@@ -1,0 +1,79 @@
+# EAS Build ignore rules - exclude anything not required for building the app
+
+# Version control
+.git
+.git/**
+.gitignore
+
+# Node modules and caches (EAS will install dependencies on the build worker)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# Expo / Metro caches and local config
+.expo
+.expo-shared
+/.expo/**
+
+# IDE/editor configs
+.vscode
+.idea
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build outputs / bundles
+/dist
+/build
+/tmp
+/temp
+/out
+web-build
+dist/**
+
+# Native folders (managed Expo projects don't need generated native projects)
+android
+ios
+
+# Logs, reports, coverage
+coverage
+coverage/**
+*.log
+reports
+
+# Local environment / secrets
+.env
+.env.*
+*.keystore
+*.jks
+*.p12
+*.pem
+
+# Large or irrelevant folders for mobile builds
+backend
+backend/**
+uploads
+uploads/**
+public/uploads
+public/uploads/**
+
+# Tests and fixtures
+__tests__
+test
+tests
+spec
+
+# Misc
+*.tgz
+*.zip
+*.bak
+
+# Keep package.json, yarn.lock/package-lock.json, app.json/app.config.js, and assets
+# so EAS can build. Remove or comment rules above if you need to include other folders.

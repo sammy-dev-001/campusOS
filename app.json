@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "campusOS",
-    "slug": "campusOS",
+    "slug": "campusos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -17,7 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.sammydev001.campusOS",
+  "package": "com.sammydev001.campusos",
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "CAMERA",
@@ -46,6 +46,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4db3bf0f-f0fc-4892-b786-3ff8f17744b0"
+      }
+    },
+    "owner": "sammy-dev-001"
   }
 }

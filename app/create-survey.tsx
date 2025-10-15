@@ -3,20 +3,20 @@ import * as Haptics from 'expo-haptics';
 import { Stack, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { ThemedText } from '../components/ThemedText';
-import { useAuth } from '../contexts/AuthContext';
+import { darkColors, lightColors } from '../constants/Colors';
+import { useAuth } from '../src/contexts/AuthContext';
 import { useTheme } from '../src/contexts/NewThemeContext';
-import { lightColors, darkColors } from '../constants/Colors';
 
 type QuestionType = 'multiple_choice' | 'text' | 'rating' | 'scale';
 

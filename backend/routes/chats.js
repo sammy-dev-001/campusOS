@@ -142,7 +142,7 @@ router.get('/:id', auth, async (req, res) => {
     .populate({
       path: 'lastMessage',
       populate: {
-        path: 'sender',
+        path: 'senderId',
         select: 'username profilePic'
       }
     })
@@ -157,10 +157,10 @@ router.get('/:id', auth, async (req, res) => {
     
     // Get messages separately
     const Message = mongoose.model('Message');
-    const messages = await Message.find({ chat: chat._id })
+    const messages = await Message.find({ chatId: chat._id })
       .sort({ createdAt: -1 })
       .limit(50)
-      .populate('sender', 'username profilePic')
+      .populate('senderId', 'username profilePic')
       .lean();
     
     // Convert to plain object and add virtuals
@@ -214,44 +214,66 @@ router.post('/:id/messages', auth, async (req, res) => {
 
     console.log('[POST /:id/messages] Constructed message object (pre-save):', message);
     
-    // If chat was returned as lean() above, re-fetch as model to allow modifications
-    let chatModel = chat;
-    if (chat && chat._id) {
-      chatModel = await Chat.findById(req.params.id);
-    }
-    if (!chatModel) {
-      return res.status(404).json({ message: 'Chat not found' });
-    }
-    chatModel.messages.push(message);
-    chatModel.lastMessage = message;
-    await chatModel.save();
-    
-    // Populate sender info before sending response
+    // Create a Message document (we do not store messages as an array on Chat)
+    const Message = mongoose.model('Message');
+
+    const messageDoc = new Message({
+      chatId: req.params.id,
+      senderId: req.user.id,
+      content: content,
+      type: 'text',
+      mediaUrl: (media && Array.isArray(media) && media.length > 0) ? media[0] : undefined,
+      readBy: [req.user.id]
+    });
+
+    await messageDoc.save();
+
+    // Update chat's lastMessage and timestamp
+    await Chat.findByIdAndUpdate(req.params.id, { lastMessage: messageDoc._id, updatedAt: new Date() });
+
+    // Populate sender info for the response
+    const populated = await Message.findById(messageDoc._id).populate('senderId', 'username profilePic').lean();
+
     const populatedMessage = {
-      ...message,
-      sender: {
-        _id: req.user.id,
-        username: req.user.username,
-        profilePic: req.user.profilePic
-      }
+      id: populated._id.toString(),
+      chatId: String(populated.chatId),
+      content: populated.content,
+      type: populated.type,
+      mediaUrl: populated.mediaUrl,
+      createdAt: populated.createdAt,
+      readBy: Array.isArray(populated.readBy) ? populated.readBy.map(String) : [],
+      sender: populated.senderId ? { _id: populated.senderId._id, username: populated.senderId.username, profilePic: populated.senderId.profilePic } : undefined,
+      senderId: populated.senderId ? String(populated.senderId._id) : String(req.user.id)
     };
-    
-    // Emit new message to all participants (use participant.user)
-    const participantsList = (chatModel.participants || []).map(p => {
-      // participants are subdocuments with a .user field
+
+    // Use the previously-lean chat to get participants list (avoid querying again)
+    const participantsList = (chat.participants || []).map(p => {
       if (p && (p.user || p.user === 0)) return String(p.user);
       return String(p);
     });
+
     console.log('[POST /:id/messages] Emitting newMessage to participants:', participantsList);
-    participantsList.forEach(participantUserId => {
-      if (participantUserId && participantUserId !== req.user.id) {
-        req.app.get('io').to(participantUserId).emit('newMessage', {
-          chatId: chatModel._id,
-          message: populatedMessage
-        });
-      }
-    });
-    
+    const webSocketService = req.app.get('webSocketService');
+    const io = webSocketService && webSocketService.io ? webSocketService.io : null;
+    if (io) {
+      participantsList.forEach(participantUserId => {
+        try {
+          if (participantUserId && participantUserId !== req.user.id) {
+            // Emit to the user's personal room if available; fall back to direct room by id
+            const room = `user_${participantUserId}`;
+            io.to(room).emit('newMessage', {
+              chatId: req.params.id,
+              message: populatedMessage
+            });
+          }
+        } catch (emitErr) {
+          console.warn('[POST /:id/messages] emit error for participant', participantUserId, emitErr);
+        }
+      });
+    } else {
+      console.warn('[POST /:id/messages] No io instance available on app to emit messages');
+    }
+
     res.status(201).json(populatedMessage);
   } catch (error) {
     console.error('Error sending message:', error);
@@ -262,24 +284,17 @@ router.post('/:id/messages', auth, async (req, res) => {
 // Mark messages as read
 router.post('/:id/read', auth, async (req, res) => {
   try {
-    const chat = await Chat.findOne({
-      _id: req.params.id,
-      'participants.user': req.user.id
-    });
-    
-    if (!chat) {
-      return res.status(404).json({ message: 'Chat not found' });
-    }
-    
-    // Mark all unread messages as read
-    chat.messages.forEach(message => {
-      if (!message.readBy.includes(req.user.id)) {
-        message.readBy.push(req.user.id);
-      }
-    });
-    
-    await chat.save();
-    
+    // Ensure the user is a participant first
+    const chat = await Chat.findOne({ _id: req.params.id, 'participants.user': req.user.id });
+    if (!chat) return res.status(404).json({ message: 'Chat not found' });
+
+    // Use Message model to add the user to readBy for messages in this chat
+    const Message = mongoose.model('Message');
+    await Message.updateMany(
+      { chatId: req.params.id, readBy: { $ne: req.user.id } },
+      { $addToSet: { readBy: req.user.id } }
+    );
+
     res.json({ message: 'Messages marked as read' });
   } catch (error) {
     console.error('Error marking messages as read:', error);

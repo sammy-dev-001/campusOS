@@ -774,12 +774,7 @@ function ChatScreenContent() {
             {item?.content ? (
               <Text style={styles.bubbleText}>{item.content}</Text>
             ) : null}
-            {/* Sending / failed indicators */}
-            {item?.status === 'sending' && (
-              <View style={{ marginTop: 6 }}>
-                <ActivityIndicator size="small" color={isOwn ? '#fff' : '#FFD600'} />
-              </View>
-            )}
+            {/* Sending indicator removed: no spinner shown for optimistic messages */}
             {item?.status === 'failed' && (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                 <Text style={[styles.bubbleMeta, { color: '#ff6b6b', marginRight: 8 }]}>Failed to send</Text>

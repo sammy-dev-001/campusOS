@@ -69,7 +69,7 @@ interface ChatContextType {
   messages: Record<string, Message[]>;
   userStatus: Record<string, string>;
   isConnected: boolean;
-  sendMessage: (chatId: string, message: Partial<Message>) => Promise<void>;
+  sendMessage: (chatId: string, message: Partial<Message>) => Promise<Message>;
   deleteMessage: (messageId: string, chatId: string) => Promise<void>;
   editMessage: (chatId: string, messageId: string, newContent: string) => Promise<void>;
   reactToMessage: (chatId: string, messageId: string, emoji: string) => void;
@@ -113,41 +113,79 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
   // Refs to hold the latest values for things used inside callbacks declared earlier
   const userRef = useRef<any>(null);
   const makeAuthenticatedRequestRef = useRef<any>(null);
+
+  // Helper to extract a stable sender id from various server shapes
+  const extractSenderId = (raw: any): string => {
+    try {
+      if (raw === undefined || raw === null) return '';
+      if (typeof raw === 'string' || typeof raw === 'number') return String(raw);
+      // If the server returns senderId as an object, try common fields
+      if (raw._id) return String(raw._id);
+      if (raw.id) return String(raw.id);
+      if (raw.senderId) return String(raw.senderId);
+      if (raw.userId) return String(raw.userId);
+      // If it's an object like { _id: {...} } nested, try deeper
+      if (raw.sender && (raw.sender._id || raw.sender.id)) {
+        return String(raw.sender._id ?? raw.sender.id);
+      }
+      // Fallback: if it has a toString that yields useful value, use it; otherwise empty
+      const maybe = String(raw);
+      if (maybe && maybe !== '[object Object]') return maybe;
+      return '';
+    } catch (e) {
+      return '';
+    }
+  };
   
   // Define all the required functions with proper types
   const sendMessageFn = useCallback(async (chatId: string, message: Partial<Message>) => {
+    if (!chatId) throw new Error('Invalid chatId');
+    const content = message.content || '';
+    // Create a temporary ID for optimistic UI
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+    // Ensure we have a valid senderId for optimistic messages. If userRef is not available
+    // (component unmounted or user state not synced), try AsyncStorage authData as fallback.
+    let senderIdVal = 'me';
     try {
-      if (!chatId) throw new Error('Invalid chatId');
-      const content = message.content || '';
-      // Create a temporary ID for optimistic UI
-      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
       const currentUser = userRef.current;
-      const optimisticMessage: Message = {
-        id: tempId,
-        tempId,
-        senderId: currentUser?.id ? String(currentUser.id) : 'me',
-        chatId: chatId,
-        content,
-        createdAt: new Date().toISOString(),
-        status: 'sending',
-      };
+      if (currentUser?.id) {
+        senderIdVal = String(currentUser.id);
+      } else {
+        const authDataRaw = await AsyncStorage.getItem('authData');
+        if (authDataRaw) {
+          const parsed = JSON.parse(authDataRaw);
+          if (parsed?.user?.id) senderIdVal = String(parsed.user.id);
+        }
+      }
+    } catch (e) {
+      console.warn('[sendMessageFn] Failed to read fallback senderId from AsyncStorage', e);
+    }
 
-      // Optimistically add the message to state
-      setMessages(prev => {
-        const existing = prev[chatId] || [];
-        return {
-          ...prev,
-          [chatId]: [...existing, optimisticMessage]
-        };
-      });
+    const optimisticMessage: Message = {
+      id: tempId,
+      tempId,
+      senderId: senderIdVal,
+      chatId: chatId,
+      content,
+      createdAt: new Date().toISOString(),
+      status: 'sending',
+    };
 
+    // Optimistically add the message to state
+    setMessages(prev => ({
+      ...prev,
+      [chatId]: [...(prev[chatId] || []), optimisticMessage]
+    }));
+
+    try {
       // Send to server
       const url = `${API_BASE_URL}/chats/${chatId}/messages`;
       const body = JSON.stringify({ content, media: (message as any).media || [] });
 
       const makeReq = makeAuthenticatedRequestRef.current;
       if (!makeReq) throw new Error('Auth request helper not available');
+      
       const response = await makeReq(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -155,53 +193,79 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       });
 
       if (!response.ok) {
-        const txt = await response.text();
-        // mark as failed
-        setMessages(prev => ({
-          ...prev,
-          [chatId]: (prev[chatId] || []).map(m => m.tempId === tempId ? { ...m, status: 'failed' } : m)
-        }));
-        throw new Error(`Failed to send message: ${txt}`);
+        throw new Error(`Server responded with status ${response.status}`);
       }
 
       const data = await response.json();
-
-      // Server might return the message directly or under `message` key
       const serverMsgRaw = data && data.message ? data.message : data;
 
       // Normalize server message to our Message shape
       const serverMessage: Message = {
         id: serverMsgRaw._id?.toString?.() || serverMsgRaw.id?.toString?.() || tempId,
-        senderId: serverMsgRaw.sender?._id?.toString?.() || serverMsgRaw.sender?.id?.toString?.() || (serverMsgRaw.sender?.toString?.() || optimisticMessage.senderId),
+        senderId: serverMsgRaw.sender?._id?.toString?.() || serverMsgRaw.sender?.id?.toString?.() || 
+                 (serverMsgRaw.sender?.toString?.() || optimisticMessage.senderId),
         chatId: chatId,
         content: serverMsgRaw.content || content,
         createdAt: serverMsgRaw.createdAt || new Date().toISOString(),
         status: 'sent',
       };
 
-      // Replace optimistic message with actual server message
+      // Replace optimistic message with actual server message.
+      // Match by tempId when available, otherwise try to find a close match by content/sender/timestamp.
       setMessages(prev => {
         const chatMsgs = prev[chatId] || [];
+
         let replaced = false;
-        const updated = chatMsgs.map(m => {
-          if (m.tempId === tempId) {
+        const newMsgs = chatMsgs.map(m => {
+          if (m.tempId && m.tempId === tempId) {
             replaced = true;
-            return serverMessage;
+            return { ...serverMessage };
           }
           return m;
         });
 
-        // If no optimistic message found (edge case), append server message
         if (!replaced) {
-          updated.push(serverMessage);
+          // Try a heuristic: find the last message with same content and sender within 60s
+          for (let i = newMsgs.length - 1; i >= 0; i--) {
+            const m = newMsgs[i];
+            if (!m) continue;
+            if (m.status === 'sending' && m.content === content && String(m.senderId) === String(senderIdVal)) {
+              const t1 = new Date(m.createdAt).getTime();
+              const t2 = new Date(serverMessage.createdAt).getTime();
+              if (Math.abs(t1 - t2) < 60000) {
+                newMsgs[i] = { ...serverMessage };
+                replaced = true;
+                break;
+              }
+            }
+          }
         }
 
-        return { ...prev, [chatId]: updated };
+        // If still not replaced, append server message but avoid duplicates
+        if (!replaced && !newMsgs.some(m => m.id === serverMessage.id)) {
+          newMsgs.push(serverMessage);
+        }
+
+        return {
+          ...prev,
+          [chatId]: newMsgs
+        };
       });
 
-      return;
+      return serverMessage;
     } catch (error) {
       console.error('[sendMessageFn] Error sending message:', error);
+      
+      // Mark message as failed in the UI
+      setMessages(prev => ({
+        ...prev,
+        [chatId]: (prev[chatId] || []).map(m => 
+          m.tempId === tempId 
+            ? { ...m, status: 'failed', error: error instanceof Error ? error.message : 'Failed to send' }
+            : m
+        )
+      }));
+      
       throw error;
     }
   }, []);
@@ -553,15 +617,23 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       return response;
     } catch (error) {
       console.error('[makeAuthenticatedRequest] Request failed:', error);
-      // If it's an auth-related error, log the user out
-      if (error instanceof Error && (
-        error.message.includes('auth') || 
-        error.message.includes('token') ||
-        error.message.includes('401')
-      )) {
-        console.log('[makeAuthenticatedRequest] Auth error detected, logging out...');
-        await logout();
-      }
+        // If it's an auth-related error, decide whether to log out.
+        // Do NOT log out for missing auth data (startup race) — only for real auth failures.
+        if (error instanceof Error) {
+          const msg = error.message || '';
+          // If auth data is simply missing from storage (likely because AuthProvider
+          // hasn't hydrated yet), don't force a logout. Let callers handle the error.
+          if (msg.includes('No authentication data found in storage') || msg.includes('No authentication token found')) {
+            console.log('[makeAuthenticatedRequest] Auth data missing in storage; not logging out (possible startup race)');
+            throw error;
+          }
+
+          // For explicit 401 / token-expired errors or when refresh failed, perform logout
+          if (msg.includes('401') || msg.includes('Token expired') || msg.includes('Authentication service not available')) {
+            console.log('[makeAuthenticatedRequest] Auth error detected, logging out...');
+            await logout();
+          }
+        }
       throw error;
     }
   }, [refreshAuthToken, logout]);
@@ -822,17 +894,59 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       }
 
       setMessages(prev => {
-        const chatId = message.chatId.toString();
+  const chatId = String((message as any).chatId ?? '').trim();
+        if (!chatId) return prev;
         const chatMessages = prev[chatId] || [];
 
-        // Check if message already exists by id or tempId
-        if (chatMessages.some(m => (m.id && message.id && m.id === message.id) || (m.tempId && m.tempId === message.id))) {
-          return prev;
+        // Normalize incoming message
+        const rawId = (message as any)._id ?? (message as any).id ?? (message as any).tempId ?? `srv-${Date.now()}`;
+        const rawSender = extractSenderId((message as any).sender ?? (message as any).senderId ?? message);
+        const normalized: Message = {
+          id: String(rawId),
+          tempId: (message as any).tempId ? String((message as any).tempId) : undefined,
+          senderId: String(rawSender),
+          chatId: chatId,
+          content: message.content ?? '',
+          createdAt: message.createdAt ?? new Date().toISOString(),
+          status: (message as any).status ?? 'sent'
+        } as Message;
+
+        // Try to find an existing optimistic message to replace
+        let replaced = false;
+        const newMsgs = chatMessages.slice();
+
+        // Find index by these rules (in order):
+        // 1) existing.tempId === normalized.tempId
+        // 2) existing.tempId === normalized.id (server might return tempId as id)
+        // 3) existing.id === normalized.id
+        // 4) heuristic: same content & sender within 60s and status sending
+        let idx = newMsgs.findIndex(m => m.tempId && normalized.tempId && m.tempId === normalized.tempId);
+        if (idx === -1) idx = newMsgs.findIndex(m => m.tempId && m.tempId === normalized.id);
+        if (idx === -1) idx = newMsgs.findIndex(m => m.id && normalized.id && m.id === normalized.id);
+        if (idx === -1) {
+          idx = newMsgs.findIndex(m => m.status === 'sending' && m.content === normalized.content && m.senderId === normalized.senderId && Math.abs(new Date(m.createdAt).getTime() - new Date(normalized.createdAt).getTime()) < 60000);
+        }
+
+        if (idx !== -1) {
+          // Merge/replace and ensure status is at least 'sent'
+          newMsgs[idx] = { ...newMsgs[idx], ...normalized, status: normalized.status || 'sent' } as Message;
+          replaced = true;
+        }
+
+        // If not replaced, avoid duplicates by id and append
+        if (!replaced) {
+          const existsById = newMsgs.some(m => m.id && normalized.id && m.id === normalized.id);
+          if (!existsById) {
+            newMsgs.push(normalized);
+          } else {
+            // nothing to do
+            return prev;
+          }
         }
 
         return {
           ...prev,
-          [chatId]: [...chatMessages, message]
+          [chatId]: newMsgs
         };
       });
     } catch (error) {
@@ -904,7 +1018,15 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         return;
       }
       
-      // Clean the chat ID to remove any potential whitespace or special characters
+      // Get current messages before fetching to preserve pending states
+      const currentMessages = messages[chatId] || [];
+      const pendingMessages = currentMessages.filter(m => 
+        m.status === 'sending' || m.status === 'failed' || m.tempId
+      );
+      
+      console.log(`[fetchMessages] Found ${pendingMessages.length} pending messages to preserve`);
+      
+      // Clean the chat ID to remove any potential whitespace
       const cleanedChatId = chatId.trim();
       
       // Simple validation for MongoDB ObjectId format (24 hex characters)
@@ -922,24 +1044,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       console.log('[fetchMessages] Making request to:', url);
       
       try {
-        // Get the current auth token
-        const authData = await AsyncStorage.getItem('authData');
-        if (!authData) {
-          throw new Error('No authentication data found');
-        }
-        
-        const { token } = JSON.parse(authData);
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
-        
-        console.log('[fetchMessages] Using token:', token.substring(0, 10) + '...');
-        
         // Make the authenticated request
         const response = await makeAuthenticatedRequest(url, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
@@ -966,21 +1074,67 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         const responseData = await response.json();
         console.log('[fetchMessages] Response data:', responseData);
         
-        let messages: Message[] = [];
+        let serverMessages: Message[] = [];
         
         // Check if the response has a 'messages' or 'data' property
         if (responseData.messages && Array.isArray(responseData.messages)) {
-          messages = responseData.messages;
+          serverMessages = responseData.messages;
         } else if (responseData.data && Array.isArray(responseData.data)) {
-          messages = responseData.data;
+          serverMessages = responseData.data;
         } else if (responseData) {
           console.log('[fetchMessages] No messages array found in response, using empty array');
         }
         
-        // Update the messages in the state
+        // Normalize incoming messages
+        const normalizedMessages: Message[] = (serverMessages || []).map((m: any) => {
+          const rawId = m._id ?? m.id ?? m.tempId ?? `srv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const rawSender = extractSenderId(m.sender ?? m.senderId ?? m);
+
+          return {
+            id: String(rawId),
+            tempId: m.tempId ? String(m.tempId) : undefined,
+            senderId: String(rawSender),
+            chatId: String(m.chatId ?? chatId),
+            content: m.content ?? '',
+            createdAt: m.createdAt ?? m.timestamp ?? new Date().toISOString(),
+            updatedAt: m.updatedAt,
+            status: (m.status as Message['status']) ?? 'sent',
+            mediaUrl: m.mediaUrl,
+            replyTo: m.replyTo,
+            type: m.type ?? 'text',
+          } as Message;
+        });
+
+        // Merge server messages with pending messages
+        const mergedMessages = [...normalizedMessages];
+        
+        // Add any pending messages that aren't already in the server response
+        pendingMessages.forEach(pendingMsg => {
+          const exists = mergedMessages.some(m => 
+            m.id === pendingMsg.id || 
+            (m.tempId && m.tempId === pendingMsg.tempId) ||
+            (m.content === pendingMsg.content && 
+             m.senderId === pendingMsg.senderId &&
+             Math.abs(new Date(m.createdAt).getTime() - new Date(pendingMsg.createdAt).getTime()) < 60000)
+          );
+          
+          if (!exists) {
+            console.log(`[fetchMessages] Preserving pending message: ${pendingMsg.content?.substring(0, 20)}...`);
+            mergedMessages.push(pendingMsg);
+          }
+        });
+        
+        // Sort by timestamp
+        const sortedMessages = mergedMessages.sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        
+        console.log(`[fetchMessages] Merged ${normalizedMessages.length} server messages with ${pendingMessages.length} pending messages`);
+
+        // Update the messages in the state using the merged and sorted array
         setMessages(prev => ({
           ...prev,
-          [chatId]: messages
+          [chatId]: sortedMessages
         }));
         
       } catch (error) {
@@ -997,22 +1151,25 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
           }
         }
         
+        // Even if we couldn't fetch new messages, keep the existing ones
+        if (currentMessages.length > 0) {
+          console.log('[fetchMessages] Keeping existing messages after error');
+          return;
+        }
+        
         throw error;
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[fetchMessages] Error in fetchMessagesFn:', errorMessage, error);
       
-      // Update state to indicate no messages could be loaded
-      setMessages(prev => ({
-        ...prev,
-        [chatId]: []
-      }));
+      // Don't clear existing messages on error, just log it
+      console.log('[fetchMessages] Preserving existing messages after error');
       
       // Re-throw the error to be handled by the caller if needed
       throw new Error(`Failed to fetch messages: ${errorMessage}`);
     }
-  }, [handleSessionExpired, makeAuthenticatedRequest, setMessages]);
+  }, [handleSessionExpired, makeAuthenticatedRequest, messages, setMessages]);
 
   // Create context value with all required functions and state
   const contextValue = useMemo<ChatContextType>(() => ({

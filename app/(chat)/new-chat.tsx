@@ -6,6 +6,7 @@ import { ActivityIndicator, FlatList, Image, StyleSheet, TextInput, TouchableOpa
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
 import { API_BASE_URL } from '../../config/api';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { useChat } from '../../src/contexts/ChatContext';
 import { useTheme } from '../../src/contexts/NewThemeContext';
 import { useUser } from '../../src/contexts/UserContext';
@@ -25,6 +26,7 @@ export default function NewChatScreen() {
   const { theme, isDark } = useTheme();
   const router = useRouter();
   const { user: currentUser } = useUser();
+  const auth = useAuth();
   const { chats, setChats } = useChat();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,14 +45,6 @@ export default function NewChatScreen() {
     }
   }, [currentUser]);
 
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <ThemedText style={{ marginTop: 10 }}>Loading user data...</ThemedText>
-      </View>
-    );
-  }
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -214,7 +208,20 @@ export default function NewChatScreen() {
         }
         
         if (response.status === 401) {
-          await AsyncStorage.removeItem('authData');
+          // Try to refresh the token via AuthContext; if refresh succeeds, retry the search once.
+          try {
+            console.log('[fetchUsers] Received 401, attempting token refresh...');
+            const refreshed = await auth.refreshAuthToken();
+            if (refreshed) {
+              console.log('[fetchUsers] Token refreshed, retrying search');
+              // Retry the search recursively once
+              return await fetchUsers(query);
+            }
+          } catch (e) {
+            console.warn('[fetchUsers] Token refresh attempt failed', e);
+          }
+          // If we get here, token refresh failed — log out and prompt user to sign in again
+          await auth.logout();
           throw new Error('Your session has expired. Please log in again.');
         }
         
@@ -330,9 +337,32 @@ export default function NewChatScreen() {
         console.log('First participant user data keys:', Object.keys(data[0].participants[0].user));
       }
       
-      // Process each chat item
-      for (const chat of data) {
+      // Process each chat item or user object
+      for (const item of data) {
         try {
+          // If the API returned a plain user object (id, username, displayName...), map it directly
+          if (item && (item.id || item._id) && (item.username || item.displayName) && !item.participants) {
+            const userId = String(item._id || item.id);
+            if (userId === currentUser?.id) {
+              console.log('Skipping current user (search result):', userId);
+              continue;
+            }
+
+            const displayName = item.displayName || item.name || item.username || 'Unknown User';
+            const email = item.email || '';
+            const profilePicture = item.profilePicture || item.profile_picture || item.profilePic || item.avatar || undefined;
+
+            const existingUserIndex = validUsers.findIndex((u: User) => u.id === userId);
+            if (existingUserIndex === -1) {
+              validUsers.push({ id: userId, displayName, email, profilePicture });
+            } else {
+              console.log('User already exists in validUsers with ID:', userId);
+            }
+
+            continue;
+          }
+
+          const chat = item;
           if (!chat || !chat.participants || !Array.isArray(chat.participants)) {
             console.log('Skipping invalid chat item:', chat);
             continue;
@@ -344,7 +374,7 @@ export default function NewChatScreen() {
             isGroup: chat.isGroupChat,
             participantCount: chat.participants?.length || 0
           });
-          
+
           // Extract all users from participants
           for (const participant of chat.participants) {
             try {
@@ -504,7 +534,7 @@ export default function NewChatScreen() {
             }
           }
         } catch (e) {
-          console.error('Error processing chat item:', chat, e);
+          console.error('Error processing chat item:', item, e);
         }
       }
       
@@ -513,8 +543,10 @@ export default function NewChatScreen() {
         u.id !== currentUserId && u.displayName !== 'Unknown User'
       );
       
-      console.log(`[fetchUsers] Found ${filteredUsers.length} valid users after filtering`);
-      return filteredUsers;
+  console.log(`[fetchUsers] Found ${filteredUsers.length} valid users after filtering`);
+  // Populate component state so the UI renders the results
+  setUsers(filteredUsers);
+  return filteredUsers;
       
     } catch (error) {
       console.error('[fetchUsers] Error:', error);
@@ -790,6 +822,12 @@ export default function NewChatScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#fff' }} edges={['top']}>
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <ThemedText style={{ marginTop: 10 }}>Loading user data...</ThemedText>
+        </View>
+      ) : null}
       {/* Header */}
       <View style={{
         flexDirection: 'row',

@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 import * as Haptics from 'expo-haptics';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../components/ThemedText';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../src/contexts/NewThemeContext';
 import { createPoll } from '../services/pollService';
+import { useAuth } from '../src/contexts/AuthContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
+import { eventBus } from '../src/utils/eventBus';
+import { getAuthToken } from '../utils/auth';
 
 export default function CreatePollScreen() {
   const router = useRouter();
@@ -85,12 +88,23 @@ export default function CreatePollScreen() {
         throw new Error('Invalid expiration date');
       }
       
-      // Call the poll service
-      await createPoll(pollData);
-      
-      // Success - navigate back and show success message
-      Alert.alert('Success', 'Poll created successfully!');
-      router.back();
+      // Ensure we have a token and set axios default header if available
+      const token = await getAuthToken();
+      if (!token) {
+        Alert.alert('Authentication required', 'Please log in to create a poll.');
+        setIsSubmitting(false);
+        return;
+      }
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+  // Call the poll service
+  const created = await createPoll(pollData);
+
+  // Emit the created poll for optimistic insertion and navigate back
+  try { eventBus.emit('poll:created', created); } catch (e) { /* ignore */ }
+
+  Alert.alert('Success', 'Poll created successfully!');
+  router.replace('/polls?refresh=1');
       
     } catch (error: any) {
       console.error('Error creating poll:', error);

@@ -1,5 +1,5 @@
-import '../styles/global.css';
+import { Redirect } from 'expo-router';
 
 export default function Index() {
-  return null; // This will be handled by the router
+  return <Redirect href="/(tabs)/index" />;
 }

@@ -21,6 +21,7 @@ module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfig(
     {
       ...env,
+      mode: 'production',
       entry: {
         app: [
           // Use the web entry point
@@ -33,6 +34,7 @@ module.exports = async function (env, argv) {
           'react-native-reanimated',
           'react-native-gesture-handler',
           'expo-router',
+          'react-native-svg',
         ],
       },
     },
@@ -45,7 +47,60 @@ module.exports = async function (env, argv) {
     fs: false,
     path: false,
     crypto: false,
+    stream: require.resolve('stream-browserify'),
+    buffer: require.resolve('buffer/'),
   };
+
+  // Add aliases for better module resolution
+  config.resolve.alias = {
+    ...config.resolve.alias,
+    'react-native$': 'react-native-web',
+    'react-native-svg$': 'react-native-svg-web',
+    'expo-router/entry': path.resolve(__dirname, 'node_modules/expo-router/entry'),
+    'expo-router': path.resolve(__dirname, 'node_modules/expo-router'),
+    '@expo/vector-icons': 'react-native-vector-icons',
+  };
+
+  // Add support for SVG files
+  config.module.rules.push({
+    test: /\.svg$/,
+    use: [
+      {
+        loader: '@svgr/webpack',
+        options: {
+          svgoConfig: {
+            plugins: [
+              {
+                name: 'preset-default',
+                params: {
+                  overrides: { removeViewBox: false },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ],
+  });
+
+  // Add this to handle react-native-svg-web
+  config.module.rules.push({
+    test: /\.(js|jsx|ts|tsx)$/,
+    include: [
+      path.resolve(__dirname, 'node_modules/react-native-svg'),
+      path.resolve(__dirname, 'node_modules/expo-router'),
+    ],
+    use: {
+      loader: 'babel-loader',
+      options: {
+        presets: ['@babel/preset-react'],
+        plugins: [
+          ['@babel/plugin-proposal-class-properties', { loose: true }],
+          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
+        ],
+      },
+    },
+  });
 
   // Add support for .web.js files
   config.resolve.extensions = [
@@ -55,6 +110,21 @@ module.exports = async function (env, argv) {
     '.web.tsx',
     ...config.resolve.extensions,
   ];
+
+  // Handle react-native-svg-web
+  config.module.rules.push({
+    test: /\.(js|jsx|ts|tsx)$/,
+    use: {
+      loader: 'babel-loader',
+      options: {
+        presets: ['@babel/preset-react'],
+        plugins: [
+          ['@babel/plugin-proposal-class-properties', { loose: true }],
+          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
+        ],
+      },
+    },
+  });
 
   // Add alias for react-native-web
   config.resolve.alias = {

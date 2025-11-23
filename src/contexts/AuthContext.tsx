@@ -1,7 +1,66 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE_URL } from '../config/api';
+import NetInfo, { NetInfoState, NetInfoStateType } from '@react-native-community/netinfo';
+import { AppState, AppStateStatus, Platform } from 'react-native';
+
+// Custom error class for authentication errors
+export class AuthError extends Error {
+  code: string;
+  details?: any;
+    
+  constructor(message: string, code: string = 'AUTH_ERROR', details?: any) {
+    super(message);
+    this.name = 'AuthError';
+    this.code = code;
+    this.details = details;
+    
+    // Maintains proper stack trace for where our error was thrown
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, AuthError);
+    }
+  }
+}
+
+// Standardized error response interface
+interface ErrorResponse {
+  code: string;
+  message: string;
+  details?: any;
+  timestamp?: string;
+}
+
+// Create a single axios instance for the app
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000, // 10 seconds timeout
+});
+
+// Helper function to create standardized error objects
+const createError = (message: string, code: string = 'AUTH_ERROR', details?: any): ErrorResponse => ({
+  code,
+  message,
+  details,
+  timestamp: new Date().toISOString(),
+});
+
+// Helper function to log errors consistently
+const logError = (error: any, context: string = 'AuthContext') => {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorStack = error instanceof Error ? error.stack : undefined;
+  
+  console.error(`[${context}]`, {
+    message: errorMessage,
+    code: error.code || 'UNKNOWN_ERROR',
+    stack: errorStack,
+    details: error.details || {},
+    timestamp: new Date().toISOString(),
+  });
+};
 
 interface ApiError {
   errorType?: string;
@@ -46,35 +105,97 @@ type LoginResponse = {
   token?: string; // Add token to LoginResponse type
 };
 
+interface NetworkState {
+  isConnected: boolean | null;
+  isInternetReachable: boolean | null;
+  type: NetInfoStateType | null;
+  lastUpdated: number | null;
+}
+
 interface AuthContextType {
+  // Existing auth state
   isInitialized: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
   token: string | null;
   refreshToken: string | null;
+  
+  // Network state
+  network: NetworkState;
+  isRetrying: boolean;
+  queuedRequests: number;
+  isOnline: boolean;
+  
+  // Auth methods
   login: (email: string, password: string) => Promise<LoginResponse>;
-  signup: (username: string, email: string, password: string, displayName: string) => Promise<string>;
+  signup: (email: string, password: string, displayName: string, fullName: string) => Promise<string>;
   logout: () => void;
   updateProfilePicture: (imageUri: string) => Promise<void>;
   saveAuthData: (data: { user: User | LoginResponse; token: string; refreshToken?: string }) => Promise<void>;
   clearAuthData: () => Promise<void>;
   refreshAuthToken: () => Promise<{ token: string; refreshToken: string } | null>;
+  
+  // Network methods
+  checkNetworkConnection: () => Promise<boolean>;
+  retryAllRequests: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // All hooks must be called unconditionally at the top level
-  const [authState, setAuthState] = useState({
+  
+
+  interface QueuedRequest {
+    id: string;
+    config: AxiosRequestConfig;
+    retryCount: number;
+    lastAttempt: number;
+    resolve: (value: any) => void;
+    reject: (error: any) => void;
+  }
+
+  interface AuthState {
+    isInitialized: boolean;
+    isAuthenticated: boolean;
+    user: User | null;
+    isLoading: boolean;
+    network: NetworkState;
+    isRetrying: boolean;
+    queuedRequests: number;
+    error?: {
+      code: string;
+      message: string;
+      details?: any;
+      retryable?: boolean;
+      retry?: () => Promise<void>;
+    };
+  }
+
+  const [authState, setAuthState] = useState<AuthState>({
     isInitialized: false,
     isAuthenticated: false,
-    user: null as User | null,
+    user: null,
     isLoading: true,
+    network: {
+      isConnected: null,
+      isInternetReachable: null,
+      type: null,
+      lastUpdated: null
+    },
+    isRetrying: false,
+    queuedRequests: 0
   });
-  
+
+  // Queue for storing requests that failed due to network issues
+  const requestQueue = useRef<QueuedRequest[]>([]);
+  const isProcessingQueue = useRef(false);
+
+  // Network state management is defined later in this file
+  // (updateNetworkState, checkNetworkConnection, processRequestQueue, queueRequest, retryAllRequests)
+
   // Memoized state updater to prevent unnecessary re-renders
-  const updateAuthState = useCallback((updates: Partial<typeof authState> | ((prev: typeof authState) => Partial<typeof authState>)) => {
+  const updateAuthState = useCallback((updates: Partial<AuthState> | ((prev: AuthState) => Partial<AuthState>)) => {
     setAuthState(prev => ({
       ...prev,
       ...(typeof updates === 'function' ? updates(prev) : updates)
@@ -84,53 +205,316 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Destructure state for easier access - must be after all hooks
   const { isInitialized, isAuthenticated, user, isLoading } = authState;
 
-  const refreshToken = useCallback(async (): Promise<{ token: string; refreshToken: string } | null> => {
-    try {
-      const authData = await AsyncStorage.getItem('authData');
-      if (!authData) return null;
+  // Track if a token refresh is in progress
+  const refreshTokenPromise = useRef<Promise<{ token: string; refreshToken: string }> | null>(null);
+  
+  // Track the number of retry attempts
+  const refreshRetryCount = useRef(0);
+  const MAX_RETRY_ATTEMPTS = 3;
+  const TOKEN_EXPIRY_MARGIN = 60 * 1000; // 1 minute in milliseconds
 
-      const { token, refreshToken } = JSON.parse(authData);
-      if (!refreshToken) return null;
-
-      const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!response.ok) throw new Error('Failed to refresh token');
-
-      const data = await response.json();
-      if (!user) {
-        throw new Error('No user data available');
-      }
-      
-      await saveAuthData({ 
-        user: { 
-          id: user.id,
-          username: user.username || 'unknown',
-          display_name: user.display_name || 'Unknown User',
-          email: user.email || '',
-          profile_picture: user.profile_picture,
-          userId: user.userId || user.id,
-          token: data.token,
-          refreshToken: data.refreshToken
-        },
-        token: data.token,
-        refreshToken: data.refreshToken 
-      });
-      
-      return { token: data.token, refreshToken: data.refreshToken };
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      await clearAuthData();
-      return null;
+  const refreshToken = useCallback(async (force = false): Promise<{ token: string; refreshToken: string }> => {
+    // If a refresh is already in progress, return the existing promise
+    if (refreshTokenPromise.current && !force) {
+      return refreshTokenPromise.current;
     }
-  }, [user]);
 
-  const saveAuthData = async (data: { user: User | LoginResponse; token?: string; refreshToken?: string }) => {
+    refreshTokenPromise.current = (async () => {
+      try {
+        refreshRetryCount.current++;
+        
+        const authData = await AsyncStorage.getItem('authData');
+        if (!authData) {
+          throw new AuthError('No authentication data found', 'NO_AUTH_DATA');
+        }
+
+        const { refreshToken, token } = JSON.parse(authData);
+        if (!refreshToken) {
+          throw new AuthError('No refresh token available', 'NO_REFRESH_TOKEN');
+        }
+
+        // Check if we've exceeded max retry attempts
+        if (refreshRetryCount.current > MAX_RETRY_ATTEMPTS) {
+          throw new AuthError(
+            'Maximum refresh token retry attempts reached',
+            'MAX_RETRY_ATTEMPTS_REACHED',
+            { attempts: refreshRetryCount.current }
+          );
+        }
+
+        // Add a small delay before retrying (exponential backoff)
+        if (refreshRetryCount.current > 1) {
+          const backoffTime = Math.min(1000 * Math.pow(2, refreshRetryCount.current - 1), 30000);
+          await new Promise(resolve => setTimeout(resolve, backoffTime));
+        }
+
+        const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          
+          // Handle specific error cases
+          if (response.status === 401 || response.status === 403) {
+            // Clear auth data if refresh token is invalid
+            await clearAuthData();
+            throw new AuthError(
+              'Session expired. Please log in again.',
+              'SESSION_EXPIRED',
+              { status: response.status, ...errorData }
+            );
+          }
+          
+          throw new AuthError(
+            errorData.message || 'Failed to refresh token',
+            errorData.code || 'TOKEN_REFRESH_FAILED',
+            { status: response.status, ...errorData }
+          );
+        }
+
+        const data = await response.json();
+        
+        if (!data.token) {
+          throw new AuthError('No access token in response', 'INVALID_TOKEN_RESPONSE');
+        }
+
+        if (!data.refreshToken) {
+          throw new AuthError('No refresh token in response', 'INVALID_REFRESH_TOKEN_RESPONSE');
+        }
+
+        // Reset retry counter on successful refresh
+        refreshRetryCount.current = 0;
+        
+        if (!user) {
+          throw new AuthError('No user data available', 'NO_USER_DATA');
+        }
+        
+        await saveAuthData({ 
+          user, 
+          token: data.token, 
+          refreshToken: data.refreshToken 
+        });
+        
+        return { 
+          token: data.token, 
+          refreshToken: data.refreshToken,
+          // Include expiry information if available
+          expiresIn: data.expiresIn,
+          expiresAt: data.expiresAt || (data.expiresIn ? Date.now() + (data.expiresIn * 1000) : undefined)
+        };
+      } catch (error) {
+        logError(error, 'refreshToken');
+        
+        // Clear auth data on certain errors
+        if (error instanceof AuthError && [
+          'INVALID_REFRESH_TOKEN', 
+          'REFRESH_TOKEN_EXPIRED',
+          'SESSION_EXPIRED',
+          'MAX_RETRY_ATTEMPTS_REACHED'
+        ].includes(error.code)) {
+          await clearAuthData(error);
+        }
+        
+        throw error; // Re-throw to allow callers to handle the error
+      } finally {
+        // Clear the current refresh promise when done
+        refreshTokenPromise.current = null;
+      }
+    })();
+
+    return refreshTokenPromise.current;
+  }, [user]);
+  
+  // Network connectivity handling
+  const updateNetworkState = useCallback((state: Partial<NetworkState>) => {
+    setAuthState(prev => ({
+      ...prev,
+      network: {
+        ...prev.network,
+        ...state,
+        lastUpdated: Date.now()
+      }
+    }));
+  }, []);
+
+  // Check network connectivity
+  const checkNetworkConnection = useCallback(async (): Promise<boolean> => {
     try {
+      const state = await NetInfo.fetch();
+      updateNetworkState({
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+        type: state.type
+      });
+      return !!state.isConnected && !!state.isInternetReachable;
+    } catch (error) {
+      logError(error, 'checkNetworkConnection');
+      updateNetworkState({
+        isConnected: false,
+        isInternetReachable: false,
+        type: null
+      });
+      return false;
+    }
+  }, [updateNetworkState]);
+
+  // Process queued requests when back online
+  const processRequestQueue = useCallback(async () => {
+    if (isProcessingQueue.current || requestQueue.current.length === 0) return;
+    
+    isProcessingQueue.current = true;
+    
+    try {
+      setAuthState(prev => ({ ...prev, isRetrying: true }));
+      
+      // Process requests in order
+      while (requestQueue.current.length > 0) {
+        const request = requestQueue.current[0];
+        const now = Date.now();
+        const timeSinceLastAttempt = now - request.lastAttempt;
+        
+        // Apply exponential backoff (min 1s, max 30s)
+        const backoffTime = Math.min(1000 * Math.pow(2, request.retryCount), 30000);
+        
+        if (timeSinceLastAttempt < backoffTime) {
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, backoffTime - timeSinceLastAttempt));
+        }
+        
+        try {
+          // Check network before retrying
+          const isOnline = await checkNetworkConnection();
+          if (!isOnline) break;
+          
+          // Retry the request
+          const response = await api.request(request.config);
+          request.resolve(response);
+          
+          // Remove from queue on success
+          requestQueue.current.shift();
+          setAuthState(prev => ({ ...prev, queuedRequests: requestQueue.current.length }));
+          
+        } catch (error) {
+          // Update retry count and last attempt time
+          request.retryCount++;
+          request.lastAttempt = Date.now();
+          
+          // If max retries reached, reject the promise
+          if (request.retryCount >= 3) { // Max 3 retries
+            request.reject(error);
+            requestQueue.current.shift();
+            setAuthState(prev => ({ ...prev, queuedRequests: requestQueue.current.length }));
+          }
+          
+          // If it's a network error, stop processing and wait for next online event
+          if (axios.isAxiosError(error) && !error.response) {
+            break;
+          }
+        }
+      }
+    } finally {
+      isProcessingQueue.current = false;
+      setAuthState(prev => ({ ...prev, isRetrying: false }));
+    }
+  }, [checkNetworkConnection]);
+
+  // Queue a failed request for retry
+  const queueRequest = useCallback((config: AxiosRequestConfig): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const request: QueuedRequest = {
+        id: Math.random().toString(36).substr(2, 9),
+        config,
+        retryCount: 0,
+        lastAttempt: Date.now(),
+        resolve,
+        reject
+      };
+      
+      requestQueue.current.push(request);
+      setAuthState(prev => ({ ...prev, queuedRequests: requestQueue.current.length }));
+      
+      // Try to process the queue if we're online
+      const isOnline = authState.network.isConnected && authState.network.isInternetReachable;
+      if (isOnline) {
+        processRequestQueue();
+      }
+    });
+  }, [authState.network, processRequestQueue]);
+
+  // Retry all queued requests
+  const retryAllRequests = useCallback(async () => {
+    if (requestQueue.current.length === 0) return;
+    
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      throw new AuthError('No internet connection', 'NETWORK_OFFLINE', { retryable: true });
+    }
+    
+    await processRequestQueue();
+  }, [checkNetworkConnection, processRequestQueue]);
+
+  // Set up network event listeners
+  useEffect(() => {
+    const unsubscribeNetInfo = NetInfo.addEventListener((state: NetInfoState) => {
+      updateNetworkState({
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+        type: state.type
+      });
+      
+      // If we just came back online, process the queue
+      (async () => {
+        const isOnline = state.isConnected && state.isInternetReachable;
+        if (isOnline) {
+          await processRequestQueue();
+        }
+      })();
+    });
+    
+    // Initial network check
+    checkNetworkConnection();
+    
+    // Set up app state listener to check network when app comes to foreground
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        await checkNetworkConnection();
+      }
+    };
+    
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      unsubscribeNetInfo();
+      appStateSubscription.remove();
+    };
+  }, [checkNetworkConnection, processRequestQueue, updateNetworkState]);
+
+  // Helper function to check if token is expired or about to expire
+  const isTokenExpiredOrExpiring = (token: string): boolean => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Date.now() / 1000; // Convert to seconds
+      // Consider token expired if it will expire in the next 60 seconds
+      return (payload.exp - now) < (TOKEN_EXPIRY_MARGIN / 1000);
+    } catch (error) {
+      // If we can't parse the token, assume it's invalid
+      return true;
+    }
+  };
+
+  const saveAuthData = async (data: { user: User | LoginResponse; token?: string; refreshToken?: string }): Promise<void> => {
+    try {
+      if (!data.user) {
+        throw new AuthError('User data is required', 'INVALID_USER_DATA');
+      }
+
       const { user, token, refreshToken } = data;
+      
       // Convert to User type if it's a LoginResponse
       const userToSave: User = {
         id: user.id,
@@ -139,48 +523,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile_picture: user.profile_picture,
         userId: (user as any).userId || user.id
       };
-      
-      // Store auth data
-      const tokenToSave = token || (data as any).token;
-      await AsyncStorage.setItem('authData', JSON.stringify({ 
+
+      const authData = {
         user: userToSave,
-        token: tokenToSave,
-        refreshToken: refreshToken || (data as any).refreshToken
-      }));
+        token,
+        refreshToken,
+      };
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem('authData', JSON.stringify(authData));
       
-      // Update state
-      updateAuthState({
-        user: userToSave,
-        isAuthenticated: true,
-        isLoading: false
-      });
-      
-      // Also store token separately for axios interceptor
+      // Update axios default headers if token exists
+      const tokenToSave = token || (await AsyncStorage.getItem('token'));
       if (tokenToSave) {
         await AsyncStorage.setItem('token', tokenToSave);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${tokenToSave}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${tokenToSave}`;
       }
+      
+      return;
     } catch (error) {
-      console.error('Error saving auth data:', error);
+      const authError = error instanceof AuthError 
+        ? error 
+        : new AuthError('Failed to save authentication data', 'SAVE_AUTH_ERROR', { cause: error });
+      
+      logError(authError, 'saveAuthData');
+      throw authError; // Re-throw to allow callers to handle the error
     }
   };
 
-  const clearAuthData = async () => {
+  const clearAuthData = async (error?: Error): Promise<void> => {
     try {
       // Clear axios default headers
-      delete axios.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['Authorization'];
       
-      // Clear all auth-related storage
+      // Clear AsyncStorage
       await AsyncStorage.multiRemove(['authData', 'token']);
       
       // Update state
       updateAuthState({
         isAuthenticated: false,
         user: null,
-        isLoading: false
+        isLoading: false,
+        isInitialized: true,
+        error: error ? {
+          code: error instanceof AuthError ? error.code : 'AUTH_ERROR',
+          message: error.message,
+          details: error instanceof AuthError ? error.details : undefined
+        } : undefined
       });
-    } catch (error) {
-      console.error('Error clearing auth data:', error);
+    } catch (clearError) {
+      const authError = new AuthError(
+        'Failed to clear authentication data', 
+        'CLEAR_AUTH_ERROR', 
+        { cause: clearError }
+      );
+      
+      logError(authError, 'clearAuthData');
+      throw authError; // Re-throw to allow callers to handle the error
     }
   };
 
@@ -277,49 +676,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      const { token } = JSON.parse(authData);
-      if (!token) {
+      const { token, refreshToken } = JSON.parse(authData);
+      if (!token || !refreshToken) {
         return false;
       }
 
-      const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        return false;
+      // Check if token is still valid
+      if (!isTokenExpiredOrExpiring(token)) {
+        return true; // Token is still valid
       }
 
-      const data = await response.json();
-      if (!data || !data.token) {
+      try {
+        // Try to refresh the token
+        const { token: newToken } = await refreshToken();
+        
+        // Update axios headers with new token
+        api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        
+        return true;
+      } catch (error) {
+        logError(error, 'handleTokenRefresh');
+        
+        // If refresh fails with a session expired error, clear auth data
+        if (error instanceof AuthError && error.code === 'SESSION_EXPIRED') {
+          await clearAuthData(error);
+        }
+        
         return false;
       }
-
-      // Update the stored token
-      const parsedData = JSON.parse(authData);
-      await AsyncStorage.setItem('authData', JSON.stringify({
-        ...parsedData,
-        token: data.token
-      }));
-
-      // Update axios headers
-      axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-      return true;
     } catch (error) {
-      console.error('Error refreshing token:', error);
+      logError(error, 'handleTokenRefresh');
       return false;
     }
-  }, []);
+  }, [refreshToken]);
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadAuthData = async () => {
       try {
         const authData = await AsyncStorage.getItem('authData');
+        
+        // Skip state updates if component is unmounted
+        if (!isMounted) return;
+
         if (authData) {
           const { user: storedUser, token } = JSON.parse(authData);
           if (storedUser && token) {
@@ -333,7 +733,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
         }
+        
         // If we get here, either no auth data or invalid token
+        if (!isMounted) return;
         updateAuthState({
           isAuthenticated: false,
           user: null,
@@ -342,6 +744,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       } catch (error) {
         console.error('Error loading auth data:', error);
+        if (!isMounted) return;
+        
         await clearAuthData();
         updateAuthState({
           isAuthenticated: false,
@@ -353,14 +757,165 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     loadAuthData();
-  }, []);
+
+        // Set up request interceptor
+    const requestInterceptor = api.interceptors.request.use(
+      async (config) => {
+        try {
+          const authData = await AsyncStorage.getItem('authData');
+          if (authData) {
+            const { token } = JSON.parse(authData);
+            if (token) {
+              config.headers = config.headers || {};
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+          }
+          return config;
+        } catch (error) {
+          const authError = new AuthError(
+            'Failed to set up request interceptor', 
+            'REQUEST_INTERCEPTOR_ERROR',
+            { cause: error }
+          );
+          logError(authError, 'requestInterceptor');
+          return Promise.reject(authError);
+        }
+      },
+      (error) => {
+        const authError = new AuthError(
+          'Request interceptor error',
+          'REQUEST_INTERCEPTOR_ERROR',
+          { cause: error }
+        );
+        logError(authError, 'requestInterceptor');
+        return Promise.reject(authError);
+      }
+    );
+
+    // Set up response interceptor
+    const responseInterceptor = api.interceptors.response.use(
+      (response: AxiosResponse) => response,
+      async (error: AxiosError) => {
+        const originalRequest = error.config as any;
+        
+        // Skip if no config or already retried
+        if (!originalRequest || originalRequest._retry) {
+          return Promise.reject(error);
+        }
+
+        // Handle 401 Unauthorized errors
+        if (error.response?.status === 401) {
+          // Mark request as retried
+          originalRequest._retry = true;
+
+          try {
+            // Try to refresh token
+            const refreshed = await handleTokenRefresh();
+            if (refreshed) {
+              // Get new token
+              const authData = await AsyncStorage.getItem('authData');
+              if (authData) {
+                const { token } = JSON.parse(authData);
+                // Update the authorization header
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                // Retry the original request
+                return api(originalRequest);
+              }
+            }
+            
+            // If we get here, token refresh failed or no auth data
+            await clearAuthData(new AuthError(
+              'Session expired. Please log in again.',
+              'SESSION_EXPIRED'
+            ));
+            
+          } catch (refreshError) {
+            await clearAuthData(refreshError instanceof Error ? refreshError : new Error(String(refreshError)));
+          }
+        }
+
+        // Handle other errors
+        const status = error.response?.status;
+        let errorMessage = 'An error occurred';
+        let errorCode = 'API_ERROR';
+        let errorDetails = {};
+
+        if (status) {
+          errorDetails = { status };
+          
+          switch (status) {
+            case 400:
+              errorMessage = 'Bad request';
+              errorCode = 'BAD_REQUEST';
+              break;
+            case 403:
+              errorMessage = 'Forbidden';
+              errorCode = 'FORBIDDEN';
+              break;
+            case 404:
+              errorMessage = 'Resource not found';
+              errorCode = 'NOT_FOUND';
+              break;
+            case 500:
+              errorMessage = 'Internal server error';
+              errorCode = 'SERVER_ERROR';
+              break;
+            case 503:
+              errorMessage = 'Service unavailable';
+              errorCode = 'SERVICE_UNAVAILABLE';
+              break;
+            default:
+              errorMessage = `HTTP Error ${status}`;
+              errorCode = `HTTP_${status}`;
+          }
+        } else if (error.code === 'ECONNABORTED') {
+          errorMessage = 'Request timed out';
+          errorCode = 'REQUEST_TIMEOUT';
+        } else if (error.message === 'Network Error') {
+          errorMessage = 'Network error. Please check your internet connection.';
+          errorCode = 'NETWORK_ERROR';
+        }
+
+        const apiError = new AuthError(
+          errorMessage,
+          errorCode,
+          {
+            ...errorDetails,
+            originalError: error,
+            url: originalRequest?.url,
+            method: originalRequest?.method,
+          }
+        );
+
+        logError(apiError, 'responseInterceptor');
+        return Promise.reject(apiError);
+      }
+    );
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      // Eject interceptors when component unmounts
+      api.interceptors.request.eject(requestInterceptor);
+      api.interceptors.response.eject(responseInterceptor);
+    };
+  }, [clearAuthData, updateAuthState, handleTokenRefresh]);
 
   // Always render children, but with loading state if needed
 
   const login = useCallback(async (email: string, password: string): Promise<LoginResponse> => {
     try {
-      if (!email || !password) {
-        throw new Error('Email and password are required.');
+      // Input validation
+      if (!email?.trim()) {
+        throw new AuthError('Email is required', 'EMAIL_REQUIRED');
+      }
+      
+      if (!password) {
+        throw new AuthError('Password is required', 'PASSWORD_REQUIRED');
+      }
+      
+      if (!API_BASE_URL) {
+        throw new AuthError('API base URL is not configured', 'CONFIGURATION_ERROR');
       }
       
       // Log the request details
@@ -374,14 +929,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Test network connectivity first
       try {
-        const testConnection = await fetch('https://www.google.com');
-        if (!testConnection.ok) {
-          console.error('Internet connection test failed');
-          throw new Error('No internet connection. Please check your network settings.');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const testResponse = await fetch('https://www.google.com', {
+          signal: controller.signal,
+          method: 'HEAD'
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!testResponse.ok) {
+          throw new AuthError(
+            'Internet connection test failed', 
+            'NETWORK_ERROR', 
+            { status: testResponse.status }
+          );
         }
       } catch (testError) {
-        console.error('Network connectivity test failed:', testError);
-        throw new Error('Network request failed. Please check your internet connection.');
+        const error = testError as Error;
+        if (error.name === 'AbortError') {
+          throw new AuthError(
+            'Network request timed out', 
+            'NETWORK_TIMEOUT', 
+            { cause: testError }
+          );
+        }
+        
+        throw new AuthError(
+          'Network request failed. Please check your internet connection.',
+          'NETWORK_ERROR',
+          { cause: testError }
+        );
       }
       
       let loginResponse;
@@ -781,6 +1360,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     token: authState.user?.token || null,
     refreshToken: authState.user?.refreshToken || null,
     
+    // Network state
+    network: authState.network,
+    isRetrying: authState.isRetrying,
+    queuedRequests: authState.queuedRequests,
+    isOnline: !!authState.network.isConnected && !!authState.network.isInternetReachable,
+    
     // Auth methods
     login,
     signup,
@@ -830,18 +1415,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error refreshing token:', error);
         return null;
       }
-    }
+    },
+    
+    // Network methods
+    checkNetworkConnection,
+    retryAllRequests,
   }), [
     authState.isInitialized, 
     authState.isAuthenticated, 
     authState.isLoading, 
     authState.user, 
+    authState.network,
+    authState.isRetrying,
+    authState.queuedRequests,
     login, 
     signup, 
     logout, 
     updateProfilePicture,
     saveAuthData,
-    clearAuthData
+    clearAuthData,
+    checkNetworkConnection,
+    retryAllRequests
   ]);
 
   // We no longer return null here, instead we'll handle loading state in the AuthGate component

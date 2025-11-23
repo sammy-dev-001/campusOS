@@ -6,7 +6,7 @@ import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../../components/ThemedText';
-import { useUser } from '../../contexts/UserContext';
+import { useUser } from '../../src/contexts/UserContext';
 import { API_BASE_URL } from '../../src/constants/Config';
 import { useTheme } from '../../src/contexts/NewThemeContext';
 

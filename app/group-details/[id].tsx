@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { API_BASE_URL } from '../../src/constants/Config';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 export default function GroupDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

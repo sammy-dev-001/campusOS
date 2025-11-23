@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { Socket } from 'socket.io-client';
@@ -499,19 +500,12 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
               try {
                 // Perform logout and cleanup
                 await logout();
-                // Reset navigation to login screen
-                // Navigate to login screen using the correct route name
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'login/index' as any }],
-                });
+                // Navigate to login screen using expo-router path
+                router.replace('/login');
               } catch (error) {
                 console.error('Error during logout:', error);
-                // If navigation fails, try a more direct approach
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'login' }],
-                });
+                // Ensure we still attempt to show login
+                router.replace('/login');
               }
               setAuthError(null);
             }
@@ -525,19 +519,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       try {
         await logout();
         // Ensure we navigate to login even if there was an error
-        // Navigate to login screen using the correct route name
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'login/index' as any }],
-        });
+        router.replace('/login');
       } catch (logoutError) {
         console.error('Error during logout:', logoutError);
-        // If we can't navigate properly, try to at least show the login screen
-        // Navigate to login screen using the correct route name
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'login/index' as any }],
-        });
+        // Try again to show the login screen
+        router.replace('/login');
       }
       return false;
     }
@@ -1235,10 +1221,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
             }}
             onPress={() => {
               setAuthError(null);
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'login/index' as any }],
-              });
+              router.replace('/login');
             }}
           >
             <Text style={{ color: 'white', fontSize: 16 }}>Log In Again</Text>

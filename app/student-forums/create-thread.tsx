@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Animated, Easing, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { API_BASE_URL } from '../../config/api';
-import { useUser } from '../../contexts/UserContext';
+import { useUser } from '../../src/contexts/UserContext';
 
 const CATEGORY_LABELS: Record<string, string> = {
   academics: 'Academics',

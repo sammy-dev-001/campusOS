@@ -3,15 +3,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { API_BASE_URL } from '../../../config/api';
-import { useUser } from '../../../contexts/UserContext';
+import { useUser } from '../../../src/contexts/UserContext';
 
-function buildCommentTree(flatComments) {
-  const map = new Map();
-  const roots = [];
-  flatComments.forEach(comment => {
+function buildCommentTree(flatComments: Array<{ id: number; parent_comment_id?: number | null }>): any[] {
+  const map = new Map<number, any>();
+  const roots: any[] = [];
+  flatComments.forEach((comment) => {
     map.set(comment.id, { ...comment, replies: [] });
   });
-  map.forEach(comment => {
+  map.forEach((comment) => {
     if (comment.parent_comment_id) {
       const parent = map.get(comment.parent_comment_id);
       if (parent) parent.replies.push(comment);
@@ -41,7 +41,7 @@ export default function ThreadDetailScreen() {
 
   // Animation refs for upvotes/likes, emoji reactions, and trending
   const likeAnim = useRef(new Animated.Value(1)).current;
-  const emojiAnims = useRef({}).current;
+  const emojiAnims = useRef<Record<string, Animated.Value>>({}).current;
   const fireAnim = useRef(new Animated.Value(1)).current;
 
   // Upvote/like handler for thread
@@ -57,9 +57,10 @@ export default function ThreadDetailScreen() {
     // TODO: Optionally send to backend
   };
   // Emoji reaction handler for thread
-  const [emojiReactions, setEmojiReactions] = useState({});
-  const handleEmoji = (emoji) => {
+  const [emojiReactions, setEmojiReactions] = useState<Record<string, number>>({});
+  const handleEmoji = (emoji: string) => {
     if (!emojiAnims[emoji]) emojiAnims[emoji] = new Animated.Value(1);
+
     Animated.sequence([
       Animated.timing(emojiAnims[emoji], { toValue: 1.3, duration: 100, useNativeDriver: true }),
       Animated.spring(emojiAnims[emoji], { toValue: 1, friction: 3, useNativeDriver: true }),

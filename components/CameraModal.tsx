@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, StyleSheet, TouchableOpacity, View, Text, Image } from 'react-native';
-import { Camera, CameraType } from 'expo-camera';
+import { Modal, StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { Camera, CameraView } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 
 type CameraModalProps = {
@@ -12,8 +12,8 @@ type CameraModalProps = {
 
 export default function CameraModal({ visible, onClose, onCapture, type }: CameraModalProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [cameraType, setCameraType] = useState(CameraType.front);
-  const cameraRef = useRef<Camera>(null);
+  const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('front');
+  const cameraRef = useRef<CameraView | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -38,9 +38,7 @@ export default function CameraModal({ visible, onClose, onCapture, type }: Camer
   };
 
   const toggleCameraType = () => {
-    setCameraType(current => 
-      current === CameraType.back ? CameraType.front : CameraType.back
-    );
+    setCameraFacing(current => (current === 'back' ? 'front' : 'back'));
   };
 
   if (hasPermission === null) {
@@ -58,10 +56,10 @@ export default function CameraModal({ visible, onClose, onCapture, type }: Camer
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        <Camera 
+        <CameraView
           ref={cameraRef}
-          style={styles.camera} 
-          type={type === 'selfie' ? CameraType.front : CameraType.back}
+          style={styles.camera}
+          facing={type === 'selfie' ? 'front' : cameraFacing}
           ratio="16:9"
         >
           <View style={styles.buttonContainer}>
@@ -70,10 +68,10 @@ export default function CameraModal({ visible, onClose, onCapture, type }: Camer
             </TouchableOpacity>
             
             <View style={styles.bottomButtons}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.flipButton}
                 onPress={toggleCameraType}
-                disabled={type === 'selfie'} // Disable flip for selfie (must be front camera)
+                disabled={type === 'selfie'}
               >
                 <Ionicons name="camera-reverse" size={32} color="white" />
               </TouchableOpacity>
@@ -93,7 +91,7 @@ export default function CameraModal({ visible, onClose, onCapture, type }: Camer
               </View>
             )}
           </View>
-        </Camera>
+        </CameraView>
       </View>
     </Modal>
   );

@@ -11,10 +11,10 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const theme = useTheme().theme;
   const auth = useAuth();
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser();
 
   // Show loading indicator while checking auth state
-  if (auth.isLoading || userLoading) {
+  if (auth.isLoading) {
     return (
       <View style={{ 
         flex: 1, 

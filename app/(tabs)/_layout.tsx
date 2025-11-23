@@ -4,8 +4,8 @@ import { View, ActivityIndicator } from 'react-native';
 import CustomTabBar from '../../components/CustomTabBar';
 import { Colors } from '../../constants/Colors';
 import { useColorScheme } from '../../src/hooks/useColorScheme';
-import { AuthProvider, useAuth } from '../../src/contexts/AuthContext';
-import { ThemeProvider, useTheme } from '../../src/contexts/NewThemeContext';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 
 // Memoized tab bar component to prevent unnecessary re-renders
 const MemoizedTabBar = memo((props: any) => (
@@ -55,15 +55,7 @@ const TabContent = () => {
   );
 };
 
-// Main tab layout component
-const TabLayout = () => {
-  return (
-    <ThemeProvider>
-      <AuthProvider>
-        <TabContent />
-      </AuthProvider>
-    </ThemeProvider>
-  );
-};
-
-export default TabLayout;
+// Main tab layout component (providers are already applied at root layout)
+export default function TabLayout() {
+  return <TabContent />;
+}

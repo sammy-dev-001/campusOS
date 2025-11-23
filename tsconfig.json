@@ -16,7 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/contexts/*": ["./contexts/*"],
+      "@/contexts/*": ["./src/contexts/*"],
       "@/components/*": ["./components/*"],
       "@/constants/*": ["./constants/*"]
     },
@@ -28,7 +28,6 @@
     "./app/**/*.ts",
     "./app/**/*.tsx",
     "./components/**/*.tsx",
-    "./contexts/**/*.tsx",
     "./hooks/**/*.ts",
     "./services/**/*.ts",
     "./types/**/*.d.ts",

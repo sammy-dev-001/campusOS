@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { API_BASE_URL } from '../config/api';
-import { useUser } from '../contexts/UserContext';
+import { useUser } from '../src/contexts/UserContext';
 
 export default function TutorStudyGroupCreateScreen() {
   const router = useRouter();

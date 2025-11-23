@@ -69,7 +69,7 @@ function AuthContent() {
   const auth = useAuth();
   const { theme } = useTheme();
 
-  // If we're still loading, show a loading screen
+  // Show loading indicator while auth is initializing
   if (!auth || !auth.isInitialized) {
     return (
       <View style={{
@@ -89,14 +89,9 @@ function AuthContent() {
         headerShown: false,
         contentStyle: { backgroundColor: theme?.background || '#fff' },
       }}>
-        {/* Always include all screens, but control their visibility based on auth state */}
         <Stack.Screen 
           name="login/index" 
-          options={{ 
-            headerShown: false,
-            // Only show login screen if not authenticated
-            ...(auth.isAuthenticated && { navigationBarHidden: true })
-          }} 
+          options={{ headerShown: false }}
         />
         
         <Stack.Screen 

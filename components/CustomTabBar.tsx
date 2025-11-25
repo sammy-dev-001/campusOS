@@ -35,7 +35,9 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       {
         backgroundColor: '#111', // solid dark background
         borderTopColor: '#222',
-        paddingBottom: Platform.OS === 'android' ? Math.max(insets.bottom, 20) : insets.bottom
+        paddingBottom: insets.bottom,
+        height: 60 + insets.bottom, // Add bottom inset to the height
+        paddingTop: 8,
       }
     ]}>
       {state.routes.map((route, index) => {
@@ -112,28 +114,37 @@ function getIconForRoute(routeName: string, isFocused: boolean): IconName {
 
 const styles = StyleSheet.create({
   container: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    height: Platform.OS === 'ios' ? 84 : 70,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+    backgroundColor: '#111',
     borderTopWidth: 1,
-    elevation: 8,
+    borderTopColor: '#222',
+    height: 60, // Base height
+    paddingBottom: 0,
+    // Shadow for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
+    // Elevation for Android
+    elevation: 16,
   },
   tabButton: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingTop: 8,
   },
   createButtonContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: -20,
+    position: 'absolute',
+    bottom: Platform.OS === 'android' ? 60 : 46, // Moved higher up
+    left: '50%',
+    marginLeft: -28,
+    zIndex: 1, // Ensure it's above the tab bar
   },
   createButton: {
     width: 56,
@@ -141,11 +152,16 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    backgroundColor: '#2196F3',
+    // Shadow for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 4,
+    // Elevation for Android
+    elevation: 8,
+    borderWidth: 3,
+    borderColor: '#111'
   },
   tabLabel: {
     fontSize: 12,

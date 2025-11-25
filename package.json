@@ -52,7 +52,7 @@
     "@types/date-fns": "^2.6.0",
     "axios": "^1.10.0",
     "date-fns": "^2.30.0",
-    "expo": "^53.0.22",
+    "expo": "~53.0.24",
     "expo-av": "~15.1.7",
     "expo-blur": "~14.1.5",
     "expo-calendar": "~14.1.4",

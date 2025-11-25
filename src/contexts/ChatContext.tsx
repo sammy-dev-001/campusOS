@@ -44,9 +44,21 @@ export interface Message {
 export interface Participant {
   id: string;  // Changed from number to string
   username: string;
+  displayName?: string;
+  profilePic?: string;  // For direct profilePic property
   profilePicture?: string;
   profilePictureThumb?: string;
   status?: 'online' | 'offline' | 'away';
+  user?: {
+    id: string;
+    username: string;
+    displayName?: string;
+    profilePic?: string;  // For nested user profilePic
+    profilePicture?: string;
+    [key: string]: any;
+  };
+  // Allow any additional properties
+  [key: string]: any;
 }
 
 export interface Chat {

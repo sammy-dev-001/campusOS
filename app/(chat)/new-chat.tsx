@@ -125,6 +125,13 @@ export default function NewChatScreen() {
   };
 
   const fetchUsers = async (query: string) => {
+    // Check if auth context is available
+    if (!auth) {
+      console.error('[fetchUsers] Auth context is not available');
+      setError('Authentication error. Please try logging in again.');
+      return;
+    }
+
     console.log('[fetchUsers] Starting user search with query:', query);
     
     if (!query.trim()) {
@@ -211,17 +218,26 @@ export default function NewChatScreen() {
           // Try to refresh the token via AuthContext; if refresh succeeds, retry the search once.
           try {
             console.log('[fetchUsers] Received 401, attempting token refresh...');
-            const refreshed = await auth.refreshAuthToken();
-            if (refreshed) {
-              console.log('[fetchUsers] Token refreshed, retrying search');
-              // Retry the search recursively once
-              return await fetchUsers(query);
+            if (auth && typeof auth.refreshAuthToken === 'function') {
+              const refreshed = await auth.refreshAuthToken();
+              if (refreshed) {
+                console.log('[fetchUsers] Token refreshed, retrying search');
+                // Retry the search recursively once
+                return await fetchUsers(query);
+              }
+            } else {
+              console.warn('[fetchUsers] refreshAuthToken is not available on auth context', { 
+                authAvailable: !!auth,
+                refreshTokenAvailable: auth && typeof auth.refreshAuthToken
+              });
             }
           } catch (e) {
             console.warn('[fetchUsers] Token refresh attempt failed', e);
           }
-          // If we get here, token refresh failed — log out and prompt user to sign in again
-          await auth.logout();
+          // If we get here, token refresh failed or is unavailable — log out and prompt user to sign in again
+          if (typeof auth.logout === 'function') {
+            await auth.logout();
+          }
           throw new Error('Your session has expired. Please log in again.');
         }
         

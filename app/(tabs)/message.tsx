@@ -144,16 +144,72 @@ export default function MessageScreen() {
   );
 
   const renderChatItem = ({ item }: { item: ChatItem }) => {
-    console.log('Chat item:', item);
+    console.log('Chat item:', JSON.stringify(item, null, 2));
+    console.log('Current user ID:', user?.id);
     const isUnread = item.unreadCount > 0;
-    const otherParticipant = item.participants?.find(p => p.id !== user?.id);
-    // Show recipients only (exclude current user) for names
-    const recipients = (item.participants || []).filter(p => p.id !== user?.id);
-    const displayName = item.name || (
-      recipients.length === 1
-        ? recipients[0]?.username || 'Chat'
-        : recipients.map(p => p.username).filter(Boolean).join(', ') || 'Chat'
-    );
+    
+    // Debug log all participants
+    console.log('All participants:', JSON.stringify(item.participants?.map(p => ({
+      id: p.id,
+      userId: p.user?.id || p.user?._id,
+      username: p.username || p.user?.username,
+      displayName: p.displayName || p.user?.displayName
+    })), null, 2));
+
+    // Find the other participant (not the current user)
+    const otherParticipant = item.participants?.find(p => {
+      const participantId = p.user?.id || p.user?._id || p.id;
+      const isOther = participantId !== user?.id;
+      console.log(`Participant check:`, {
+        participantId,
+        currentUserId: user?.id,
+        isOther,
+        participant: {
+          id: p.id,
+          userId: p.user?.id || p.user?._id,
+          username: p.username || p.user?.username,
+          displayName: p.displayName || p.user?.displayName
+        }
+      });
+      return isOther;
+    });
+    
+    console.log('Other participant found:', otherParticipant ? {
+      id: otherParticipant.id,
+      userId: otherParticipant.user?.id || otherParticipant.user?._id,
+      username: otherParticipant.username || otherParticipant.user?.username,
+      displayName: otherParticipant.displayName || otherParticipant.user?.displayName
+    } : 'None found');
+    
+    // Get all recipients (excluding current user)
+    const recipients = (item.participants || []).filter(p => {
+      const participantId = p.user?.id || p.user?._id || p.id;
+      return participantId !== user?.id;
+    });
+    
+    console.log('Recipients after filter:', recipients.map(r => ({
+      id: r.id,
+      userId: r.user?.id || r.user?._id,
+      username: r.username || r.user?.username,
+      displayName: r.displayName || r.user?.displayName
+    })));
+    
+    // Helper function to get display name from participant
+    const getParticipantName = (p: any) => {
+      return p.user?.displayName || p.displayName || p.user?.username || p.username || 'Unknown User';
+    };
+
+    // Helper function to get profile picture from participant
+    const getParticipantProfilePicture = (p: any) => {
+      return p.user?.profilePicture || p.user?.profile_picture || p.user?.avatar || p.profilePicture || p.avatar;
+    };
+
+    // For direct messages, always use the other participant's username
+    // For group chats, use the chat name or 'Group Chat' as fallback
+    const displayName = item.isGroup 
+      ? item.name || 'Group Chat'
+      : (otherParticipant?.user?.username || otherParticipant?.username || 'Chat');
+    
     const avatarColor = getAvatarColor(item.id);
 
     // Get profile picture URL, handling both relative and absolute paths
@@ -179,9 +235,21 @@ export default function MessageScreen() {
 
     const lastMessage = item.lastMessage;
     const lastMessageTime = lastMessage?.createdAt ? formatTimeAgo(lastMessage.createdAt) : '';
-    const avatarUri = item.isGroup
-      ? item.avatar ? getProfilePictureUrl(item.avatar) : null
-      : otherParticipant?.profilePicture ? getProfilePictureUrl(otherParticipant.profilePicture) : null;
+    
+    // Get the correct profile picture URL
+    let avatarUri = null;
+    if (item.isGroup) {
+      // For group chats, use the chat's avatar
+      avatarUri = item.avatar ? getProfilePictureUrl(item.avatar) : null;
+    } else if (otherParticipant) {
+      // For direct messages, use the other participant's profile picture
+      const profilePic = otherParticipant.user?.profilePic || otherParticipant.user?.profilePicture || 
+                        otherParticipant.profilePic || otherParticipant.profilePicture;
+      avatarUri = profilePic ? getProfilePictureUrl(profilePic) : null;
+      
+      // Log for debugging
+      console.log('Profile picture for', otherParticipant.user?.username || otherParticipant.username, ':', profilePic);
+    }
     
     let lastMessageContent = 'No messages yet';
     if (lastMessage) {

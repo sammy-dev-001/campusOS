@@ -5,11 +5,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Dimensions, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '../../components/ThemedText';
 import { Button } from '../../components/ui/Button';
-import { useThemeColor } from '../../src/hooks/useThemeColor';
 import { Colors } from '../../src/constants/Colors';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useTheme } from '../../src/contexts/NewThemeContext';
 import { useUser } from '../../src/contexts/UserContext';
+import { useThemeColor } from '../../src/hooks/useThemeColor';
 import { API_BASE_URL } from '../config/api';
 
 const { width, height } = Dimensions.get('window');
@@ -511,21 +511,44 @@ const LoginSignUpScreen = () => {
     setUploadingPic(true);
     try {
       const formData = new FormData();
-      formData.append('profilePicture', {
-        uri: profilePic,
-        name: 'profile.jpg',
-        type: 'image/jpeg',
-      } as any);
-      formData.append('userId', user?.id?.toString() || '');
+      // Convert image to base64
+      const response = await fetch(profilePic);
+      const blob = await response.blob();
+      const base64Image = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            const base64Data = reader.result.split(',')[1];
+            if (base64Data) {
+              resolve(base64Data);
+            } else {
+              reject(new Error('Failed to convert image to base64'));
+            }
+          } else {
+            reject(new Error('Unexpected file reader result type'));
+          }
+        };
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(blob);
+      });
+      
+      // Get the file extension
+      const fileExtension = profilePic.split('.').pop()?.toLowerCase() || 'jpg';
+      const mimeType = `image/${fileExtension === 'png' ? 'png' : fileExtension === 'gif' ? 'gif' : 'jpeg'}`;
       
       console.log('Uploading profile picture...');
-      const res = await fetch(`${API_BASE_URL}/api/users/upload-profile-pic`, {
+      const uploadUrl = `${API_BASE_URL}/users/me/avatar`;
+      
+      const res = await fetch(uploadUrl, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'multipart/form-data',
           'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await AsyncStorage.getItem('token')}`
         },
-        body: formData,
+        body: JSON.stringify({
+          image: `data:${mimeType};base64,${base64Image}`
+        }),
       });
       
       if (!res.ok) {

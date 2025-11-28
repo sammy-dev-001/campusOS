@@ -1,5 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 import { ResizeMode, Video } from 'expo-av';
 import * as NavigationBar from 'expo-navigation-bar';
 import React, { useEffect, useRef, useState } from 'react';
@@ -144,26 +145,97 @@ export default function PostScreen() {
   // Mute state per post
   const [mutedMap, setMutedMap] = useState<{ [key: number]: boolean }>({});
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [visibleItems, setVisibleItems] = useState<{id: number, isVideo: boolean}[]>([]);
+  const isFocused = useIsFocused();
+  
+  // Viewability configuration - using useRef to prevent recreation on re-renders
+  const viewabilityConfig = useRef({
+    minimumViewTime: 100, // Minimum time an item must be visible before callback is triggered
+    itemVisiblePercentThreshold: 50, // At least 50% of the item must be visible
+    waitForInteraction: false, // Don't wait for interaction
+  }).current;
 
-  // Auto-hide controls when a video starts playing
-  useEffect(() => {
-    if (playingVideoId == null) return;
-    // show briefly then hide
-    setControlsVisible(prev => ({ ...prev, [playingVideoId!]: true }));
-    if (hideTimersRef.current[playingVideoId]) {
-      clearTimeout(hideTimersRef.current[playingVideoId]!);
-      hideTimersRef.current[playingVideoId] = null;
+  // Handle viewable items changes
+  const handleViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: any[] }) => {
+    console.log('Viewable items changed:', viewableItems.map(v => ({
+      id: v.item.id,
+      isViewable: v.isViewable,
+      type: v.item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i) ? 'video' : 'image'
+    })));
+    
+    // Update the list of all currently visible items
+    const newVisibleItems = viewableItems
+      .filter(item => item.isViewable)
+      .map(item => ({
+        id: item.item.id,
+        isVideo: !!item.item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i)
+      }));
+    
+    setVisibleItems(newVisibleItems);
+    
+    // Check if the currently playing video is still visible
+    if (playingVideoId) {
+      const isStillVisible = newVisibleItems.some(item => item.id === playingVideoId && item.isVideo);
+      console.log(`Video ${playingVideoId} is ${isStillVisible ? 'still visible' : 'no longer visible'}`);
+      
+      if (!isStillVisible) {
+        // If the current video is no longer visible, pause it
+        console.log(`Pausing video ${playingVideoId} because it's no longer visible`);
+        videoRefs.current[playingVideoId]?.pauseAsync()
+          .then(() => console.log(`Successfully paused video ${playingVideoId}`))
+          .catch(e => console.error(`Error pausing video ${playingVideoId}:`, e));
+        setPlayingVideoId(null);
+      }
     }
-    hideTimersRef.current[playingVideoId] = setTimeout(() => {
-      setControlsVisible(cv => ({ ...cv, [playingVideoId!]: false }));
-      hideTimersRef.current[playingVideoId!] = null;
-    }, 2000);
-  }, [playingVideoId]);
+    
+    // Find the first viewable video that's not the currently playing one
+    const newVideoToPlay = viewableItems.find(item => 
+      item.isViewable && 
+      item.item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i) &&
+      item.item.id !== playingVideoId
+    );
 
-  // Cleanup timers on unmount
+    // If we found a new video to play
+    if (newVideoToPlay) {
+      const postId = newVideoToPlay.item.id;
+      
+      // Pause the currently playing video if any
+      if (playingVideoId && videoRefs.current[playingVideoId]) {
+        videoRefs.current[playingVideoId].pauseAsync();
+      }
+      
+      // Play the new video
+      setPlayingVideoId(postId);
+      const videoRef = videoRefs.current[postId];
+      if (videoRef) {
+        videoRef.playAsync().catch(console.error);
+      }
+    }
+  }).current;
+
+  // Pause all videos when screen loses focus
+  useEffect(() => {
+    if (!isFocused) {
+      // Pause the currently playing video
+      if (playingVideoId && videoRefs.current[playingVideoId]) {
+        videoRefs.current[playingVideoId]?.pauseAsync();
+        setPlayingVideoId(null);
+      }
+    }
+  }, [isFocused]);
+
+  // Cleanup timers and videos on unmount
   useEffect(() => {
     return () => {
+      // Clear all timers
       Object.values(hideTimersRef.current).forEach(t => { if (t) clearTimeout(t); });
+      
+      // Pause all videos
+      Object.values(videoRefs.current).forEach(ref => {
+        if (ref) {
+          ref.pauseAsync().catch(console.error);
+        }
+      });
     };
   }, []);
 
@@ -1160,13 +1232,26 @@ export default function PostScreen() {
     return (
       <View style={styles.mediaContainer}>
         <Video
+          ref={ref => { videoRefs.current[post.id] = ref; }}
           source={{ uri: post.media_url }}
           style={[styles.postMedia, { backgroundColor: '#1E1E1E' }]}
           resizeMode={ResizeMode.CONTAIN}
           useNativeControls={false}
-          shouldPlay={false}
+          shouldPlay={playingVideoId === post.id && isFocused}
+          isMuted={mutedMap[post.id] ?? true}
+          onPlaybackStatusUpdate={(status) => {
+            if (status.isLoaded && !status.isPlaying && playingVideoId === post.id && isFocused) {
+              videoRefs.current[post.id]?.playAsync().catch(console.error);
+            }
+          }}
           isLooping
           usePoster={false}
+          onError={(e) => console.warn('Video error', e)}
+          onLoad={() => {
+            if (playingVideoId === post.id && isFocused) {
+              videoRefs.current[post.id]?.playAsync().catch(console.error);
+            }
+          }}
         />
         <TouchableOpacity 
           style={styles.playButton}
@@ -1278,6 +1363,9 @@ export default function PostScreen() {
           contentContainerStyle={styles.postListContent}
           onRefresh={onRefresh}
           refreshing={refreshing}
+          viewabilityConfig={viewabilityConfig}
+          onViewableItemsChanged={handleViewableItemsChanged}
+          removeClippedSubviews={false} // Important for viewability tracking
           ListEmptyComponent={
             <Text style={styles.emptyText}>
               No posts yet. Be the first to share something!

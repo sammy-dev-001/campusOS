@@ -1,12 +1,13 @@
 import { Stack } from 'expo-router';
 import React, { Component, useEffect, useState } from 'react';
-import { ActivityIndicator, View, Text } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AnnouncementProvider } from '../src/contexts/AnnouncementContext';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { ChatProvider } from '../src/contexts/ChatContext';
 import { GpaProvider } from '../src/contexts/GpaContext';
 import { ThemeProvider, useTheme } from '../src/contexts/NewThemeContext';
+import { NotificationProvider } from '../src/contexts/NotificationContext';
 import { TimetableProvider } from '../src/contexts/TimetableContext';
 import { UserProvider } from '../src/contexts/UserContext';
 
@@ -121,25 +122,25 @@ const App = () => {
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <ErrorBoundary>
+        <AuthProvider>
           <ThemeProvider>
-            <AuthProvider>
-              <UserProvider>
-                <ChatProvider>
-                  <GpaProvider>
-                    <TimetableProvider>
-                      <AnnouncementProvider>
+            <UserProvider>
+              <ChatProvider>
+                <GpaProvider>
+                  <TimetableProvider>
+                    <AnnouncementProvider>
+                      <NotificationProvider>
                         <InitialAuthCheck>
                           <AuthContent />
                         </InitialAuthCheck>
-                      </AnnouncementProvider>
-                    </TimetableProvider>
-                  </GpaProvider>
-                </ChatProvider>
-              </UserProvider>
-            </AuthProvider>
+                      </NotificationProvider>
+                    </AnnouncementProvider>
+                  </TimetableProvider>
+                </GpaProvider>
+              </ChatProvider>
+            </UserProvider>
           </ThemeProvider>
-        </ErrorBoundary>
+        </AuthProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
   );

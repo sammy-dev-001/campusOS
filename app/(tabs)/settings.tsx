@@ -1,6 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -8,6 +9,7 @@ import { useTheme } from '../../src/contexts/NewThemeContext';
 import { useUser } from '../../src/contexts/UserContext';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, setUser } = useUser();
   const { logout, user: authUser, isAuthenticated, updateProfilePicture } = useAuth();
@@ -34,7 +36,7 @@ export default function SettingsScreen() {
 
       setUploading(true);
       setError('');
-      
+
       try {
         // Compress and resize the image
         const manipulated = await ImageManipulator.manipulateAsync(
@@ -48,7 +50,7 @@ export default function SettingsScreen() {
 
         // Use the updateProfilePicture function from AuthContext
         await updateProfilePicture(manipulated.uri);
-        
+
         // If we reach here, the upload was successful
         setAvatar(null); // Clear the temporary avatar state
       } catch (e: any) {
@@ -64,7 +66,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#121212' }]}> 
+    <View style={[styles.container, { backgroundColor: '#121212' }]}>
       {/* Header */}
       <View style={styles.headerBlack}>
         <Text style={styles.headerText}>Settings</Text>
@@ -75,7 +77,7 @@ export default function SettingsScreen() {
         <View style={styles.profileCard}>
           <View style={styles.avatarContainer}>
             {uploading ? (
-              <View style={[styles.avatarImage, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#222' }]}> 
+              <View style={[styles.avatarImage, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#222' }]}>
                 <ActivityIndicator size="large" color="#4D96FF" />
               </View>
             ) : user && user.profile_picture ? (

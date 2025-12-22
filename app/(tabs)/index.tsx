@@ -1,29 +1,28 @@
 // app/(tabs)/index.tsx
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import React, { useState, useEffect, useMemo } from 'react';
-import { Modal, TouchableWithoutFeedback } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Image,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  StyleProp,
-  ViewStyle,
-  TextStyle,
-  ImageStyle,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
+    Image,
+    ImageStyle,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TextStyle,
+    TouchableOpacity,
+    View,
+    ViewStyle,
+    useWindowDimensions
 } from 'react-native';
+import { useTimetable } from '../../src/contexts/TimetableContext';
 
 import { ThemedText } from '../../components/ThemedText';
-import { useUser } from '../../src/contexts/UserContext';
 import { useTheme } from '../../src/contexts/NewThemeContext';
+import { useUser } from '../../src/contexts/UserContext';
 
 interface ClassItem {
   id: string;
@@ -142,7 +141,8 @@ export default function HomeScreen() {
   
   const styles = stylesFn(themeColors, isDesktop);
 
-  const [todayClasses, setTodayClasses] = useState<ClassItem[]>([]);
+  const { getTodaysClasses: getTodaysClassesFn } = useTimetable();
+  const todayClasses = useMemo(() => getTodaysClassesFn(), [getTodaysClassesFn]);
 
   const handleQuickActionPress = (actionLabel: string) => {
     switch (actionLabel) {

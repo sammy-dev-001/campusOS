@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo, { NetInfoState, NetInfoStateType } from '@react-native-community/netinfo';
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { API_BASE_URL } from '../config/api';
-import NetInfo, { NetInfoState, NetInfoStateType } from '@react-native-community/netinfo';
-import { AppState, AppStateStatus, Platform } from 'react-native';
 
 // Custom error class for authentication errors
 export class AuthError extends Error {
@@ -113,7 +113,7 @@ interface NetworkState {
 }
 
 interface AuthContextType {
-  // Existing auth state
+  // Core state
   isInitialized: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -130,10 +130,10 @@ interface AuthContextType {
   // Auth methods
   login: (email: string, password: string) => Promise<LoginResponse>;
   signup: (email: string, password: string, displayName: string, fullName: string) => Promise<string>;
-  logout: () => void;
-  updateProfilePicture: (imageUri: string) => Promise<void>;
+  logout: () => Promise<void>;
+  updateProfilePicture: (imageUri: string) => Promise<string | undefined>;
   saveAuthData: (data: { user: User | LoginResponse; token: string; refreshToken?: string }) => Promise<void>;
-  clearAuthData: () => Promise<void>;
+  clearAuthData: (error?: Error) => Promise<void>;
   refreshAuthToken: () => Promise<{ token: string; refreshToken: string } | null>;
   
   // Network methods
@@ -1342,15 +1342,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Auth State:', { 
-      isAuthenticated: authState.isAuthenticated, 
-      isLoading: authState.isLoading, 
-      user: authState.user ? 'User exists' : 'No user' 
-    });
-  }, [authState.isAuthenticated, authState.isLoading, authState.user]);
-
   const contextValue: AuthContextType = useMemo(() => ({
     // Core state
     isInitialized: authState.isInitialized,
@@ -1435,7 +1426,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     saveAuthData,
     clearAuthData,
     checkNetworkConnection,
-    retryAllRequests
+    retryAllRequests,
+    getAuthToken
   ]);
 
   // We no longer return null here, instead we'll handle loading state in the AuthGate component

@@ -1,22 +1,23 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  Text, 
-  Image, 
-  ActivityIndicator, 
-  KeyboardAvoidingView, 
-  Platform,
-  Alert 
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { API_BASE_URL } from '../src/constants/Config';
 import { useTheme } from '../src/contexts/NewThemeContext';
 import { useUpload } from '../src/contexts/UploadContext';
-import { API_BASE_URL } from '../src/constants/Config';
 
 interface CreatePostFormProps {
   onPostCreated?: () => void;
@@ -42,13 +43,11 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
 
       if (!result.canceled && result.assets?.[0]?.uri) {
         const asset = result.assets[0];
-        
-        // If we have base64 data, use it directly
+
         if (asset.base64) {
           const base64Data = `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`;
           setMedia(base64Data);
         } else {
-          // Fallback to URI if base64 is not available
           setMedia(asset.uri);
         }
       }
@@ -63,46 +62,27 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
   };
 
   const handleSubmit = async () => {
-    console.log('=== Form Submission Started ===');
-    console.log('Content:', content);
-    console.log('Media exists:', !!media);
-    
-    if (isSubmitting) {
-      console.log('Already submitting, aborting');
-      return;
-    }
-    
+    if (isSubmitting) return;
+
     if (!content.trim() && !media) {
       Alert.alert('Error', 'Please add some content or an image to your post');
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
+      if (!token) throw new Error('Authentication required');
 
-      console.log('Preparing post data...');
       const postData: Record<string, any> = {
         content: content.trim(),
-        caption: content.trim(), // Some backends expect 'caption' instead of 'content'
-        text: content.trim(),   // Another common field name for post content
+        caption: content.trim(),
+        text: content.trim(),
       };
 
-      // If there's media, add it to the payload
-      if (media) {
-        postData.media = media;
-        console.log('Including media in the post data');
-      }
+      if (media) postData.media = media;
 
-      console.log('Sending post request with payload:', JSON.stringify({
-        ...postData,
-        media: postData.media ? '[MEDIA DATA]' : null // Don't log actual media data
-      }, null, 2));
-      
       const response = await fetch(`${API_BASE_URL}/api/posts`, {
         method: 'POST',
         headers: {
@@ -112,37 +92,17 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
         },
         body: JSON.stringify(postData),
       });
-      
-      // Convert headers to a plain object for logging
-      const headers: Record<string, string> = {};
-      response.headers.forEach((value, key) => {
-        headers[key] = value;
-      });
-      console.log('Response headers:', headers);
-      
-      console.log('Response status:', response.status);
-      let responseData;
-      try {
-        const responseText = await response.text();
-        console.log('Raw response text:', responseText);
-        responseData = responseText ? JSON.parse(responseText) : {};
-        console.log('Parsed response data:', responseData);
-      } catch (parseError) {
-        console.error('Error parsing response:', parseError);
-        throw new Error('Invalid response from server');
-      }
-      
+
+      const text = await response.text();
+      const responseData = text ? JSON.parse(text) : {};
+
       if (!response.ok) {
         throw new Error(responseData.message || 'Failed to create post');
       }
-      
-      // If successful, reset the form
+
       setContent('');
       setMedia(null);
-      
-      // Notify parent component
       onPostCreated?.();
-      
     } catch (error) {
       console.error('Error creating post:', error);
       Alert.alert('Error', error instanceof Error ? error.message : 'Failed to create post');
@@ -152,17 +112,20 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor: theme.background }]}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <View style={styles.header}>
+      <View style={[styles.fixedHeader, { backgroundColor: theme.background, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
           <Ionicons name="close" size={24} color={theme.text} />
         </TouchableOpacity>
+
         <Text style={[styles.title, { color: theme.text }]}>Create Post</Text>
-        <TouchableOpacity 
-          onPress={handleSubmit} 
+
+        <TouchableOpacity
+          onPress={handleSubmit}
           style={[styles.postButton, (!content.trim() && !media) && styles.postButtonDisabled]}
           disabled={isSubmitting || (!content.trim() && !media)}
         >
@@ -174,7 +137,12 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <TextInput
           style={[styles.input, { color: theme.text }]}
           placeholder="What's on your mind?"
@@ -183,15 +151,15 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
           value={content}
           onChangeText={setContent}
         />
-        
+
         {media && (
           <View style={styles.mediaPreview}>
-            <Image 
-              source={{ uri: media }} 
-              style={styles.mediaImage} 
-              resizeMode="cover"
+            <Image
+              source={{ uri: media }}
+              style={styles.mediaImage}
+              resizeMode="contain"
             />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.removeMediaButton}
               onPress={removeMedia}
             >
@@ -199,20 +167,20 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
             </TouchableOpacity>
           </View>
         )}
-      </View>
 
-      <View style={[styles.footer, { borderTopColor: theme.border }]}>
-        <TouchableOpacity 
-          style={styles.mediaButton}
-          onPress={pickMedia}
-          disabled={isSubmitting}
-        >
-          <Ionicons name="image" size={24} color={theme.primary} />
-          <Text style={[styles.mediaButtonText, { color: theme.text }]}>
-            {media ? 'Change Photo' : 'Add Photo'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        <View style={[styles.footer, { borderTopColor: theme.border }]}> 
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={pickMedia}
+            disabled={isSubmitting}
+          >
+            <Ionicons name="image" size={24} color={theme.primary} />
+            <Text style={[styles.mediaButtonText, { color: theme.text }]}> 
+              {media ? 'Change Photo' : 'Add Photo'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -220,6 +188,24 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 15,
+    paddingBottom: 80, // Extra padding at the bottom for the footer
+  },
+  fixedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+    borderBottomWidth: 1,
   },
   header: {
     flexDirection: 'row',
@@ -235,6 +221,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerRightPlaceholder: {
+    width: 40,
+  },
   postButton: {
     backgroundColor: '#1a73e8',
     paddingHorizontal: 16,
@@ -248,10 +242,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
-  },
-  content: {
-    flex: 1,
-    padding: 15,
   },
   input: {
     fontSize: 16,
@@ -267,7 +257,8 @@ const styles = StyleSheet.create({
   },
   mediaImage: {
     width: '100%',
-    aspectRatio: 4/3,
+    minHeight: 200,
+    maxHeight: 400,
     borderRadius: 10,
   },
   removeMediaButton: {

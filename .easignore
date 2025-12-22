@@ -9,7 +9,7 @@
 node_modules
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
+yarn-error.log*Delete the entire file.
 pnpm-lock.yaml
 
 # Expo / Metro caches and local config

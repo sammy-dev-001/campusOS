@@ -6,6 +6,7 @@ import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { Socket } from 'socket.io-client';
 import { API_BASE_URL } from '../constants/Config';
 import type { AppNavigationProp } from '../navigation/types';
+import { useNotificationService } from '../services/notificationService';
 import { useAuth } from './AuthContext';
 import { useWebSocket } from './WebSocketContext';
 
@@ -869,6 +870,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
     setIsConnected(false);
   }, []);
 
+  // Get the notification service
+  const { notifyNewMessage } = useNotificationService();
+  const { user: currentUser } = useAuth();
+
   const handleNewMessage = useCallback((payload: any) => {
     try {
       if (!payload) return;
@@ -891,9 +896,25 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         message = payload as Message;
       }
 
+      const chatId = String((message as any).chatId ?? '').trim();
+      if (!chatId) return;
+
+      // Show notification for new messages not sent by the current user and when the chat is not active
+      if (message.senderId !== currentUser?.id?.toString() && chatId !== activeChat) {
+        // Find the chat to get the sender's name
+        const chat = chats.find(c => c.id === chatId);
+        const sender = chat?.participants?.find(p => p.id === message.senderId);
+        const senderName = sender?.displayName || sender?.username || 'Someone';
+        
+        // Show notification
+        notifyNewMessage(
+          senderName,
+          message.content || 'New message',
+          chatId
+        );
+      }
+
       setMessages(prev => {
-  const chatId = String((message as any).chatId ?? '').trim();
-        if (!chatId) return prev;
         const chatMessages = prev[chatId] || [];
 
         // Normalize incoming message

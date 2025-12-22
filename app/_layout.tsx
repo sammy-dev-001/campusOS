@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { Component, useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AnnouncementProvider } from '../src/contexts/AnnouncementContext';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
@@ -12,8 +12,8 @@ import { TimetableProvider } from '../src/contexts/TimetableContext';
 import { UserProvider } from '../src/contexts/UserContext';
 
 // Error boundary component
-class ErrorBoundary extends Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
-  constructor(props: {children: React.ReactNode}) {
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -54,7 +54,8 @@ function InitialAuthCheck({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, []);
 
-  if (!isReady || !auth?.isInitialized) {
+  const isWeb = Platform.OS === 'web';
+  if (!isReady || (!isWeb && !auth?.isInitialized)) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
@@ -90,27 +91,27 @@ function AuthContent() {
         headerShown: false,
         contentStyle: { backgroundColor: theme?.background || '#fff' },
       }}>
-        <Stack.Screen 
-          name="login/index" 
+        <Stack.Screen
+          name="login/index"
           options={{ headerShown: false }}
         />
-        
-        <Stack.Screen 
-          name="(tabs)" 
-          options={{ 
+
+        <Stack.Screen
+          name="(tabs)"
+          options={{
             headerShown: false,
             // Only show tabs if authenticated
             ...(!auth.isAuthenticated && { navigationBarHidden: true })
-          }} 
+          }}
         />
-        
-        <Stack.Screen 
-          name="gpa-tracker" 
-          options={{ 
+
+        <Stack.Screen
+          name="gpa-tracker"
+          options={{
             headerShown: false,
             // Only show if authenticated
             ...(!auth.isAuthenticated && { navigationBarHidden: true })
-          }} 
+          }}
         />
       </Stack>
     </View>
@@ -125,19 +126,19 @@ const App = () => {
         <AuthProvider>
           <ThemeProvider>
             <UserProvider>
-              <ChatProvider>
-                <GpaProvider>
-                  <TimetableProvider>
-                    <AnnouncementProvider>
-                      <NotificationProvider>
+              <NotificationProvider>
+                <ChatProvider>
+                  <GpaProvider>
+                    <TimetableProvider>
+                      <AnnouncementProvider>
                         <InitialAuthCheck>
                           <AuthContent />
                         </InitialAuthCheck>
-                      </NotificationProvider>
-                    </AnnouncementProvider>
-                  </TimetableProvider>
-                </GpaProvider>
-              </ChatProvider>
+                      </AnnouncementProvider>
+                    </TimetableProvider>
+                  </GpaProvider>
+                </ChatProvider>
+              </NotificationProvider>
             </UserProvider>
           </ThemeProvider>
         </AuthProvider>

@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AnnouncementProvider } from '../src/contexts/AnnouncementContext';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { ChatProvider } from '../src/contexts/ChatContext';
+import { FinanceProvider } from '../src/contexts/FinanceContext';
 import { GpaProvider } from '../src/contexts/GpaContext';
 import { ThemeProvider, useTheme } from '../src/contexts/NewThemeContext';
 import { NotificationProvider } from '../src/contexts/NotificationContext';
@@ -128,15 +129,17 @@ const App = () => {
             <UserProvider>
               <NotificationProvider>
                 <ChatProvider>
-                  <GpaProvider>
-                    <TimetableProvider>
-                      <AnnouncementProvider>
-                        <InitialAuthCheck>
-                          <AuthContent />
-                        </InitialAuthCheck>
-                      </AnnouncementProvider>
-                    </TimetableProvider>
-                  </GpaProvider>
+                  <FinanceProvider>
+                    <GpaProvider>
+                      <TimetableProvider>
+                        <AnnouncementProvider>
+                          <InitialAuthCheck>
+                            <AuthContent />
+                          </InitialAuthCheck>
+                        </AnnouncementProvider>
+                      </TimetableProvider>
+                    </GpaProvider>
+                  </FinanceProvider>
                 </ChatProvider>
               </NotificationProvider>
             </UserProvider>

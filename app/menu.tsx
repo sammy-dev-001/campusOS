@@ -2,10 +2,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-    FlatList,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { ThemedText } from '../components/ThemedText';
@@ -14,8 +14,8 @@ import { useTheme } from '../src/contexts/NewThemeContext';
 
 const features = [
   {
-    title: 'Campus Marketplace',
-    subtitle: 'Buy & sell campus goods',
+    title: 'EduFi Marketplace',
+    subtitle: 'Buy & sell student goods',
     icon: 'cart-outline',
     color: '#FFB74D',
     route: '/market-place',
@@ -36,7 +36,7 @@ const features = [
   },
   {
     title: 'Student Forums',
-    subtitle: 'Discuss campus life',
+    subtitle: 'Discuss student life',
     icon: 'forum-outline',
     color: '#FF8A65',
     route: '/student-forums',
@@ -49,7 +49,7 @@ const features = [
     route: '/settings',
   },
   {
-    title: 'About CampusOS',
+    title: 'About EduFi',
     subtitle: 'Learn about the platform',
     icon: 'information-outline',
     color: '#7986CB',
@@ -87,7 +87,7 @@ export default function MenuScreen() {
         numColumns={2}
         columnWrapperStyle={styles.row}
         ListHeaderComponent={
-          <View style={{paddingTop: 40}}>
+          <View style={{ paddingTop: 40 }}>
             <ThemedText style={styles.header}>Explore Features</ThemedText>
           </View>
         }
@@ -116,29 +116,31 @@ const getStyles = (theme: any) =>
       flex: 1,
       backgroundColor: theme.card,
       borderRadius: 15,
-      padding: 20,
+      padding: 16,
       margin: 8,
       alignItems: 'center',
-      aspectRatio: 1,
       justifyContent: 'center',
+      minHeight: 140,
+      maxWidth: '48%',
+      overflow: 'hidden',
     },
     iconContainer: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: 50,
+      height: 50,
+      borderRadius: 25,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 15,
+      marginBottom: 10,
     },
     cardTitle: {
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: 'bold',
       textAlign: 'center',
+      marginBottom: 4,
     },
     cardSubtitle: {
-      fontSize: 13,
+      fontSize: 11,
       color: theme.secondary,
       textAlign: 'center',
-      marginTop: 4,
     },
   }); 

@@ -2,16 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useMemo, useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    FlatList,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Dimensions,
+  FlatList,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import WebView from 'react-native-webview';
 
@@ -78,7 +78,7 @@ function PdfViewerModal({ visible, onClose, uri }: { visible: boolean, onClose: 
         onClose();
       }
     }, [visible, uri, onClose]);
-    
+
     return null;
   }
 }
@@ -86,18 +86,18 @@ function PdfViewerModal({ visible, onClose, uri }: { visible: boolean, onClose: 
 function NotesPastQuestionsScreen() {
   const { user } = useAuth();
   const { documents, addDocument, updateDocument, deleteDocument, downloadDocument, isLoading } = useDocuments();
-  
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('Notes');
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDoc, setEditingDoc] = useState<Document | null>(null);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewingUri, setViewingUri] = useState<string | null>(null);
-  
+
   const filteredDocuments = useMemo(() => {
     return documents
       .filter(doc => doc.docType === activeTab)
-      .filter(doc => 
+      .filter(doc =>
         doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doc.courseCode.toLowerCase().includes(searchQuery.toLowerCase())
       )
@@ -142,17 +142,17 @@ function NotesPastQuestionsScreen() {
     setEditingDoc(doc);
     setModalVisible(true);
   };
-  
+
   const closeModal = () => {
     setModalVisible(false);
     setEditingDoc(null);
   };
-  
-  const handleSubmit = async (docData: Omit<Document, 'id' | 'createdAt'| 'rating' | 'ratingsCount'>) => {
+
+  const handleSubmit = async (docData: Omit<Document, 'id' | 'createdAt' | 'rating' | 'ratingsCount'>) => {
     if (editingDoc) await handleEditDocument(docData);
     else await handleAddDocument(docData);
   };
-  
+
   const viewDocument = async (doc: Document) => {
     const url = (doc as any).fileUrl || doc.fileUri;
     setViewingUri(url);
@@ -181,7 +181,7 @@ function NotesPastQuestionsScreen() {
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleDeleteDocument(item)} style={styles.actionButton}>
           <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-    </TouchableOpacity>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -210,13 +210,13 @@ function NotesPastQuestionsScreen() {
         </View>
         <View style={styles.tabs}>
           {(['Notes', 'Past Questions'] as ActiveTab[]).map(tab => (
-        <TouchableOpacity 
+            <TouchableOpacity
               key={tab}
               style={[styles.tab, activeTab === tab && styles.activeTab]}
               onPress={() => setActiveTab(tab)}
-        >
+            >
               <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
-        </TouchableOpacity>
+            </TouchableOpacity>
           ))}
         </View>
       </View>
@@ -231,13 +231,13 @@ function NotesPastQuestionsScreen() {
           <Text style={styles.emptySubtext}>Tap the upload button to add the first one!</Text>
         </View>
       ) : (
-      <FlatList
+        <FlatList
           data={filteredDocuments}
           renderItem={renderDocItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+          showsVerticalScrollIndicator={false}
+        />
       )}
 
       {/* Modals */}
@@ -248,38 +248,40 @@ function NotesPastQuestionsScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+  container: { flex: 1, backgroundColor: '#121212' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#121212',
   },
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
-    headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-    uploadButton: { padding: 8 },
-    controlsContainer: { paddingHorizontal: 20, marginBottom: 10 },
-    searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E', borderRadius: 10, paddingHorizontal: 15, marginBottom: 15 },
-    searchIcon: { marginRight: 10 },
-    searchInput: { flex: 1, color: '#fff', fontSize: 16, paddingVertical: 12 },
-    tabs: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 10, padding: 4 },
-    tab: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-    activeTab: { backgroundColor: '#007AFF' },
-    tabText: { color: '#fff', fontWeight: '600' },
-    activeTabText: { color: '#fff' },
-    listContainer: { paddingHorizontal: 20, paddingBottom: 20 },
-    docCard: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 12, padding: 15, marginBottom: 12, alignItems: 'center' },
-    docIcon: { marginRight: 15 },
-    docInfo: { flex: 1 },
-    docTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    docMeta: { color: '#888', fontSize: 12, marginTop: 2 },
-    docUploader: { color: '#666', fontSize: 12, fontStyle: 'italic', marginTop: 4 },
-    docActions: { flexDirection: 'row', gap: 4 },
-    actionButton: { padding: 6 },
-    emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
-    emptyText: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginTop: 16 },
-    emptySubtext: { color: '#888', fontSize: 14, textAlign: 'center', marginTop: 8 },
-    viewerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#1E1E1E' },
-    viewerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    pdf: { flex: 1, width: Dimensions.get('window').width, height: Dimensions.get('window').height },
-}); 
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
+  headerTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+  uploadButton: { padding: 8 },
+  controlsContainer: { paddingHorizontal: 20, marginBottom: 10 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E', borderRadius: 10, paddingHorizontal: 15, marginBottom: 15 },
+  searchIcon: { marginRight: 10 },
+  searchInput: { flex: 1, color: '#fff', fontSize: 16, paddingVertical: 12 },
+  tabs: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 10, padding: 4 },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+  activeTab: { backgroundColor: '#007AFF' },
+  tabText: { color: '#fff', fontWeight: '600' },
+  activeTabText: { color: '#fff' },
+  listContainer: { paddingHorizontal: 20, paddingBottom: 20 },
+  docCard: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 12, padding: 15, marginBottom: 12, alignItems: 'center' },
+  docIcon: { marginRight: 15 },
+  docInfo: { flex: 1 },
+  docTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  docMeta: { color: '#888', fontSize: 12, marginTop: 2 },
+  docUploader: { color: '#666', fontSize: 12, fontStyle: 'italic', marginTop: 4 },
+  docActions: { flexDirection: 'row', gap: 4 },
+  actionButton: { padding: 6 },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
+  emptyText: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginTop: 16 },
+  emptySubtext: { color: '#888', fontSize: 14, textAlign: 'center', marginTop: 8 },
+  viewerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#1E1E1E' },
+  viewerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  pdf: { flex: 1, width: Dimensions.get('window').width, height: Dimensions.get('window').height },
+});
+
+export default NotesPastQuestionsScreen;

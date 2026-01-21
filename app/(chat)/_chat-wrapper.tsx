@@ -14,11 +14,11 @@ export function ChatWrapper({ children }: ChatWrapperProps) {
   // Show loading while checking auth state
   if (auth.isLoading || !auth.isAuthenticated) {
     return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        backgroundColor: theme.background 
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.background
       }}>
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
@@ -27,3 +27,5 @@ export function ChatWrapper({ children }: ChatWrapperProps) {
 
   return <>{children}</>;
 }
+
+export default ChatWrapper;

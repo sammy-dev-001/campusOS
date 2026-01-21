@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useUser } from '../../src/contexts/UserContext';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 
 // Helper functions
 function getInitials(name?: string) {
@@ -33,6 +34,7 @@ const CreatePostScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { user } = useUser();
+  const { theme } = useTheme();
 
   const pickMedia = async () => {
     try {
@@ -77,7 +79,7 @@ const CreatePostScreen = () => {
 
       const formData = new FormData();
       formData.append('content', content);
-      
+
       if (media) {
         // For React Native, we need to create a file-like object
         const file = {
@@ -101,11 +103,11 @@ const CreatePostScreen = () => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to create post');
       }
-      
+
       // Reset form
       setContent('');
       setMedia(null);
-      
+
       // Show success and navigate back
       Alert.alert('Success', 'Your post has been created!', [
         {
@@ -129,8 +131,8 @@ const CreatePostScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.background }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
@@ -138,7 +140,10 @@ const CreatePostScreen = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: 150 }}
+      >
         <View style={styles.userInfo}>
           <View style={[styles.avatar, { backgroundColor: getAvatarColor(user?.display_name || user?.username || '') }]}>
             <Text style={styles.avatarText}>{getInitials(user?.display_name || user?.username)}</Text>

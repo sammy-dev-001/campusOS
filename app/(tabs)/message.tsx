@@ -59,7 +59,7 @@ export default function MessageScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
+
   // Load chats when the screen is focused
   React.useEffect(() => {
     const loadChats = async () => {
@@ -75,7 +75,7 @@ export default function MessageScreen() {
         setLoading(false);
       }
     };
-    
+
     loadChats();
   }, []);
 
@@ -147,7 +147,7 @@ export default function MessageScreen() {
     console.log('Chat item:', JSON.stringify(item, null, 2));
     console.log('Current user ID:', user?.id);
     const isUnread = item.unreadCount > 0;
-    
+
     // Debug log all participants
     console.log('All participants:', JSON.stringify(item.participants?.map(p => ({
       id: p.id,
@@ -173,27 +173,27 @@ export default function MessageScreen() {
       });
       return isOther;
     });
-    
+
     console.log('Other participant found:', otherParticipant ? {
       id: otherParticipant.id,
       userId: otherParticipant.user?.id || otherParticipant.user?._id,
       username: otherParticipant.username || otherParticipant.user?.username,
       displayName: otherParticipant.displayName || otherParticipant.user?.displayName
     } : 'None found');
-    
+
     // Get all recipients (excluding current user)
     const recipients = (item.participants || []).filter(p => {
       const participantId = p.user?.id || p.user?._id || p.id;
       return participantId !== user?.id;
     });
-    
+
     console.log('Recipients after filter:', recipients.map(r => ({
       id: r.id,
       userId: r.user?.id || r.user?._id,
       username: r.username || r.user?.username,
       displayName: r.displayName || r.user?.displayName
     })));
-    
+
     // Helper function to get display name from participant
     const getParticipantName = (p: any) => {
       return p.user?.displayName || p.displayName || p.user?.username || p.username || 'Unknown User';
@@ -206,10 +206,10 @@ export default function MessageScreen() {
 
     // For direct messages, always use the other participant's username
     // For group chats, use the chat name or 'Group Chat' as fallback
-    const displayName = item.isGroup 
+    const displayName = item.isGroup
       ? item.name || 'Group Chat'
       : (otherParticipant?.user?.username || otherParticipant?.username || 'Chat');
-    
+
     const avatarColor = getAvatarColor(item.id);
 
     // Get profile picture URL, handling both relative and absolute paths
@@ -235,7 +235,7 @@ export default function MessageScreen() {
 
     const lastMessage = item.lastMessage;
     const lastMessageTime = lastMessage?.createdAt ? formatTimeAgo(lastMessage.createdAt) : '';
-    
+
     // Get the correct profile picture URL
     let avatarUri = null;
     if (item.isGroup) {
@@ -243,14 +243,14 @@ export default function MessageScreen() {
       avatarUri = item.avatar ? getProfilePictureUrl(item.avatar) : null;
     } else if (otherParticipant) {
       // For direct messages, use the other participant's profile picture
-      const profilePic = otherParticipant.user?.profilePic || otherParticipant.user?.profilePicture || 
-                        otherParticipant.profilePic || otherParticipant.profilePicture;
+      const profilePic = otherParticipant.user?.profilePic || otherParticipant.user?.profilePicture ||
+        otherParticipant.profilePic || otherParticipant.profilePicture;
       avatarUri = profilePic ? getProfilePictureUrl(profilePic) : null;
-      
+
       // Log for debugging
       console.log('Profile picture for', otherParticipant.user?.username || otherParticipant.username, ':', profilePic);
     }
-    
+
     let lastMessageContent = 'No messages yet';
     if (lastMessage) {
       if (typeof lastMessage === 'string') {
@@ -290,7 +290,7 @@ export default function MessageScreen() {
                 accessibilityLabel={`Profile picture of ${displayName}`}
               />
             ) : (
-              <View style={[styles.avatarPlaceholder, styles.avatarBorder, { backgroundColor: avatarColor }]}> 
+              <View style={[styles.avatarPlaceholder, styles.avatarBorder, { backgroundColor: avatarColor }]}>
                 <ThemedText style={styles.avatarText}>
                   {getInitials(displayName)}
                 </ThemedText>
@@ -317,7 +317,7 @@ export default function MessageScreen() {
                 {lastMessageContent}
               </ThemedText>
               {isUnread && (
-                <View style={[styles.unreadBadge, { backgroundColor: '#2196F3' }]}> 
+                <View style={[styles.unreadBadge, { backgroundColor: '#2196F3' }]}>
                   <ThemedText style={styles.unreadCount}>{item.unreadCount}</ThemedText>
                 </View>
               )}
@@ -330,14 +330,14 @@ export default function MessageScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }]}> 
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
   if (error) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }]}> 
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }]}>
         <ThemedText style={[styles.emptyText, { color: theme.secondary, marginBottom: 16 }]}>
           {error instanceof Error ? error.message : String(error)}
         </ThemedText>
@@ -361,7 +361,7 @@ export default function MessageScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <StatusBar style="light" />
-      <View style={[styles.header, { paddingTop: 12, paddingBottom: 12 }]}> 
+      <View style={[styles.header, { paddingTop: 12, paddingBottom: 12 }]}>
         <ThemedText style={styles.headerTitle}>Messages</ThemedText>
         <View style={styles.headerAvatarContainer}>
           <TouchableOpacity>
@@ -405,7 +405,7 @@ export default function MessageScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="chatbubbles" size={64} color={theme.secondary} />
-              <ThemedText style={[styles.emptyText, { color: theme.secondary }]}> 
+              <ThemedText style={[styles.emptyText, { color: theme.secondary }]}>
                 No chats yet. Start a new conversation!
               </ThemedText>
             </View>
@@ -414,7 +414,7 @@ export default function MessageScreen() {
       ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="chatbubbles" size={64} color={theme.secondary} />
-          <ThemedText style={[styles.emptyText, { color: theme.secondary }]}> 
+          <ThemedText style={[styles.emptyText, { color: theme.secondary }]}>
             No chats yet. Start a new conversation!
           </ThemedText>
         </View>

@@ -7,13 +7,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '../src/hooks/useColorScheme';
 import { ThemedText } from './ThemedText';
 
-type IconName = 'home' | 'home-outline' | 'chatbubble' | 'chatbubble-outline' | 
-                'newspaper' | 'newspaper-outline' | 'settings' | 'settings-outline' | 'add-circle' | 'add-circle-outline' | 'calendar' | 'calendar-outline';
+type IconName = 'home' | 'home-outline' | 'chatbubble' | 'chatbubble-outline' |
+  'newspaper' | 'newspaper-outline' | 'settings' | 'settings-outline' | 'add-circle' | 'add-circle-outline' | 'calendar' | 'calendar-outline' | 'wallet' | 'wallet-outline';
 
 const routeLabels: Record<string, string> = {
   index: 'Home',
   message: 'Messages',
   create: 'Add',
+  finance: 'Finance',
   post: 'Posts',
   planner: 'Planner',
   settings: 'Settings',
@@ -25,73 +26,97 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const handleCreatePress = () => {
-    router.push('/(tabs)/create');
-  };
+  const tabBarHeight = 60 + insets.bottom;
+
+  // Check if current route is the Posts screen
+  const currentRoute = state.routes[state.index]?.name;
+  const isPostScreen = currentRoute === 'post';
 
   return (
-    <View style={[
-      styles.container,
-      {
-        backgroundColor: '#111', // solid dark background
-        borderTopColor: '#222',
-        paddingBottom: insets.bottom,
-        height: 60 + insets.bottom, // Add bottom inset to the height
-        paddingTop: 8,
-      }
-    ]}>
-      {state.routes.map((route, index) => {
-        const isFocused = state.index === index;
-        const isCreateTab = route.name === 'create';
+    <>
+      {/* Floating + Button for Create - Only visible on Posts screen */}
+      {isPostScreen && (
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            bottom: tabBarHeight + 20,
+            right: 20,
+            zIndex: 100,
+          }}
+          onPress={() => router.push('/create')}
+        >
+          <View style={styles.createButton}>
+            <Ionicons name="add" size={32} color="#fff" />
+          </View>
+        </TouchableOpacity>
+      )}
 
-        if (isCreateTab) {
-          return (
-            <View key={route.key} style={styles.createButtonContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.createButton,
-                  {
-                    backgroundColor: '#2196F3', // blue for the add button
-                    borderWidth: 4,
-                    borderColor: '#181829',
-                    shadowColor: '#2196F3',
-                    shadowOpacity: 0.4,
-                    shadowRadius: 8,
-                  }
-                ]}
-                onPress={handleCreatePress}
-              >
-                <Ionicons name="add" size={32} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          );
+      {/* Tab Bar */}
+      <View style={[
+        styles.container,
+        {
+          backgroundColor: '#111',
+          borderTopColor: '#222',
+          paddingBottom: insets.bottom,
+          height: tabBarHeight,
+          paddingTop: 8,
         }
+      ]}>
+        {state.routes
+          .filter(route => route.name !== 'create')
+          .map((route, index) => {
+            const actualIndex = state.routes.findIndex(r => r.name === route.name);
+            const isFocused = state.index === actualIndex;
+            const isFinanceTab = route.name === 'finance';
 
-        const icon = getIconForRoute(route.name, isFocused);
-        const color = isFocused
-          ? '#2196F3'
-          : '#888';
-        const label = routeLabels[route.name] || route.name;
+            const icon = getIconForRoute(route.name, isFocused);
+            const color = isFocused
+              ? '#0B3C5D'
+              : '#888';
+            const label = routeLabels[route.name] || route.name;
 
-        return (
-          <TouchableOpacity
-            key={route.key}
-            style={styles.tabButton}
-            onPress={() => navigation.navigate(route.name)}
-          >
-            <Ionicons name={icon} size={24} color={color} />
-            <ThemedText
-              style={[
-                styles.tabLabel,
-                { color }
-              ]}
-            >
-              {label}
-            </ThemedText>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+            if (isFinanceTab) {
+              return (
+                <TouchableOpacity
+                  key={route.key}
+                  style={styles.tabButton}
+                  onPress={() => navigation.navigate(route.name)}
+                >
+                  <View style={styles.financeIconContainer}>
+                    <Ionicons name="wallet" size={22} color="#fff" />
+                  </View>
+                  <ThemedText
+                    style={[
+                      styles.tabLabel,
+                      { color: isFocused ? '#2196F3' : '#888' }
+                    ]}
+                  >
+                    {label}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            }
+
+            return (
+              <TouchableOpacity
+                key={route.key}
+                style={styles.tabButton}
+                onPress={() => navigation.navigate(route.name)}
+              >
+                <Ionicons name={icon} size={24} color={color} />
+                <ThemedText
+                  style={[
+                    styles.tabLabel,
+                    { color }
+                  ]}
+                >
+                  {label}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+      </View>
+    </>
   );
 }
 
@@ -103,6 +128,8 @@ function getIconForRoute(routeName: string, isFocused: boolean): IconName {
       return isFocused ? 'chatbubble' : 'chatbubble-outline';
     case 'post':
       return isFocused ? 'newspaper' : 'newspaper-outline';
+    case 'finance':
+      return isFocused ? 'wallet' : 'wallet-outline';
     case 'planner':
       return isFocused ? 'calendar' : 'calendar-outline';
     case 'settings':
@@ -141,10 +168,10 @@ const styles = StyleSheet.create({
   },
   createButtonContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'android' ? 60 : 46, // Moved higher up
+    bottom: Platform.OS === 'android' ? 70 : 60, // Higher above tab bar
     left: '50%',
     marginLeft: -28,
-    zIndex: 1, // Ensure it's above the tab bar
+    zIndex: 10, // Higher z-index
   },
   createButton: {
     width: 56,
@@ -152,19 +179,32 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#2196F3',
+    backgroundColor: '#0B3C5D', // EduFi Primary Blue
     // Shadow for iOS
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
     // Elevation for Android
-    elevation: 8,
+    elevation: 10,
     borderWidth: 3,
     borderColor: '#111'
   },
   tabLabel: {
     fontSize: 12,
     marginTop: 4,
+  },
+  financeIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2196F3',
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 6,
   },
 });

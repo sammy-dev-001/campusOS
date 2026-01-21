@@ -4,19 +4,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-    Image,
-    ImageStyle,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TextStyle,
-    TouchableOpacity,
-    View,
-    ViewStyle,
-    useWindowDimensions
+  Image,
+  ImageStyle,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextStyle,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+  useWindowDimensions
 } from 'react-native';
 import { useTimetable } from '../../src/contexts/TimetableContext';
 
@@ -33,22 +33,22 @@ interface ClassItem {
 }
 
 const studyGroups = [
-    {
-      id: 'cs-majors-1',
-      icon: 'flower-tulip-outline',
-      title: 'CS Majors Club',
-      members: 15,
-      description: 'Discussions, coding challenges & tech talks',
-      iconColor: '#ffb3ba', // A pinkish color for the tulip
-    },
-    {
-      id: 'creative-writing-2',
-      icon: 'creation',
-      title: 'Creative Writing',
-      members: 8,
-      description: 'Share your stories and get feedback.',
-      iconColor: '#8ecae6', // A blue/teal color
-    },
+  {
+    id: 'cs-majors-1',
+    icon: 'flower-tulip-outline',
+    title: 'CS Majors Club',
+    members: 15,
+    description: 'Discussions, coding challenges & tech talks',
+    iconColor: '#ffb3ba', // A pinkish color for the tulip
+  },
+  {
+    id: 'creative-writing-2',
+    icon: 'creation',
+    title: 'Creative Writing',
+    members: 8,
+    description: 'Share your stories and get feedback.',
+    iconColor: '#8ecae6', // A blue/teal color
+  },
 ];
 
 interface UserProfile {
@@ -103,16 +103,16 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const router = useRouter();
   const searchParams = useLocalSearchParams();
-  
+
   // Get user's display name, falling back to username
   const userDisplayName = React.useMemo(() => {
     if (!user) return 'Student';
     return user.display_name || user.username || 'Student';
   }, [user]);
-  
+
   // Get today's classes - this is a mock function
   const getTodaysClasses = () => [];
-  
+
   // Use theme values directly from the theme object
   const themeColors = React.useMemo(() => ({
     background: theme.background,
@@ -122,23 +122,23 @@ export default function HomeScreen() {
   }), [theme]);
   const isDesktop = width > 768;
   const [refreshKey, setRefreshKey] = useState(0);
-  
+
   // Get the refresh parameter from the URL
   const refresh = searchParams.refresh as string | undefined;
-  
+
   // Force refresh when the refresh parameter changes
   useEffect(() => {
     if (refresh) {
       // Force a re-render by updating the refresh key
       setRefreshKey(prev => prev + 1);
-      
+
       // Remove the refresh parameter from the URL
       const newParams = { ...searchParams };
       delete newParams.refresh;
       router.setParams(newParams);
     }
   }, [refresh, searchParams, router]);
-  
+
   const styles = stylesFn(themeColors, isDesktop);
 
   const { getTodaysClasses: getTodaysClassesFn } = useTimetable();
@@ -195,13 +195,16 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         <View style={styles.contentContainer}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <MaterialCommunityIcons name="school-outline" size={30} color={themeColors.text} />
-              <ThemedText style={styles.logoText}>CampusOS</ThemedText>
+              <ThemedText style={styles.logoText}>EduFi</ThemedText>
             </View>
             <View style={styles.avatar}>
               {user?.profile_picture ? (
@@ -219,7 +222,7 @@ export default function HomeScreen() {
 
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={themeColors.secondary} style={{marginRight: 10}} />
+            <Ionicons name="search" size={20} color={themeColors.secondary} style={{ marginRight: 10 }} />
             <TextInput
               placeholder="Search courses, groups..."
               placeholderTextColor={themeColors.secondary}
@@ -324,9 +327,9 @@ export default function HomeScreen() {
           </View>
 
           {/* Campus AI Assistant */}
-          <ThemedText style={styles.sectionTitle}>Campus AI Assistant</ThemedText>
+          <ThemedText style={styles.sectionTitle}>EduFi AI Assistant</ThemedText>
           <LinearGradient
-            colors={["#4A90E2", "#D02323"]}
+            colors={["#0B3C5D", "#4CAF50"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.aiAssistantCard}
@@ -334,52 +337,42 @@ export default function HomeScreen() {
             <View style={styles.aiIconContainer}>
               <MaterialCommunityIcons name="chat-processing-outline" size={30} color="#fff" />
             </View>
-            <ThemedText style={styles.aiTitle}>Campus Buddy</ThemedText>
+            <ThemedText style={styles.aiTitle}>Eddy</ThemedText>
             <ThemedText style={styles.aiSubtitle}>Your personal academic AI assistant.</ThemedText>
             <TouchableOpacity
               style={styles.aiButton}
-              onPress={() => router.push('/new-chat')}
+              onPress={() => router.push('/ai-buddy')}
             >
               <ThemedText style={styles.aiButtonText}>Chat Now</ThemedText>
             </TouchableOpacity>
           </LinearGradient>
 
-          {/* Study Groups */}
-          <ThemedText style={styles.sectionTitle}>Study Groups</ThemedText>
-          <View style={styles.studyGroupsGrid}>
-            {studyGroups.map((group, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={styles.studyGroupCard}
-                onPress={() => router.push({
-                  pathname: '/group-details/[id]',
-                  params: { 
-                    id: group.id || index.toString(),
-                    title: group.title,
-                    description: group.description,
-                    members: group.members,
-                    icon: group.icon,
-                    iconColor: group.iconColor
-                  }
-                })}
-              >
-                <View style={styles.studyGroupHeader}>
-                  <View style={[styles.studyGroupIcon, { backgroundColor: group.iconColor }]}> 
-                    <MaterialCommunityIcons name={group.icon as any} size={24} color="#000" />
-                  </View>
-                  <ThemedText style={styles.studyGroupTitle}>{group.title}</ThemedText>
+          {/* Campus Map */}
+          <ThemedText style={styles.sectionTitle}>Explore Campus</ThemedText>
+          <TouchableOpacity
+            style={styles.campusMapCard}
+            onPress={() => router.push('/campus-map')}
+          >
+            <LinearGradient
+              colors={['#0B3C5D', '#1A5A8C']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.campusMapGradient}
+            >
+              <View style={styles.campusMapContent}>
+                <View style={styles.campusMapIcon}>
+                  <Ionicons name="map" size={32} color="#fff" />
                 </View>
-                <View style={styles.studyGroupInfo}>
-                  <Ionicons name="people-outline" size={16} color={themeColors.secondary} />
-                  <ThemedText style={styles.studyGroupMeta}>{group.members} Members</ThemedText>
+                <View style={styles.campusMapInfo}>
+                  <ThemedText style={styles.campusMapTitle}>Campus Map</ThemedText>
+                  <ThemedText style={styles.campusMapSubtitle}>
+                    Navigate buildings, find your way around campus
+                  </ThemedText>
                 </View>
-                <ThemedText style={styles.studyGroupDescription}>{group.description}</ThemedText>
-                <View style={styles.studyGroupButton}>
-                  <ThemedText style={styles.studyGroupButtonText}>View Group</ThemedText>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+                <Ionicons name="chevron-forward" size={24} color="#fff" />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -452,12 +445,19 @@ interface Styles {
   studyGroupButton: ViewStyle;
   studyGroupButtonText: TextStyle;
   header: ViewStyle;
+  campusMapCard: ViewStyle;
+  campusMapGradient: ViewStyle;
+  campusMapContent: ViewStyle;
+  campusMapIcon: ViewStyle;
+  campusMapInfo: ViewStyle;
+  campusMapTitle: TextStyle;
+  campusMapSubtitle: TextStyle;
 }
 
 const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<Styles>({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: theme.background,
     paddingTop: Platform.OS === 'android' ? 25 : 0,
   } as ViewStyle,
   contentContainer: {
@@ -621,7 +621,7 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<S
   navHubContainer: {
     marginHorizontal: 20,
     marginTop: 30,
-    height: 280, 
+    height: 280,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -815,6 +815,41 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<S
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 15,
-    backgroundColor: '#121212',
+    backgroundColor: theme.background,
   } as ViewStyle,
+  campusMapCard: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+  } as ViewStyle,
+  campusMapGradient: {
+    padding: 16,
+  } as ViewStyle,
+  campusMapContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  } as ViewStyle,
+  campusMapIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  } as ViewStyle,
+  campusMapInfo: {
+    flex: 1,
+    marginLeft: 16,
+  } as ViewStyle,
+  campusMapTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+  } as TextStyle,
+  campusMapSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+  } as TextStyle,
 });

@@ -269,6 +269,23 @@ class OfflineManager {
     /**
      * Process sync queue when online
      */
+    /**
+     * Cache feed data
+     */
+    async cacheFeed(posts: any[]): Promise<void> {
+        await this.cacheData(STORAGE_KEYS.TIMETABLE + '_FEED', posts, 24 * 60 * 60 * 1000); // 24 hours
+    }
+
+    /**
+     * Get cached feed
+     */
+    async getCachedFeed(): Promise<any[] | null> {
+        return this.getCachedData<any[]>(STORAGE_KEYS.TIMETABLE + '_FEED');
+    }
+
+    /**
+     * Process sync queue when online
+     */
     async processSyncQueue(): Promise<{ success: number; failed: number }> {
         const result = { success: 0, failed: 0 };
 
@@ -283,27 +300,32 @@ class OfflineManager {
 
         const remainingItems: SyncQueueItem[] = [];
 
+        // Dynamic import to avoid circular dependency issues if any still exist, 
+        // but prefer direct import if possible. For now, we'll use the apiClient 
+        // which should be safe as it doesn't depend on OfflineManager.
+        const { default: apiClient } = await import('../../services/api');
+
         for (const item of queue) {
             try {
-                // Import api dynamically to avoid circular dependencies
-                const { api } = await import('../contexts/AuthContext');
+                console.log(`[Sync] Processing item: ${item.type} ${item.endpoint}`);
 
                 switch (item.method) {
                     case 'POST':
-                        await api.post(item.endpoint, item.payload);
+                        await apiClient.post(item.endpoint, item.payload);
                         break;
                     case 'PUT':
-                        await api.put(item.endpoint, item.payload);
+                        await apiClient.put(item.endpoint, item.payload);
                         break;
                     case 'PATCH':
-                        await api.patch(item.endpoint, item.payload);
+                        await apiClient.patch(item.endpoint, item.payload);
                         break;
                     case 'DELETE':
-                        await api.delete(item.endpoint);
+                        await apiClient.delete(item.endpoint);
                         break;
                 }
                 result.success++;
             } catch (error) {
+                console.error(`[Sync] Failed to process item ${item.id}:`, error);
                 item.retryCount++;
                 if (item.retryCount < 3) {
                     remainingItems.push(item);

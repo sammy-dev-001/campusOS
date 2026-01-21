@@ -14,6 +14,8 @@ Notifications.setNotificationHandler({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
         priority: Notifications.AndroidNotificationPriority.HIGH,
     }),
 });
@@ -228,7 +230,7 @@ export const scheduleLocalNotification = async (
     notification: {
         title: string;
         body: string;
-        data?: object;
+        data?: Record<string, unknown>;
     },
     trigger: Notifications.NotificationTriggerInput
 ): Promise<string> => {

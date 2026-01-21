@@ -14,11 +14,11 @@ const MemoizedTabBar = memo((props: any) => (
 
 // Memoized loading component
 const LoadingIndicator = ({ theme }: { theme: any }) => (
-  <View style={{ 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    backgroundColor: theme?.background || '#fff' 
+  <View style={{
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme?.background || '#fff'
   }}>
     <ActivityIndicator size="large" color={theme?.primary} />
   </View>
@@ -48,7 +48,8 @@ const TabContent = () => {
       screenOptions={screenOptions}>
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
       <Tabs.Screen name="message" options={{ title: 'Messages' }} />
-      <Tabs.Screen name="create" options={{ title: '' }} />
+      <Tabs.Screen name="create" options={{ title: '', href: null }} />
+      <Tabs.Screen name="finance" options={{ title: 'Finance' }} />
       <Tabs.Screen name="post" options={{ title: 'Posts' }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
     </Tabs>

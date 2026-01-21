@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "campusOS",
-    "slug": "campusos",
+    "name": "EduFi",
+    "slug": "edufi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "campusos",
+    "scheme": "edufi",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "ios": {
@@ -14,16 +14,17 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0B3C5D"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.sammydev001.campusos",
+      "package": "com.sammydev001.edufi",
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO",
-        "READ_EXTERNAL_STORAGE"
+        "READ_EXTERNAL_STORAGE",
+        "READ_SMS"
       ]
     },
     "web": {
@@ -39,7 +40,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0B3C5D"
         }
       ],
       "expo-web-browser"

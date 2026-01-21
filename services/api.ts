@@ -32,15 +32,15 @@ apiClient.interceptors.request.use(
   async (config) => {
     try {
       // Skip token check for auth routes
-      const isAuthRoute = ['/auth/login', '/auth/register', '/auth/refresh-token'].some(route => 
+      const isAuthRoute = ['/auth/login', '/auth/register', '/auth/refresh-token'].some(route =>
         config.url?.includes(route)
       );
-      
+
       if (!isAuthRoute) {
         // First try to get token from authData (where it's actually stored)
         const authData = await AsyncStorage.getItem('authData');
         let token;
-        
+
         if (authData) {
           try {
             const parsedAuthData = JSON.parse(authData);
@@ -49,12 +49,12 @@ apiClient.interceptors.request.use(
             console.error('[API] Error parsing auth data:', e);
           }
         }
-        
+
         // Fallback to userToken for backward compatibility
         if (!token) {
           token = await AsyncStorage.getItem('userToken');
         }
-        
+
         if (token) {
           config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${token}`;
@@ -62,21 +62,21 @@ apiClient.interceptors.request.use(
           console.warn('[API] No authentication token found');
         }
       }
-      
+
       // Ensure URL is defined before manipulating it
       if (config.url) {
         // Remove any leading slashes to prevent double slashes
         config.url = config.url.replace(/^\/+/, '');
-        
+
         // Log the final URL for debugging
         console.log(`[API] ${config.method?.toUpperCase() || 'GET'} ${config.baseURL}/${config.url}`);
       }
-      
+
       // Log request data if present
       if (config.data) {
         console.log('[API] Request data:', config.data);
       }
-      
+
       return config;
     } catch (error) {
       console.error('[API] Error in request interceptor:', error);
@@ -89,126 +89,88 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Add response interceptor for handling responses and errors
+// Unified response interceptor - handles logging, response transformation, and auth refresh
 apiClient.interceptors.response.use(
   (response) => {
-    // Any status code that lie within the range of 2xx cause this function to trigger
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
-    
-    // If the error is 401 and we haven't already tried to refresh the token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        const refreshToken = await AsyncStorage.getItem('refreshToken');
-        if (refreshToken) {
-          // Try to refresh the token
-          // const response = await apiClient.post('/auth/refresh-token', { refreshToken });
-          // const { token, user } = response.data as TokenRefreshResponse;
-          // 
-          // // Update tokens
-          // await AsyncStorage.setItem('userToken', token);
-          // 
-          // // Update the Authorization header
-          // originalRequest.headers.Authorization = `Bearer ${token}`;
-          // 
-          // // Retry the original request
-          // return apiClient(originalRequest);
-        }
-        
-        // If we get here, refresh failed or no refresh token
-        // Clear tokens and redirect to login
-        await AsyncStorage.multiRemove(['userToken', 'refreshToken', 'userData']);
-        // The app should handle the redirect to login page when it detects the missing token
-      } catch (refreshError) {
-        console.error('[API] Error refreshing token:', refreshError);
-        // Clear tokens on any error during refresh
-        await AsyncStorage.multiRemove(['userToken', 'refreshToken', 'userData']);
-      }
+    // Log successful responses in development
+    if (__DEV__) {
+      console.log(`[API] Response ${response.status} for ${response.config.url}`);
     }
-    
-    // Handle other errors
-    if (error.response?.data?.message) {
-      return Promise.reject(new Error(error.response.data.message));
-    }
-    
-    return Promise.reject(error);
-  }
-);
 
-apiClient.interceptors.response.use(
-  (response) => {
-    // Log successful responses
-    console.log(`[API] Response ${response.status} for ${response.config.url}`);
-    
-    // Return the full response object for posts endpoint
+    // Return the full response object for posts endpoint (needs response.data access)
     if (response.config.url?.includes('/posts')) {
       return response;
     }
-    
-    // For other endpoints, return just the data
+
+    // For other endpoints, return just the data for convenience
     return response.data;
   },
   async (error) => {
     const originalRequest = error.config;
-    
-    // Log the error
+
+    // Log errors
     if (error.response) {
       console.error(
         `[API] Error response: ${error.response.status}`,
         error.response.data
       );
-      
-      // Handle 401 Unauthorized errors
+
+      // Handle 401 Unauthorized errors with token refresh
       if (error.response.status === 401 && !originalRequest._retry) {
-        console.log('[API] Attempting to refresh token...');
         originalRequest._retry = true;
-        
+
         try {
-          // Try to refresh the token
           const refreshToken = await AsyncStorage.getItem('refreshToken');
           if (!refreshToken) {
-            console.error('[API] No refresh token available');
-            // Clear auth data if refresh token is missing
-            await AsyncStorage.removeItem('token');
+            // No refresh token available - clear auth and reject
+            await AsyncStorage.multiRemove(['userToken', 'refreshToken', 'userData', 'token', 'authData']);
             return Promise.reject(error);
           }
-          
+
           // Call the refresh token endpoint
           const response = await axios.post<TokenRefreshResponse>(
             `${cleanBaseUrl(API_BASE_URL)}/auth/refresh-token`,
             { refreshToken }
           );
-          
+
           const { token } = response.data;
-          
+
           // Store the new token
           await AsyncStorage.setItem('token', token);
-          console.log('[API] Token refreshed successfully');
-          
-          // Update the authorization header
+
+          // Also update authData to keep in sync
+          const authDataRaw = await AsyncStorage.getItem('authData');
+          if (authDataRaw) {
+            try {
+              const authData = JSON.parse(authDataRaw);
+              authData.token = token;
+              await AsyncStorage.setItem('authData', JSON.stringify(authData));
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
+
+          // Update the authorization header and retry
           originalRequest.headers.Authorization = `Bearer ${token}`;
-          
-          // Retry the original request
           return apiClient(originalRequest);
         } catch (refreshError) {
           console.error('[API] Token refresh failed:', refreshError);
-          // Clear auth data on refresh failure
-          await AsyncStorage.removeItem('token');
-          await AsyncStorage.removeItem('refreshToken');
-          // You might want to redirect to login here
+          // Clear all auth data on refresh failure
+          await AsyncStorage.multiRemove(['userToken', 'refreshToken', 'userData', 'token', 'authData']);
           return Promise.reject(refreshError);
         }
+      }
+
+      // Handle error with message from response
+      if (error.response.data?.message) {
+        return Promise.reject(new Error(error.response.data.message));
       }
     } else if (error.request) {
       console.error('[API] No response received:', error.request);
     } else {
       console.error('[API] Request error:', error.message);
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -230,21 +192,21 @@ interface User {
 const chatApi = {
   getChats: () => apiClient.get<Chat[]>('/chats'),
   getMessages: (chatId: string) => apiClient.get(`/chats/${chatId}/messages`),
-  sendMessage: (chatId: string, content: string) => 
+  sendMessage: (chatId: string, content: string) =>
     apiClient.post(`/chats/${chatId}/messages`, { content }),
-  createChat: (userId: string) => 
+  createChat: (userId: string) =>
     apiClient.post<Chat>('/chats', { userId }),
-  getChatDetails: (chatId: string) => 
+  getChatDetails: (chatId: string) =>
     apiClient.get<Chat>(`/chats/${chatId}`),
-  getGroups: () => 
+  getGroups: () =>
     apiClient.get<Chat[]>('/chats/groups'),
-  getDirectMessageConversations: () => 
+  getDirectMessageConversations: () =>
     apiClient.get<Chat[]>('/chats/direct'),
-  createDirectMessage: (userId: string) => 
+  createDirectMessage: (userId: string) =>
     apiClient.post<Chat>('/chats/direct', { userId }),
-  createGroup: (name: string, userIds: string[]) => 
+  createGroup: (name: string, userIds: string[]) =>
     apiClient.post<Chat>('/chats/groups', { name, userIds }),
-  addUserToGroup: (groupId: string, userId: string) => 
+  addUserToGroup: (groupId: string, userId: string) =>
     apiClient.post(`/chats/groups/${groupId}/users`, { userId }),
 };
 
@@ -276,7 +238,7 @@ const userApi = {
 
 // Auth API
 const authApi = {
-  login: (email: string, password: string) => 
+  login: (email: string, password: string) =>
     apiClient.post('/auth/login', { email, password }),
   register: (data: any) => apiClient.post('/auth/register', data),
   logout: () => apiClient.post('/auth/logout')
@@ -301,13 +263,13 @@ const postsApi = {
     try {
       // The response is already the array of posts, not wrapped in a data property
       const response = await apiClient.get<BackendPost[]>(`/posts?page=${page}&limit=${limit}`);
-      
+
       console.log('[API] Posts response:', {
         status: response.status,
         dataLength: response.data?.length || 0,
         firstPost: response.data?.[0] || 'No posts'
       });
-      
+
       return response;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
@@ -320,19 +282,19 @@ const postsApi = {
     }
   },
   getPost: (id: string) => apiClient.get(`/posts/${id}`),
-  createPost: (data: { content: string, media?: string[] }) => 
+  createPost: (data: { content: string, media?: string[] }) =>
     apiClient.post('/posts', data),
-  updatePost: (id: string, data: { content?: string, media?: string[] }) => 
+  updatePost: (id: string, data: { content?: string, media?: string[] }) =>
     apiClient.put(`/posts/${id}`, data),
   deletePost: (id: string) => apiClient.delete(`/posts/${id}`),
   likePost: (postId: string, data: { userId: string }) =>
     apiClient.post(`/posts/${postId}/like`, data),
-  getComments: (postId: number) => 
+  getComments: (postId: number) =>
     apiClient.get(`/posts/${postId}/comments`),
   commentOnPost: async (postId: number | string, data: { content: string, userId: string | number }) => {
     try {
       const postIdStr = typeof postId === 'number' ? postId.toString() : postId;
-      
+
       // Format the data to match the backend's expected format
       // The backend seems to expect a different structure based on the error
       const commentData = {
@@ -340,15 +302,15 @@ const postsApi = {
         author: data.userId, // Try using 'author' instead of 'user'
         post: postIdStr     // Include the post ID in the request body as well
       };
-      
+
       console.log('Sending comment data:', commentData);
-      
+
       // The auth token will be added by the request interceptor
       const response = await apiClient.post(`/posts/${postIdStr}/comments`, commentData);
-      
+
       // Log the full response for debugging
       console.log('Comment response:', response);
-      
+
       return response;
     } catch (error: any) {
       console.error('Error in commentOnPost:', {
@@ -356,12 +318,12 @@ const postsApi = {
         response: error.response?.data,
         status: error.response?.status
       });
-      
+
       // Log more detailed error information if available
       if (error.response?.data) {
         console.error('Backend error details:', error.response.data);
       }
-      
+
       throw new Error(error.response?.data?.message || 'Error adding comment');
     }
   },

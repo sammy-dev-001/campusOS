@@ -42,7 +42,7 @@ const sampleEvents = [
   {
     id: '1',
     title: "Annual Freshers' Welcome Gala",
-    description: "Join us for an unforgettable evening of music, dance, and networking as we officially welcome all new students to CampusOS",
+    description: "Join us for an unforgettable evening of music, dance, and networking as we officially welcome all new students to EduFi",
     date: "Saturday, October 26",
     time: "6:00 PM - 9:00 PM",
     location: "University Main Auditorium, Lagos Campus",
@@ -85,7 +85,7 @@ const categories = ['All', 'Featured', 'Academic', 'Social', 'Sports', 'Religiou
 
 const EventCard = ({ event, isFeatured = false, onPress }: EventCardProps) => {
   const { theme } = useTheme();
-  
+
   const getCategoryColor = (category: string): string => {
     switch (category.toLowerCase()) {
       case 'academic':
@@ -142,13 +142,13 @@ const EventCard = ({ event, isFeatured = false, onPress }: EventCardProps) => {
         {event.location}
       </Text>
       <View style={styles.upcomingButtonRow}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.rsvpButton, { backgroundColor: theme.primary }]}
           onPress={onPress}
         >
           <Text style={styles.rsvpButtonText}>RSVP Now</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.calendarButton, { borderColor: theme.primary }]}
           onPress={() => console.log('Add to calendar:', event.title)}
         >
@@ -192,7 +192,7 @@ export default function EventsPage() {
   const filteredEvents = events.filter(event => {
     const matchesCategory = selectedCategory === 'All' || event.category === selectedCategory;
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchQuery.toLowerCase());
+      event.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -216,12 +216,12 @@ export default function EventsPage() {
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.text }]}>CampusOS Events</Text>
+        <Text style={[styles.title, { color: theme.text }]}>EduFi Events</Text>
         <TouchableOpacity onPress={() => router.push('/(tabs)/settings')}>
           {user?.profile_picture ? (
-            <Image 
-              source={{ uri: user.profile_picture }} 
-              style={[styles.profileCircle, { borderColor: theme.primary }]} 
+            <Image
+              source={{ uri: user.profile_picture }}
+              style={[styles.profileCircle, { borderColor: theme.primary }]}
             />
           ) : (
             <View style={[styles.profileCircle, { backgroundColor: theme.primary, justifyContent: 'center', alignItems: 'center' }]}>
@@ -252,13 +252,13 @@ export default function EventsPage() {
       </View>
 
       <View style={styles.categoryContainer}>
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryScroll}
         >
           {categories.map((category) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               key={category}
               style={[
                 styles.categoryItem,
@@ -267,7 +267,7 @@ export default function EventsPage() {
               ]}
               onPress={() => setSelectedCategory(category)}
             >
-              <Text 
+              <Text
                 style={[
                   styles.categoryText,
                   { color: selectedCategory === category ? '#fff' : theme.textSecondary },
@@ -280,16 +280,16 @@ export default function EventsPage() {
         </ScrollView>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {featuredEvent && (
           <>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>Featured Event</Text>
-            <EventCard 
-              event={featuredEvent} 
-              isFeatured 
+            <EventCard
+              event={featuredEvent}
+              isFeatured
               onPress={() => featuredEvent && handleEventPress(featuredEvent)}
             />
           </>
@@ -302,9 +302,9 @@ export default function EventsPage() {
             </Text>
             <View style={styles.upcomingRow}>
               {upcomingEvents.map((event) => (
-                <EventCard 
-                  key={event.id} 
-                  event={event} 
+                <EventCard
+                  key={event.id}
+                  event={event}
                   onPress={() => handleEventPress(event)}
                 />
               ))}
@@ -312,19 +312,19 @@ export default function EventsPage() {
           </>
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons 
-              name="calendar-outline" 
-              size={60} 
-              color={theme.textSecondary} 
+            <Ionicons
+              name="calendar-outline"
+              size={60}
+              color={theme.textSecondary}
               style={styles.emptyIcon}
             />
             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-              {searchQuery 
+              {searchQuery
                 ? 'No events match your search'
                 : `No ${selectedCategory === 'All' ? '' : selectedCategory + ' '}events found`}
             </Text>
             {searchQuery && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.clearFiltersButton, { borderColor: theme.primary }]}
                 onPress={() => {
                   setSearchQuery('');
@@ -339,9 +339,9 @@ export default function EventsPage() {
           </View>
         )}
       </ScrollView>
-      
+
       {/* Add Event FAB */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.fab, { backgroundColor: theme.primary }]}
         onPress={() => router.push('/create-event')}
       >

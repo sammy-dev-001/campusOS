@@ -116,9 +116,9 @@ class NotificationScheduler {
                     ...(Platform.OS === 'android' && { channelId: 'class-reminders' }),
                 },
                 trigger: {
+                    type: 'date',
                     date: classDate,
-                    repeats: true,
-                },
+                } as Notifications.NotificationTriggerInput,
             });
 
             const scheduledNotification: ScheduledNotification = {
@@ -182,8 +182,9 @@ class NotificationScheduler {
                         ...(Platform.OS === 'android' && { channelId: 'assignments' }),
                     },
                     trigger: {
+                        type: 'date',
                         date: reminderTime,
-                    },
+                    } as Notifications.NotificationTriggerInput,
                 });
 
                 const scheduledNotification: ScheduledNotification = {
@@ -244,8 +245,9 @@ class NotificationScheduler {
                     ...(Platform.OS === 'android' && { channelId: 'events' }),
                 },
                 trigger: {
+                    type: 'date',
                     date: reminderTime,
-                },
+                } as Notifications.NotificationTriggerInput,
             });
 
             const scheduledNotification: ScheduledNotification = {

@@ -9,13 +9,13 @@ import { API_BASE_URL } from '../config/api';
 export class AuthError extends Error {
   code: string;
   details?: any;
-    
+
   constructor(message: string, code: string = 'AUTH_ERROR', details?: any) {
     super(message);
     this.name = 'AuthError';
     this.code = code;
     this.details = details;
-    
+
     // Maintains proper stack trace for where our error was thrown
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, AuthError);
@@ -52,7 +52,7 @@ const createError = (message: string, code: string = 'AUTH_ERROR', details?: any
 const logError = (error: any, context: string = 'AuthContext') => {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorStack = error instanceof Error ? error.stack : undefined;
-  
+
   console.error(`[${context}]`, {
     message: errorMessage,
     code: error.code || 'UNKNOWN_ERROR',
@@ -120,22 +120,22 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   refreshToken: string | null;
-  
+
   // Network state
   network: NetworkState;
   isRetrying: boolean;
   queuedRequests: number;
   isOnline: boolean;
-  
+
   // Auth methods
   login: (email: string, password: string) => Promise<LoginResponse>;
-  signup: (email: string, password: string, displayName: string, fullName: string) => Promise<string>;
+  signup: (email: string, password: string, displayName: string, fullName: string, university?: string, level?: string, course?: string) => Promise<string>;
   logout: () => Promise<void>;
   updateProfilePicture: (imageUri: string) => Promise<string | undefined>;
   saveAuthData: (data: { user: User | LoginResponse; token: string; refreshToken?: string }) => Promise<void>;
   clearAuthData: (error?: Error) => Promise<void>;
   refreshAuthToken: () => Promise<{ token: string; refreshToken: string } | null>;
-  
+
   // Network methods
   checkNetworkConnection: () => Promise<boolean>;
   retryAllRequests: () => Promise<void>;
@@ -144,7 +144,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  
+
 
   interface QueuedRequest {
     id: string;
@@ -201,13 +201,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ...(typeof updates === 'function' ? updates(prev) : updates)
     }));
   }, []);
-  
+
   // Destructure state for easier access - must be after all hooks
   const { isInitialized, isAuthenticated, user, isLoading } = authState;
 
   // Track if a token refresh is in progress
   const refreshTokenPromise = useRef<Promise<{ token: string; refreshToken: string }> | null>(null);
-  
+
   // Track the number of retry attempts
   const refreshRetryCount = useRef(0);
   const MAX_RETRY_ATTEMPTS = 3;
@@ -222,7 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshTokenPromise.current = (async () => {
       try {
         refreshRetryCount.current++;
-        
+
         const authData = await AsyncStorage.getItem('authData');
         if (!authData) {
           throw new AuthError('No authentication data found', 'NO_AUTH_DATA');
@@ -258,7 +258,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          
+
           // Handle specific error cases
           if (response.status === 401 || response.status === 403) {
             // Clear auth data if refresh token is invalid
@@ -269,7 +269,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               { status: response.status, ...errorData }
             );
           }
-          
+
           throw new AuthError(
             errorData.message || 'Failed to refresh token',
             errorData.code || 'TOKEN_REFRESH_FAILED',
@@ -278,7 +278,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const data = await response.json();
-        
+
         if (!data.token) {
           throw new AuthError('No access token in response', 'INVALID_TOKEN_RESPONSE');
         }
@@ -289,19 +289,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Reset retry counter on successful refresh
         refreshRetryCount.current = 0;
-        
+
         if (!user) {
           throw new AuthError('No user data available', 'NO_USER_DATA');
         }
-        
-        await saveAuthData({ 
-          user, 
-          token: data.token, 
-          refreshToken: data.refreshToken 
+
+        await saveAuthData({
+          user,
+          token: data.token,
+          refreshToken: data.refreshToken
         });
-        
-        return { 
-          token: data.token, 
+
+        return {
+          token: data.token,
           refreshToken: data.refreshToken,
           // Include expiry information if available
           expiresIn: data.expiresIn,
@@ -309,17 +309,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       } catch (error) {
         logError(error, 'refreshToken');
-        
+
         // Clear auth data on certain errors
         if (error instanceof AuthError && [
-          'INVALID_REFRESH_TOKEN', 
+          'INVALID_REFRESH_TOKEN',
           'REFRESH_TOKEN_EXPIRED',
           'SESSION_EXPIRED',
           'MAX_RETRY_ATTEMPTS_REACHED'
         ].includes(error.code)) {
           await clearAuthData(error);
         }
-        
+
         throw error; // Re-throw to allow callers to handle the error
       } finally {
         // Clear the current refresh promise when done
@@ -329,7 +329,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return refreshTokenPromise.current;
   }, [user]);
-  
+
   // Network connectivity handling
   const updateNetworkState = useCallback((state: Partial<NetworkState>) => {
     setAuthState(prev => ({
@@ -366,51 +366,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Process queued requests when back online
   const processRequestQueue = useCallback(async () => {
     if (isProcessingQueue.current || requestQueue.current.length === 0) return;
-    
+
     isProcessingQueue.current = true;
-    
+
     try {
       setAuthState(prev => ({ ...prev, isRetrying: true }));
-      
+
       // Process requests in order
       while (requestQueue.current.length > 0) {
         const request = requestQueue.current[0];
         const now = Date.now();
         const timeSinceLastAttempt = now - request.lastAttempt;
-        
+
         // Apply exponential backoff (min 1s, max 30s)
         const backoffTime = Math.min(1000 * Math.pow(2, request.retryCount), 30000);
-        
+
         if (timeSinceLastAttempt < backoffTime) {
           // Wait before retrying
           await new Promise(resolve => setTimeout(resolve, backoffTime - timeSinceLastAttempt));
         }
-        
+
         try {
           // Check network before retrying
           const isOnline = await checkNetworkConnection();
           if (!isOnline) break;
-          
+
           // Retry the request
           const response = await api.request(request.config);
           request.resolve(response);
-          
+
           // Remove from queue on success
           requestQueue.current.shift();
           setAuthState(prev => ({ ...prev, queuedRequests: requestQueue.current.length }));
-          
+
         } catch (error) {
           // Update retry count and last attempt time
           request.retryCount++;
           request.lastAttempt = Date.now();
-          
+
           // If max retries reached, reject the promise
           if (request.retryCount >= 3) { // Max 3 retries
             request.reject(error);
             requestQueue.current.shift();
             setAuthState(prev => ({ ...prev, queuedRequests: requestQueue.current.length }));
           }
-          
+
           // If it's a network error, stop processing and wait for next online event
           if (axios.isAxiosError(error) && !error.response) {
             break;
@@ -434,10 +434,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resolve,
         reject
       };
-      
+
       requestQueue.current.push(request);
       setAuthState(prev => ({ ...prev, queuedRequests: requestQueue.current.length }));
-      
+
       // Try to process the queue if we're online
       const isOnline = authState.network.isConnected && authState.network.isInternetReachable;
       if (isOnline) {
@@ -449,12 +449,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Retry all queued requests
   const retryAllRequests = useCallback(async () => {
     if (requestQueue.current.length === 0) return;
-    
+
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       throw new AuthError('No internet connection', 'NETWORK_OFFLINE', { retryable: true });
     }
-    
+
     await processRequestQueue();
   }, [checkNetworkConnection, processRequestQueue]);
 
@@ -466,7 +466,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isInternetReachable: state.isInternetReachable,
         type: state.type
       });
-      
+
       // If we just came back online, process the queue
       (async () => {
         const isOnline = state.isConnected && state.isInternetReachable;
@@ -475,19 +475,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       })();
     });
-    
+
     // Initial network check
     checkNetworkConnection();
-    
+
     // Set up app state listener to check network when app comes to foreground
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         await checkNetworkConnection();
       }
     };
-    
+
     const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
-    
+
     return () => {
       unsubscribeNetInfo();
       appStateSubscription.remove();
@@ -514,7 +514,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { user, token, refreshToken } = data;
-      
+
       // Convert to User type if it's a LoginResponse
       const userToSave: User = {
         id: user.id,
@@ -532,20 +532,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Save to AsyncStorage
       await AsyncStorage.setItem('authData', JSON.stringify(authData));
-      
+
       // Update axios default headers if token exists
       const tokenToSave = token || (await AsyncStorage.getItem('token'));
       if (tokenToSave) {
         await AsyncStorage.setItem('token', tokenToSave);
         api.defaults.headers.common['Authorization'] = `Bearer ${tokenToSave}`;
       }
-      
+
       return;
     } catch (error) {
-      const authError = error instanceof AuthError 
-        ? error 
+      const authError = error instanceof AuthError
+        ? error
         : new AuthError('Failed to save authentication data', 'SAVE_AUTH_ERROR', { cause: error });
-      
+
       logError(authError, 'saveAuthData');
       throw authError; // Re-throw to allow callers to handle the error
     }
@@ -555,10 +555,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Clear axios default headers
       delete api.defaults.headers.common['Authorization'];
-      
+
       // Clear AsyncStorage
       await AsyncStorage.multiRemove(['authData', 'token']);
-      
+
       // Update state
       updateAuthState({
         isAuthenticated: false,
@@ -573,11 +573,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (clearError) {
       const authError = new AuthError(
-        'Failed to clear authentication data', 
-        'CLEAR_AUTH_ERROR', 
+        'Failed to clear authentication data',
+        'CLEAR_AUTH_ERROR',
         { cause: clearError }
       );
-      
+
       logError(authError, 'clearAuthData');
       throw authError; // Re-throw to allow callers to handle the error
     }
@@ -595,7 +595,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return null;
     }
-    
+
     const { token, user: storedUser } = JSON.parse(authData);
     if (!token) {
       console.log('No token found in auth data');
@@ -604,7 +604,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-  const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -613,7 +613,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
         credentials: 'include'
       });
-      
+
       if (response.status === 401) {
         // Token might be expired, try to refresh it
         console.log('Token expired, attempting to refresh...');
@@ -624,18 +624,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Session expired. Please log in again.');
         }
       }
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to fetch user info');
       }
-      
+
       const data = await response.json();
-      
+
       if (!data) {
         throw new Error('Invalid user data received');
       }
-      
+
       const userData: User = {
         id: data._id || data.id,
         username: data.username,
@@ -643,7 +643,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile_picture: data.profilePic || data.profile_picture || '',
         userId: data._id || data.id
       };
-      
+
       // Update user data if it has changed
       updateAuthState(prev => {
         if (
@@ -658,9 +658,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return prev;
       });
       // Save token with user data
-      await saveAuthData({ 
+      await saveAuthData({
         user: userData,
-        token 
+        token
       });
       return userData;
     } catch (error) {
@@ -689,19 +689,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         // Try to refresh the token
         const { token: newToken } = await refreshToken();
-        
+
         // Update axios headers with new token
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-        
+
         return true;
       } catch (error) {
         logError(error, 'handleTokenRefresh');
-        
+
         // If refresh fails with a session expired error, clear auth data
         if (error instanceof AuthError && error.code === 'SESSION_EXPIRED') {
           await clearAuthData(error);
         }
-        
+
         return false;
       }
     } catch (error) {
@@ -716,7 +716,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loadAuthData = async () => {
       try {
         const authData = await AsyncStorage.getItem('authData');
-        
+
         // Skip state updates if component is unmounted
         if (!isMounted) return;
 
@@ -733,7 +733,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
         }
-        
+
         // If we get here, either no auth data or invalid token
         if (!isMounted) return;
         updateAuthState({
@@ -745,7 +745,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Error loading auth data:', error);
         if (!isMounted) return;
-        
+
         await clearAuthData();
         updateAuthState({
           isAuthenticated: false,
@@ -758,7 +758,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     loadAuthData();
 
-        // Set up request interceptor
+    // Set up request interceptor
     const requestInterceptor = api.interceptors.request.use(
       async (config) => {
         try {
@@ -773,7 +773,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return config;
         } catch (error) {
           const authError = new AuthError(
-            'Failed to set up request interceptor', 
+            'Failed to set up request interceptor',
             'REQUEST_INTERCEPTOR_ERROR',
             { cause: error }
           );
@@ -797,7 +797,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as any;
-        
+
         // Skip if no config or already retried
         if (!originalRequest || originalRequest._retry) {
           return Promise.reject(error);
@@ -822,13 +822,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return api(originalRequest);
               }
             }
-            
+
             // If we get here, token refresh failed or no auth data
             await clearAuthData(new AuthError(
               'Session expired. Please log in again.',
               'SESSION_EXPIRED'
             ));
-            
+
           } catch (refreshError) {
             await clearAuthData(refreshError instanceof Error ? refreshError : new Error(String(refreshError)));
           }
@@ -842,7 +842,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (status) {
           errorDetails = { status };
-          
+
           switch (status) {
             case 400:
               errorMessage = 'Bad request';
@@ -909,15 +909,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!email?.trim()) {
         throw new AuthError('Email is required', 'EMAIL_REQUIRED');
       }
-      
+
       if (!password) {
         throw new AuthError('Password is required', 'PASSWORD_REQUIRED');
       }
-      
+
       if (!API_BASE_URL) {
         throw new AuthError('API base URL is not configured', 'CONFIGURATION_ERROR');
       }
-      
+
       // Log the request details
       const requestDetails = {
         url: `${API_BASE_URL}/auth/login`,
@@ -926,23 +926,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: { email, password: '***' } // Don't log actual password
       };
       console.log('Login request:', JSON.stringify(requestDetails, null, 2));
-      
+
       // Test network connectivity first
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-        
+
         const testResponse = await fetch('https://www.google.com', {
           signal: controller.signal,
           method: 'HEAD'
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (!testResponse.ok) {
           throw new AuthError(
-            'Internet connection test failed', 
-            'NETWORK_ERROR', 
+            'Internet connection test failed',
+            'NETWORK_ERROR',
             { status: testResponse.status }
           );
         }
@@ -950,23 +950,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const error = testError as Error;
         if (error.name === 'AbortError') {
           throw new AuthError(
-            'Network request timed out', 
-            'NETWORK_TIMEOUT', 
+            'Network request timed out',
+            'NETWORK_TIMEOUT',
             { cause: testError }
           );
         }
-        
+
         throw new AuthError(
           'Network request failed. Please check your internet connection.',
           'NETWORK_ERROR',
           { cause: testError }
         );
       }
-      
+
       let loginResponse;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
+
       try {
         // Authenticate with the backend
         loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -994,7 +994,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         throw new Error(`Network request failed: ${fetchError.message}`);
       }
-      
+
       console.log('Login response status:', loginResponse.status);
       let responseText: string;
       try {
@@ -1004,7 +1004,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error reading response text:', textError);
         throw new Error('Invalid response from server');
       }
-      
+
       // Parse the response text as JSON if it exists
       let responseData: ApiResponse<UserResponse> = {};
       try {
@@ -1019,11 +1019,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!loginResponse.ok) {
         let errorMessage = 'Login failed. Please check your credentials.';
         let errorType = 'authentication';
-        
+
         // Use the parsed responseData from earlier
         const errorData: ApiError = responseData.error || {} as ApiError;
         console.log('Error response data:', errorData);
-        
+
         // Use the error type and message from the backend if available
         if (errorData.errorType) {
           errorType = errorData.errorType;
@@ -1035,9 +1035,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (errorMsg.includes('password') || errorMsg.includes('incorrect')) {
               errorMessage = errorData.message || 'Incorrect password. Please try again.';
               errorType = 'password';
-            } else if (errorMsg.includes('user') || 
-                      errorMsg.includes('email') || 
-                      errorMsg.includes('not found')) {
+            } else if (errorMsg.includes('user') ||
+              errorMsg.includes('email') ||
+              errorMsg.includes('not found')) {
               errorMessage = errorData.message || 'No account found with this email address.';
               errorType = 'email';
             } else if (errorData.message) {
@@ -1051,7 +1051,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             errorType = 'server';
           }
         }
-          
+
         // Log the error for debugging
         console.error('Login error:', {
           status: loginResponse.status,
@@ -1059,13 +1059,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           message: errorMessage,
           type: errorType
         });
-        
+
         // Create a custom error with more details
         const error = new Error(errorMessage) as Error & { errorType?: string };
         error.errorType = errorType;
         throw error;
       }
-      
+
       // If we get here, login was successful
       // Handle the backend's response format
       const responseUser = responseData.user || {} as UserResponse;
@@ -1076,24 +1076,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile_picture: responseUser.profilePic || responseUser.profile_picture,
         userId: responseUser.id || responseUser._id || responseData.userId
       };
-      
+
       const token = responseData.token || responseData.jwt;
-      
+
       if (!userData.id || !token) {
         console.error('Missing user ID or token in response:', responseData);
         throw new Error('Invalid response from server');
       }
-      
+
       if (!token) {
         throw new Error('No authentication token received');
       }
-      
+
       // Save user data and token to AsyncStorage
       await saveAuthData({
         user: userData,
         token: token
       });
-      
+
       console.log('Login successful:', userData);
       return {
         ...userData,
@@ -1106,37 +1106,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, displayName: string, fullName: string): Promise<string> => {
+  const signup = useCallback(async (email: string, password: string, displayName: string, fullName: string, university: string = '', level: string = '', course: string = ''): Promise<string> => {
     try {
       // Trim all input fields to remove any accidental whitespace
       const trimmedEmail = email.trim();
       const trimmedPassword = password.trim();
       const trimmedDisplayName = displayName.trim();
       const trimmedFullName = fullName.trim();
-      
+
       // Generate a username from email
       const trimmedUsername = trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
-      
-      console.log('Signup attempt with:', { 
+
+      console.log('Signup attempt with:', {
         email: trimmedEmail,
         hasPassword: !!trimmedPassword,
         displayName: trimmedDisplayName,
         fullName: trimmedFullName,
-        generatedUsername: trimmedUsername
+        generatedUsername: trimmedUsername,
+        university,
+        level,
+        course
       });
-      
+
       // Validate required fields
       const missingFields = [];
       if (!trimmedEmail) missingFields.push('email');
       if (!trimmedPassword) missingFields.push('password');
       if (!trimmedDisplayName) missingFields.push('displayName');
       if (!trimmedFullName) missingFields.push('fullName');
-      
+
       if (missingFields.length > 0) {
         console.log('Missing required fields:', missingFields);
         throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
       }
-      
+
       if (trimmedPassword.length < 6) {
         console.log('Password validation failed - length:', trimmedPassword.length);
         throw new Error('Password must be at least 6 characters long.');
@@ -1148,7 +1151,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: trimmedEmail,
         displayName: trimmedDisplayName,
         fullName: trimmedFullName,
-        password: trimmedPassword
+        password: trimmedPassword,
+        university,
+        level,
+        course
       };
 
       const signupUrl = `${API_BASE_URL}/auth/signup`;
@@ -1167,14 +1173,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       const responseData = await response.json().catch(() => ({}));
-      
+
       if (!response.ok) {
         console.error('Signup failed:', {
           status: response.status,
           statusText: response.statusText,
           response: responseData
         });
-        
+
         // Handle specific error cases
         if (response.status === 400 && responseData.field) {
           if (responseData.field === 'email') {
@@ -1184,12 +1190,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           throw new Error(`${responseData.field} already exists`);
         }
-        
+
         throw new Error(responseData.message || 'Signup failed. Please try again.');
       }
 
       console.log('Signup successful:', responseData);
-      
+
       if (!responseData.user) {
         throw new Error('Invalid response from server');
       }
@@ -1235,41 +1241,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Define the updateProfilePicture function if not already defined
   const updateProfilePicture = useCallback(async (imageUri: string) => {
     if (!user) return;
-    
+
     try {
       // First, check if the image exists and is accessible
       let response = await fetch(imageUri);
       if (!response.ok) {
         throw new Error('Failed to access the image');
       }
-      
+
       // Get the blob data
       const blob = await response.blob();
-      
+
       // Get the file extension from the URI
       const fileExtension = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `profile_${Date.now()}.${fileExtension}`;
-      
+
       // Determine the MIME type based on file extension
       let mimeType = 'image/jpeg';
       if (fileExtension === 'png') mimeType = 'image/png';
       else if (fileExtension === 'gif') mimeType = 'image/gif';
-      
+
       // Create form data for file upload
       const formData = new FormData();
-      
+
       // Create a file with the correct MIME type
       const file = new File([blob], fileName, { type: mimeType });
-      
+
       // Append the file to form data with the correct field name
       formData.append('profile_picture', file);
-      
+
       // Get the authentication token
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
-      
+
       console.log('Uploading profile picture to:', `${API_BASE_URL}/users/me/avatar`);
-      
+
       // Convert the file to base64 for the backend
       const base64Image = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -1288,7 +1294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         reader.onerror = error => reject(error);
         reader.readAsDataURL(blob);
       });
-      
+
       // Use the correct endpoint for profile picture upload
       response = await fetch(`${API_BASE_URL}/users/me/avatar`, {
         method: 'POST',
@@ -1301,9 +1307,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           image: `data:${mimeType};base64,${base64Image}`
         }),
       });
-      
+
       console.log('Upload response status:', response.status);
-      
+
       if (!response.ok) {
         let errorMessage = 'Failed to upload profile picture';
         try {
@@ -1315,7 +1321,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         throw new Error(errorMessage);
       }
-      
+
       const data = await response.json();
       // Check for both possible field names in the response
       const profilePicUrl = data.profilePic || data.profile_picture;
@@ -1323,18 +1329,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Profile picture URL not found in response:', data);
         throw new Error('No profile picture URL in response');
       }
-      
-      const updatedUser = { 
-        ...user, 
+
+      const updatedUser = {
+        ...user,
         profile_picture: profilePicUrl
       };
-      
+
       // Update both the auth context and user context
       await saveAuthData({
         user: updatedUser,
         token
       });
-      
+
       return data.profile_picture;
     } catch (error) {
       console.error('Error updating profile picture:', error);
@@ -1350,13 +1356,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: authState.user,
     token: authState.user?.token || null,
     refreshToken: authState.user?.refreshToken || null,
-    
+
     // Network state
     network: authState.network,
     isRetrying: authState.isRetrying,
     queuedRequests: authState.queuedRequests,
     isOnline: !!authState.network.isConnected && !!authState.network.isInternetReachable,
-    
+
     // Auth methods
     login,
     signup,
@@ -1386,12 +1392,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!authState.user) {
           throw new Error('No user data available');
         }
-        
+
         const newTokens = {
           token: data.token,
           refreshToken: data.refreshToken
         };
-        
+
         await saveAuthData({
           user: {
             ...authState.user,
@@ -1400,28 +1406,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
           ...newTokens
         });
-        
+
         return newTokens;
       } catch (error) {
         console.error('Error refreshing token:', error);
         return null;
       }
     },
-    
+
     // Network methods
     checkNetworkConnection,
     retryAllRequests,
   }), [
-    authState.isInitialized, 
-    authState.isAuthenticated, 
-    authState.isLoading, 
-    authState.user, 
+    authState.isInitialized,
+    authState.isAuthenticated,
+    authState.isLoading,
+    authState.user,
     authState.network,
     authState.isRetrying,
     authState.queuedRequests,
-    login, 
-    signup, 
-    logout, 
+    login,
+    signup,
+    logout,
     updateProfilePicture,
     saveAuthData,
     clearAuthData,

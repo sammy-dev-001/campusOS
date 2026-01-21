@@ -34,8 +34,8 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
+  const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
   useEffect(() => {
     // Request permissions on mount
@@ -60,10 +60,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Clean up listeners on unmount
     return () => {
       if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
+        notificationListener.current.remove();
       }
       if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+        responseListener.current.remove();
       }
     };
   }, [user?.id]);
@@ -102,7 +102,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         projectId: '4db3bf0f-f0fc-4892-b786-3ff8f17744b0'
       })).data;
       console.log('Push token:', token);
-      
+
       // Send the token to the server if user is authenticated
       if (user?.id) {
         try {

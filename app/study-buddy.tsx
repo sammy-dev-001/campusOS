@@ -359,40 +359,56 @@ export default function StudyBuddyScreen() {
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={theme.primary} />
                 </View>
-            ) : (
+            ) : activeTab === 'matches' ? (
                 <FlatList
-                    data={activeTab === 'matches' ? matches : activeTab === 'buddies' ? buddies : requests}
-                    renderItem={
-                        activeTab === 'matches'
-                            ? renderMatch
-                            : activeTab === 'buddies'
-                                ? renderBuddy
-                                : renderRequest
-                    }
-                    keyExtractor={(item: any) => item.id || item._id}
+                    data={matches}
+                    renderItem={renderMatch}
+                    keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
                     }
                     ListEmptyComponent={
                         <View style={styles.emptyList}>
-                            <Ionicons
-                                name={
-                                    activeTab === 'matches'
-                                        ? 'search-outline'
-                                        : activeTab === 'buddies'
-                                            ? 'people-outline'
-                                            : 'mail-outline'
-                                }
-                                size={48}
-                                color={theme.textSecondary}
-                            />
+                            <Ionicons name="search-outline" size={48} color={theme.textSecondary} />
                             <Text style={[styles.emptyListText, { color: theme.textSecondary }]}>
-                                {activeTab === 'matches'
-                                    ? 'No matches found. Try updating your profile!'
-                                    : activeTab === 'buddies'
-                                        ? "You don't have any study buddies yet."
-                                        : 'No pending requests.'}
+                                No matches found. Try updating your profile!
+                            </Text>
+                        </View>
+                    }
+                />
+            ) : activeTab === 'buddies' ? (
+                <FlatList
+                    data={buddies}
+                    renderItem={renderBuddy}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyList}>
+                            <Ionicons name="people-outline" size={48} color={theme.textSecondary} />
+                            <Text style={[styles.emptyListText, { color: theme.textSecondary }]}>
+                                You don't have any study buddies yet.
+                            </Text>
+                        </View>
+                    }
+                />
+            ) : (
+                <FlatList
+                    data={requests}
+                    renderItem={renderRequest}
+                    keyExtractor={(item) => item._id}
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyList}>
+                            <Ionicons name="mail-outline" size={48} color={theme.textSecondary} />
+                            <Text style={[styles.emptyListText, { color: theme.textSecondary }]}>
+                                No pending requests.
                             </Text>
                         </View>
                     }

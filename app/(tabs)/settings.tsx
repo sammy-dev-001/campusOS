@@ -66,7 +66,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#121212' }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={styles.headerBlack}>
         <Text style={styles.headerText}>Settings</Text>
@@ -111,7 +111,7 @@ export default function SettingsScreen() {
             <Ionicons name="notifications-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
               <Text style={styles.settingLabel}>App Notifications</Text>
-              <Text style={styles.settingSubLabel}>Control alerts from CampusOS</Text>
+              <Text style={styles.settingSubLabel}>Control alerts from EduFi</Text>
             </View>
             <Switch value={appNotif} onValueChange={setAppNotif} thumbColor={appNotif ? '#4D96FF' : '#222'} trackColor={{ false: '#333', true: '#4D96FF' }} />
           </View>
@@ -163,7 +163,7 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
             <MaterialCommunityIcons name="information-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>About CampusOS</Text>
+              <Text style={styles.settingLabel}>About EduFi</Text>
               <Text style={styles.settingSubLabel}>Version, terms, and privacy policy</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#121212',
+    backgroundColor: 'transparent',
     paddingTop: 56,
     paddingBottom: 18,
     paddingHorizontal: 16,

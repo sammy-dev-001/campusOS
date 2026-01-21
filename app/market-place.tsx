@@ -6,7 +6,7 @@ import { ThemedView } from '../components/ThemedView';
 export default function MarketPlaceScreen() {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Campus Market Place</ThemedText>
+      <ThemedText type="title">EduFi Marketplace</ThemedText>
       <ThemedText>This screen is under construction.</ThemedText>
     </ThemedView>
   );

@@ -145,7 +145,7 @@ class BiometricService {
             return { success: false, error: 'No user configured for biometric login' };
         }
 
-        const authResult = await this.authenticate('Login to CampusOS');
+        const authResult = await this.authenticate('Login to EduFi');
         if (!authResult.success) {
             return { success: false, error: authResult.error };
         }

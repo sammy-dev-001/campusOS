@@ -2,7 +2,8 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Dimensions, FlatList, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '../../components/ThemedText';
 import { Button } from '../../components/ui/Button';
 import { Colors } from '../../src/constants/Colors';
@@ -11,6 +12,7 @@ import { useTheme } from '../../src/contexts/NewThemeContext';
 import { useUser } from '../../src/contexts/UserContext';
 import { useThemeColor } from '../../src/hooks/useThemeColor';
 import { API_BASE_URL } from '../config/api';
+import { Picker } from '@react-native-picker/picker';
 
 const { width, height } = Dimensions.get('window');
 
@@ -60,7 +62,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     marginBottom: 10,
-    color: '#3b6ea5', // blue logo
+    color: '#0B3C5D', // EduFi blue logo
     transform: [{ rotate: '-10deg' }], // Slightly tilt the logo
   },
   appTitle: {
@@ -133,7 +135,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   forgotPasswordText: {
-    color: '#3b6ea5',
+    color: '#0B3C5D',
     fontSize: 14,
     textDecorationLine: 'underline',
   },
@@ -141,7 +143,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginTop: 10,
-    backgroundColor: '#3b6ea5', // muted blue for Login
+    backgroundColor: '#0B3C5D', // EduFi blue for Login
   },
   createAccountButton: {
     height: 50,
@@ -235,6 +237,24 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 8,
   },
+  suggestionsContainer: {
+    maxHeight: 200,
+    width: width * 0.85,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: -5,
+    marginBottom: 10,
+    zIndex: 1000,
+  },
+  suggestionItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+  },
+  picker: {
+    flex: 1,
+    height: 50,
+    marginLeft: 5,
+  },
 });
 
 interface MovingDoodleProps {
@@ -286,7 +306,7 @@ const MovingDoodle: React.FC<MovingDoodleProps> = ({ icon, size, initialX, initi
       <MaterialIcons
         name={icon}
         size={size}
-        color="#3b6ea5"
+        color="#0B3C5D"
         style={{ opacity: 0.3 }}
       />
     </Animated.View>
@@ -337,12 +357,19 @@ const LoginSignUpScreen = () => {
   const [showProfilePicModal, setShowProfilePicModal] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [uploadingPic, setUploadingPic] = useState(false);
-  
+
+  // New academic fields
+  const [university, setUniversity] = useState('');
+  const [level, setLevel] = useState('');
+  const [course, setCourse] = useState('');
+  const [showUniversitySuggestions, setShowUniversitySuggestions] = useState(false);
+  const [universitySuggestions, setUniversitySuggestions] = useState<string[]>([]);
+
   const router = useRouter();
   const { login, signup, user } = useAuth();
   const { updateUser } = useUser();
   const { theme } = useTheme();
-  
+
   const primaryColor = useThemeColor({ light: Colors.light.primary, dark: Colors.dark.primary }, 'primary');
   const backgroundColor = theme.background;
   const textColor = theme.text;
@@ -350,15 +377,59 @@ const LoginSignUpScreen = () => {
   const cardColor = theme.card;
   const borderColor = theme.border;
   const logoColor = theme.primary;
-  
+
+  // List of common universities for autocomplete
+  const UNIVERSITIES = [
+    'University of Lagos',
+    'University of Ibadan',
+    'Obafemi Awolowo University',
+    'University of Nigeria',
+    'Ahmadu Bello University',
+    'Covenant University',
+    'Lagos State University',
+    'University of Benin',
+    'Federal University of Technology, Akure',
+    'University of Port Harcourt'
+  ];
+
+  const LEVELS = [
+    '100 Level',
+    '200 Level',
+    '300 Level',
+    '400 Level',
+    '500 Level',
+    'Graduate/Masters',
+    'PhD'
+  ];
+
+  const handleUniversityChange = (text: string) => {
+    setUniversity(text);
+    setErrors(prev => ({ ...prev, university: '' }));
+
+    if (text.length > 0) {
+      const filtered = UNIVERSITIES.filter(uni =>
+        uni.toLowerCase().includes(text.toLowerCase())
+      );
+      setUniversitySuggestions(filtered);
+      setShowUniversitySuggestions(filtered.length > 0);
+    } else {
+      setShowUniversitySuggestions(false);
+    }
+  };
+
+  const selectUniversity = (uni: string) => {
+    setUniversity(uni);
+    setShowUniversitySuggestions(false);
+  };
+
   const renderDoodles = () => {
     const doodleIcons = ['school', 'menu-book', 'edit', 'calculate', 'backpack'] as const;
     return Array.from({ length: 20 }).map((_, index) => (
-      <MaterialIcons 
+      <MaterialIcons
         key={index}
         name={doodleIcons[index % doodleIcons.length]}
         size={40}
-        color="#3b6ea5"
+        color="#0B3C5D"
         style={{
           position: 'absolute',
           left: `${Math.random() * 100}%`,
@@ -427,8 +498,8 @@ const LoginSignUpScreen = () => {
         router.replace('/(tabs)');
       } else {
         // Signup returns a string (display_name) on success
-        const displayName = await signup(email, password, username, fullName);
-        
+        const displayName = await signup(email, password, username, fullName, university, level, course);
+
         // If we get here, signup was successful
         // Auto-login after successful signup
         await login(email, password);
@@ -436,7 +507,7 @@ const LoginSignUpScreen = () => {
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
-      
+
       // Handle specific error types
       if (error.errorType === 'email') {
         setErrors({
@@ -531,17 +602,17 @@ const LoginSignUpScreen = () => {
         reader.onerror = error => reject(error);
         reader.readAsDataURL(blob);
       });
-      
+
       // Get the file extension
       const fileExtension = profilePic.split('.').pop()?.toLowerCase() || 'jpg';
       const mimeType = `image/${fileExtension === 'png' ? 'png' : fileExtension === 'gif' ? 'gif' : 'jpeg'}`;
-      
+
       console.log('Uploading profile picture...');
       const uploadUrl = `${API_BASE_URL}/users/me/avatar`;
-      
+
       const res = await fetch(uploadUrl, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${await AsyncStorage.getItem('token')}`
@@ -550,21 +621,21 @@ const LoginSignUpScreen = () => {
           image: `data:${mimeType};base64,${base64Image}`
         }),
       });
-      
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      
+
       const data = await res.json();
       console.log('Profile picture upload response:', data);
-      
+
       if (data && data.profilePictureUrl) {
         await updateUser({ profile_picture: data.profilePictureUrl });
         console.log('Profile picture updated successfully');
       } else {
         console.warn('No profile picture URL in response:', data);
       }
-      
+
       setShowProfilePicModal(false);
       setProfilePic(null);
       router.replace('/(tabs)');
@@ -581,23 +652,23 @@ const LoginSignUpScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor }]}
     >
       <DoodleBackground />
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         style={styles.scrollView}
       >
         <View style={styles.header}>
-          <MaterialIcons 
-            name="school" 
+          <MaterialIcons
+            name="account-balance-wallet"
             size={80} // Increased size
-            color={logoColor} 
+            color={logoColor}
             style={styles.logo}
           />
-          <ThemedText style={styles.appTitle} type="title">CAMPUS OS</ThemedText>
+          <ThemedText style={styles.appTitle} type="title">EDUFI</ThemedText>
         </View>
 
         <View style={[styles.formContainer, { backgroundColor: 'transparent' }]}>
@@ -619,7 +690,7 @@ const LoginSignUpScreen = () => {
                   style={[styles.input, { color: textColor }]}
                   placeholder="Username"
                   placeholderTextColor={textSecondaryColor}
-                  value={username}                  onChangeText={(text) => {
+                  value={username} onChangeText={(text) => {
                     setUsername(text.trim());
                     setErrors(prev => ({ ...prev, username: '' }));
                   }}
@@ -642,10 +713,77 @@ const LoginSignUpScreen = () => {
                 />
               </View>
               {errors.fullName && <ThemedText style={styles.fieldError}>{errors.fullName}</ThemedText>}
+
+              {/* University Field with Autocomplete */}
+              <View>
+                <View style={[styles.inputContainer, { borderColor: errors.university ? '#ff4444' : borderColor }]}>
+                  <Ionicons name="school-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                  <TextInput
+                    style={[styles.input, { color: textColor }]}
+                    placeholder="University (Optional)"
+                    placeholderTextColor={textSecondaryColor}
+                    value={university}
+                    onChangeText={handleUniversityChange}
+                    onFocus={() => university.length > 0 && setShowUniversitySuggestions(universitySuggestions.length > 0)}
+                  />
+                </View>
+                {errors.university && <ThemedText style={styles.fieldError}>{errors.university}</ThemedText>}
+
+                {/* University Suggestions Dropdown */}
+                {showUniversitySuggestions && universitySuggestions.length > 0 && (
+                  <View style={[styles.suggestionsContainer, { backgroundColor: cardColor, borderColor }]}>
+                    {universitySuggestions.map((uni, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[styles.suggestionItem, { borderBottomColor: borderColor }]}
+                        onPress={() => selectUniversity(uni)}
+                      >
+                        <ThemedText style={{ color: textColor }}>{uni}</ThemedText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Level Picker */}
+              <View style={[styles.inputContainer, { borderColor: errors.level ? '#ff4444' : borderColor, paddingHorizontal: 5 }]}>
+                <Ionicons name="bar-chart-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                <Picker
+                  selectedValue={level}
+                  onValueChange={(itemValue) => {
+                    setLevel(itemValue);
+                    setErrors(prev => ({ ...prev, level: '' }));
+                  }}
+                  style={[styles.picker, { color: textColor }]}
+                  dropdownIconColor={textSecondaryColor}
+                >
+                  <Picker.Item label="Select Level (Optional)" value="" />
+                  {LEVELS.map((lvl) => (
+                    <Picker.Item key={lvl} label={lvl} value={lvl} />
+                  ))}
+                </Picker>
+              </View>
+              {errors.level && <ThemedText style={styles.fieldError}>{errors.level}</ThemedText>}
+
+              {/* Course/Major Field */}
+              <View style={[styles.inputContainer, { borderColor: errors.course ? '#ff4444' : borderColor }]}>
+                <Ionicons name="book-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, { color: textColor }]}
+                  placeholder="Course/Major (Optional)"
+                  placeholderTextColor={textSecondaryColor}
+                  value={course}
+                  onChangeText={(text) => {
+                    setCourse(text);
+                    setErrors(prev => ({ ...prev, course: '' }));
+                  }}
+                />
+              </View>
+              {errors.course && <ThemedText style={styles.fieldError}>{errors.course}</ThemedText>}
             </>
           )}
 
-          <View style={[styles.inputContainer, { borderColor: errors.email ? '#ff4444' : borderColor }]}> 
+          <View style={[styles.inputContainer, { borderColor: errors.email ? '#ff4444' : borderColor }]}>
             <Ionicons name="mail-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
             <TextInput
               style={[styles.input, { color: textColor }]}
@@ -757,27 +895,27 @@ const LoginSignUpScreen = () => {
             <ThemedText style={[styles.modalTitle, { color: textColor }]}>Upload a Profile Picture (Optional)</ThemedText>
             <View style={styles.imageContainer}>
               {profilePic ? (
-                <Image 
-                  source={{ uri: profilePic }} 
+                <Image
+                  source={{ uri: profilePic }}
                   style={[
-                    styles.profileImage, 
-                    { 
-                      borderColor: borderColor, 
+                    styles.profileImage,
+                    {
+                      borderColor: borderColor,
                       borderWidth: 1,
-                      backgroundColor: cardColor 
+                      backgroundColor: cardColor
                     }
-                  ]} 
+                  ]}
                   resizeMode="cover"
                 />
               ) : (
-                <TouchableOpacity 
-                  onPress={handleProfilePicPick} 
+                <TouchableOpacity
+                  onPress={handleProfilePicPick}
                   style={[
-                    styles.profileImagePlaceholder, 
-                    { 
-                      backgroundColor: cardColor, 
-                      borderColor: borderColor, 
-                      borderWidth: 1 
+                    styles.profileImagePlaceholder,
+                    {
+                      backgroundColor: cardColor,
+                      borderColor: borderColor,
+                      borderWidth: 1
                     }
                   ]}
                 >
@@ -786,32 +924,32 @@ const LoginSignUpScreen = () => {
               )}
             </View>
             <View style={styles.modalButtons}>
-              <Button 
-                onPress={handleProfilePicPick} 
+              <Button
+                onPress={handleProfilePicPick}
                 style={{
                   ...styles.modalButton,
                   backgroundColor: cardColor,
                   borderColor: borderColor,
-                }} 
+                }}
                 variant="secondary"
                 textStyle={{ color: textColor }}
               >
                 Choose Photo
               </Button>
-              <Button 
-                onPress={handleProfilePicUpload} 
-                loading={uploadingPic} 
-                disabled={!profilePic} 
+              <Button
+                onPress={handleProfilePicUpload}
+                loading={uploadingPic}
+                disabled={!profilePic}
                 style={styles.modalButton}
                 variant="primary"
               >
                 Upload & Continue
               </Button>
-              <Button 
-                onPress={() => { 
-                  setShowProfilePicModal(false); 
-                  router.replace('/(tabs)'); 
-                }} 
+              <Button
+                onPress={() => {
+                  setShowProfilePicModal(false);
+                  router.replace('/(tabs)');
+                }}
                 variant="secondary"
                 style={{
                   ...styles.modalButton,

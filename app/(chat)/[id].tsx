@@ -44,7 +44,7 @@ function normalizeAvatarUrl(u?: string | null): string | undefined {
       console.log('[Avatar] rewriting to uploads path', { from: n, to: rewritten });
       return rewritten;
     }
-  } catch {}
+  } catch { }
   return n;
 }
 
@@ -282,7 +282,7 @@ function ChatScreenContent() {
         // Copy content URI video to cache file path to ensure fetch can read it
         try {
           const ext = safeName.split('.').pop() || 'mp4';
-          const dest = `${FileSystem.cacheDirectory}upload-${Date.now()}.${ext}`;
+          const dest = `${FileSystem.cacheDirectory || FileSystem.documentDirectory || ''}upload-${Date.now()}.${ext}`;
           console.log('[ChatDetail] normalize video via copy to cache', { dest });
           await FileSystem.copyAsync({ from: fileUri, to: dest });
           uploadUri = dest;
@@ -296,10 +296,10 @@ function ChatScreenContent() {
 
     try {
       console.log('[ChatDetail] uploading file to Cloudinary:', { uri: uploadUri, name: safeName, type: safeType });
-      
+
       // Import the upload utility
       const { uploadToCloudinary } = await import('../../utils/fileUpload');
-      
+
       // Upload to Cloudinary
       const result = await uploadToCloudinary({
         uri: uploadUri,
@@ -307,10 +307,10 @@ function ChatScreenContent() {
         name: safeName,
         mimeType: safeType,
       });
-      
+
       console.log('[ChatDetail] Cloudinary upload success:', result.url);
       return result.url;
-      
+
     } catch (error) {
       console.error('File upload error:', error);
       if (isMounted.current) {
@@ -558,7 +558,7 @@ function ChatScreenContent() {
       }
       // Create deterministic filename under cacheDirectory
       const safe = encodeURIComponent(normalized).replace(/%/g, '_');
-      const dest = `${FileSystem.cacheDirectory}thumb-${safe}.jpg`;
+      const dest = `${FileSystem.cacheDirectory || FileSystem.documentDirectory || ''}thumb-${safe}.jpg`;
       const existing = await FileSystem.getInfoAsync(dest);
       if (existing.exists) {
         thumbCacheRef.current.set(normalized, dest);
@@ -638,10 +638,10 @@ function ChatScreenContent() {
       user: item.user,
       participants: item.participants,
     });
-    
+
     // Log the timestamp fields we have access to
-  const timestampFields = ['createdAt', 'timestamp', 'date', 'time', 'sentAt', 'created'];
-  const timestamps: Record<string, any> = {};
+    const timestampFields = ['createdAt', 'timestamp', 'date', 'time', 'sentAt', 'created'];
+    const timestamps: Record<string, any> = {};
     timestampFields.forEach(field => {
       if (item[field] !== undefined) {
         timestamps[field] = {
@@ -653,8 +653,8 @@ function ChatScreenContent() {
       }
     });
     console.log('Message timestamps:', timestamps);
-    
-  const isOwn = user != null && item != null && String(item.senderId) === String(user.id);
+
+    const isOwn = user != null && item != null && String(item.senderId) === String(user.id);
     // Prefer embedded sender object if present; else find in participants; else fall back to otherUser for 1:1 chats
     // Resolve sender: prefer explicit sender object, then try participants list (which may have nested .user), then fall back to otherUser
     const participantMatch = normalizedParticipants.find((p: any) => p?.id && String(p.id) === String(item?.senderId) || p?.id && String(p.id) === String(item?.sender?._id || item?.sender?.id));
@@ -662,23 +662,23 @@ function ChatScreenContent() {
     const sender = isOwn
       ? user
       : ((item as any)?.sender || resolvedFromParticipant || otherUser);
-    
+
     // Get sender's display name or username
     const senderName = sender?.displayName || sender?.username || 'Unknown User';
     const showSenderName = !isOwn && senderName !== 'Unknown User';
-    
+
     const initials = isOwn
       ? ''
       : getInitials(senderName);
-      
+
     const avatar = isOwn
       ? null
       : getUserAvatar(sender);
-      
+
     if (!isOwn) {
       console.log('[BubbleAvatar] resolved', { senderId: item?.senderId, senderName, avatar });
     }
-    
+
     const mediaUrl = item?.mediaUrl ? normalizeUrl(item.mediaUrl) : undefined;
 
     return (
@@ -723,22 +723,27 @@ function ChatScreenContent() {
               const msgId = item?.tempId || item?.id;
               const options: any[] = [];
               if (item?.status === 'failed') {
-                options.push({ text: 'Retry', onPress: () => {
-                  Alert.alert('Retry message?', 'Do you want to retry sending this message?', [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Retry', onPress: async () => {
-                        try {
-                          if (msgId) await deleteMessage(msgId, id as string);
-                        } catch (e) { console.warn('retry cleanup failed', e); }
-                        try { sendMessage(id as string, { content: item.content, type: item.type, mediaUrl: item.mediaUrl }); } catch (e) { console.error('retry send failed', e); }
+                options.push({
+                  text: 'Retry', onPress: () => {
+                    Alert.alert('Retry message?', 'Do you want to retry sending this message?', [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Retry', onPress: async () => {
+                          try {
+                            if (msgId) await deleteMessage(msgId, id as string);
+                          } catch (e) { console.warn('retry cleanup failed', e); }
+                          try { sendMessage(id as string, { content: item.content, type: item.type, mediaUrl: item.mediaUrl }); } catch (e) { console.error('retry send failed', e); }
+                        }
                       }
-                    }
-                  ]);
-                } });
+                    ]);
+                  }
+                });
               }
-              options.push({ text: 'Delete', onPress: async () => {
-                try { const msgId2 = item?.tempId || item?.id; if (msgId2) await deleteMessage(msgId2, id as string); } catch (e) { console.error('delete failed', e); }
-              } });
+              options.push({
+                text: 'Delete', onPress: async () => {
+                  try { const msgId2 = item?.tempId || item?.id; if (msgId2) await deleteMessage(msgId2, id as string); } catch (e) { console.error('delete failed', e); }
+                }
+              });
               options.push({ text: 'Cancel', style: 'cancel' });
               // Present as a simple Alert with options
               Alert.alert('Message actions', '', options as any[]);
@@ -757,8 +762,8 @@ function ChatScreenContent() {
               }}>
                 {item.type === 'image' ? (
                   <View style={styles.bubbleImageContainer}>
-                    <Image 
-                      source={{ uri: mediaUrl }} 
+                    <Image
+                      source={{ uri: mediaUrl }}
                       style={styles.bubbleImage}
                       resizeMode="cover"
                     />
@@ -781,7 +786,8 @@ function ChatScreenContent() {
                 <TouchableOpacity onPress={() => {
                   Alert.alert('Retry message?', 'Do you want to retry sending this message?', [
                     { text: 'Cancel', style: 'cancel' },
-                    { text: 'Retry', onPress: async () => {
+                    {
+                      text: 'Retry', onPress: async () => {
                         try {
                           const msgId = item?.tempId || item?.id;
                           if (msgId) await deleteMessage(msgId, id as string);
@@ -801,16 +807,16 @@ function ChatScreenContent() {
             ]}>
               {item?.createdAt
                 ? (() => {
-                    try {
-                      const date = new Date(item.createdAt);
-                      return isNaN(date.getTime()) 
-                        ? '??' 
-                        : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    } catch (e) {
-                      console.error('Error formatting date:', e, 'Value:', item.createdAt);
-                      return '??';
-                    }
-                  })()
+                  try {
+                    const date = new Date(item.createdAt);
+                    return isNaN(date.getTime())
+                      ? '??'
+                      : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  } catch (e) {
+                    console.error('Error formatting date:', e, 'Value:', item.createdAt);
+                    return '??';
+                  }
+                })()
                 : ''}
             </Text>
           </TouchableOpacity>
@@ -825,7 +831,7 @@ function ChatScreenContent() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View
-        style={[styles.header, { paddingTop: 8 }] }
+        style={[styles.header, { paddingTop: 8 }]}
         onLayout={(e) => setHeaderHeight(Math.max(0, Math.round(e.nativeEvent.layout.height)))}
       >
         <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
@@ -1012,8 +1018,8 @@ const styles = StyleSheet.create({
   headerAvatarText: { color: '#FFD600', fontWeight: 'bold', fontSize: 16 },
   headerTitle: { color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 12, flexShrink: 1 },
   messages: { padding: 16, paddingBottom: 8 },
-  messageRow: { 
-    marginBottom: 8, 
+  messageRow: {
+    marginBottom: 8,
     width: '100%',
     paddingHorizontal: 8,
   },
@@ -1034,15 +1040,15 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
-  bubbleOwn: { 
-    backgroundColor: '#2196F3', 
-    alignSelf: 'flex-end', 
+  bubbleOwn: {
+    backgroundColor: '#2196F3',
+    alignSelf: 'flex-end',
     borderTopRightRadius: 6,
     marginBottom: 4,
   },
-  bubbleOther: { 
-    backgroundColor: '#23242A', 
-    alignSelf: 'flex-start', 
+  bubbleOther: {
+    backgroundColor: '#23242A',
+    alignSelf: 'flex-start',
     borderTopLeftRadius: 6,
     marginBottom: 4,
   },
@@ -1054,8 +1060,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 6,
     borderTopRightRadius: 18,
   },
-  bubbleText: { 
-    color: '#fff', 
+  bubbleText: {
+    color: '#fff',
     fontSize: 15,
     lineHeight: 20,
   },
@@ -1063,31 +1069,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  bubbleTime: { 
-    fontSize: 11, 
-    alignSelf: 'flex-end', 
+  bubbleTime: {
+    fontSize: 11,
+    alignSelf: 'flex-end',
     marginTop: 4,
     opacity: 0.8,
   },
-  bubbleTimeOwn: { 
+  bubbleTimeOwn: {
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'right',
   },
-  bubbleTimeOther: { 
+  bubbleTimeOther: {
     color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'left',
   },
-  bubbleImageContainer: { 
-    width: 200, 
-    height: 120, 
-    borderRadius: 10, 
-    marginBottom: 6, 
+  bubbleImageContainer: {
+    width: 200,
+    height: 120,
+    borderRadius: 10,
+    marginBottom: 6,
     overflow: 'hidden',
-    backgroundColor: '#222' 
+    backgroundColor: '#222'
   },
-  bubbleImage: { 
-    width: '100%', 
-    height: '100%' 
+  bubbleImage: {
+    width: '100%',
+    height: '100%'
   },
   bubbleVideo: {
     width: 200,

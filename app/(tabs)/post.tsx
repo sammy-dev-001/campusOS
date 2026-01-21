@@ -3,107 +3,44 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
 import { ResizeMode, Video } from 'expo-av';
 import * as NavigationBar from 'expo-navigation-bar';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActionSheetIOS, ActivityIndicator, Alert, Animated, FlatList, Image, Modal, PanResponder, PanResponderInstance, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useThemeColor } from '../../src/hooks/useThemeColor';
-interface Post {
-  id: number;
-  userId: number;
-  username: string;
-  content: string;
-  timestamp: string;
-  media_url?: string;
-  likes_count: number;
-  comments_count: number;
-  is_liked: boolean;
-  author: {
-    username: string;
-    display_name: string;
-    profile_picture: string;
-  };
-  createdAt?: string;
-  publishedAt?: string;
-}
-
-interface Comment {
-  id: number;
-  post_id: number;
-  user_id: number;
-  username: string;
-  content: string;
-  timestamp: string;
-  display_name: string;
-  profile_picture: string;
-  is_liked: boolean;
-  likes_count: number;
-  parent_comment_id?: number | null;
-  replies?: Comment[];
-  createdAt?: string;
-  publishedAt?: string;
-}
+import {
+  Post,
+  Comment,
+  AVATAR_COLORS,
+  getInitials,
+  getAvatarColor,
+  extractHashtags,
+  getProfilePicUrl,
+  isValidProfilePic,
+  formatMillis,
+  formatTimestamp
+} from '../../components/posts';
+import PostHeader from '../../components/posts/PostHeader';
+import CommentsModal from '../../components/posts/CommentsModal';
+import { OfflineBanner } from '../../components/OfflineBanner';
+import offlineManager from '../../src/services/OfflineManager';
 
 import { api } from '../../services/api';
 
-const AVATAR_COLORS = ['#4D96FF', '#8A2BE2', '#FF6B6B', '#FFD93D', '#6BCB77', '#FFB86B'];
 // Feature flag: use native player controls in feed (same as fullscreen)
 // Set to false to use our custom minimal transparent overlay controls
 const USE_NATIVE_FEED_CONTROLS = false;
-
-function getInitials(name?: string) {
-  if (!name) return '??';
-  const names = name.split(' ');
-  if (names.length > 1) {
-    return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
-}
-
-function getAvatarColor(name: string) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
-function extractHashtags(text: string) {
-  const regex = /#(\w+)/g;
-  const tags = [];
-  let match;
-  while ((match = regex.exec(text))) {
-    tags.push(match[1]);
-  }
-  return tags;
-}
-
-// Helper to add cache-busting to profile picture URLs
-function getProfilePicUrl(url: string) {
-  if (!url) return '';
-  const bust = Date.now();
-  return url.includes('?') ? `${url}&bust=${bust}` : `${url}?bust=${bust}`;
-}
-
-function isValidProfilePic(url: string | undefined | null) {
-  return !!url && typeof url === 'string' && url.trim() !== '' && url.trim().toLowerCase() !== 'null';
-}
-
-// Helper to format milliseconds as m:ss
-function formatMillis(ms: number) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
 
 export default function PostScreen() {
   const primaryColor = useThemeColor({}, 'primary');
   const cardColor = useThemeColor({}, 'card');
   const textColor = useThemeColor({}, 'text');
   const textSecondaryColor = useThemeColor({}, 'textSecondary');
+  const backgroundColor = useThemeColor({}, 'background');
   const { user } = useAuth();
+  const router = useRouter();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,9 +82,9 @@ export default function PostScreen() {
   // Mute state per post
   const [mutedMap, setMutedMap] = useState<{ [key: number]: boolean }>({});
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [visibleItems, setVisibleItems] = useState<{id: number, isVideo: boolean}[]>([]);
+  const [visibleItems, setVisibleItems] = useState<{ id: number, isVideo: boolean }[]>([]);
   const isFocused = useIsFocused();
-  
+
   // Viewability configuration - using useRef to prevent recreation on re-renders
   const viewabilityConfig = useRef({
     minimumViewTime: 100, // Minimum time an item must be visible before callback is triggered
@@ -162,7 +99,7 @@ export default function PostScreen() {
       isViewable: v.isViewable,
       type: v.item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i) ? 'video' : 'image'
     })));
-    
+
     // Update the list of all currently visible items
     const newVisibleItems = viewableItems
       .filter(item => item.isViewable)
@@ -170,14 +107,14 @@ export default function PostScreen() {
         id: item.item.id,
         isVideo: !!item.item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i)
       }));
-    
+
     setVisibleItems(newVisibleItems);
-    
+
     // Check if the currently playing video is still visible
     if (playingVideoId) {
       const isStillVisible = newVisibleItems.some(item => item.id === playingVideoId && item.isVideo);
       console.log(`Video ${playingVideoId} is ${isStillVisible ? 'still visible' : 'no longer visible'}`);
-      
+
       if (!isStillVisible) {
         // If the current video is no longer visible, pause it
         console.log(`Pausing video ${playingVideoId} because it's no longer visible`);
@@ -187,10 +124,10 @@ export default function PostScreen() {
         setPlayingVideoId(null);
       }
     }
-    
+
     // Find the first viewable video that's not the currently playing one
-    const newVideoToPlay = viewableItems.find(item => 
-      item.isViewable && 
+    const newVideoToPlay = viewableItems.find(item =>
+      item.isViewable &&
       item.item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i) &&
       item.item.id !== playingVideoId
     );
@@ -198,12 +135,12 @@ export default function PostScreen() {
     // If we found a new video to play
     if (newVideoToPlay) {
       const postId = newVideoToPlay.item.id;
-      
+
       // Pause the currently playing video if any
       if (playingVideoId && videoRefs.current[playingVideoId]) {
         videoRefs.current[playingVideoId].pauseAsync();
       }
-      
+
       // Play the new video
       setPlayingVideoId(postId);
       const videoRef = videoRefs.current[postId];
@@ -229,7 +166,7 @@ export default function PostScreen() {
     return () => {
       // Clear all timers
       Object.values(hideTimersRef.current).forEach(t => { if (t) clearTimeout(t); });
-      
+
       // Pause all videos
       Object.values(videoRefs.current).forEach(ref => {
         if (ref) {
@@ -336,36 +273,62 @@ export default function PostScreen() {
 
   const fetchPosts = async () => {
     try {
-      const response = await api.posts.getPosts(1, 20); // Get first page with 20 posts
-      // The response should be an array of posts or an object with a posts property
-      const postsRaw = Array.isArray(response) ? response : response?.data || [];
-      // Map backend post objects to the Post interface
-      const postsData: Post[] = postsRaw.map((p: any) => ({
-        id: p.id ?? p._id ?? 0,
-        userId: p.userId ?? p.author?._id ?? 0,
-        username: p.username ?? p.author?.username ?? '',
-        content: p.content ?? '',
-        timestamp: p.timestamp ?? p.createdAt ?? p.publishedAt ?? '',
-        media_url: p.media_url ?? (Array.isArray(p.media) && p.media.length > 0 ? p.media[0].url : undefined),
-        likes_count: typeof p.likes_count === 'number' ? p.likes_count : (Array.isArray(p.likes) ? p.likes.length : 0),
-        comments_count: typeof p.comments_count === 'number' ? p.comments_count : (Array.isArray(p.comments) ? p.comments.length : 0),
-        is_liked: p.is_liked ?? false,
-        author: {
-          username: p.author?.username ?? '',
-          display_name: p.author?.display_name ?? p.author?.username ?? '',
-          profile_picture: p.author?.profile_picture ?? p.author?.profilePic ?? ''
-        },
-        createdAt: p.createdAt,
-        publishedAt: p.publishedAt
-      }));
-      // Sort posts by timestamp in descending order
-      const sortedData = postsData.sort((postA: Post, postB: Post) => 
-        new Date(postB.timestamp).getTime() - new Date(postA.timestamp).getTime()
-      );
-      setPosts(sortedData);
+      // Check connectivity first
+      const isConnected = await offlineManager.checkNetworkStatus();
+
+      if (isConnected) {
+        const response = await api.posts.getPosts(1, 20); // Get first page with 20 posts
+        // The response should be an array of posts or an object with a posts property
+        const postsRaw = Array.isArray(response) ? response : response?.data || [];
+        // Map backend post objects to the Post interface
+        const postsData: Post[] = postsRaw.map((p: any) => ({
+          id: p.id ?? p._id ?? 0,
+          userId: p.userId ?? p.author?._id ?? 0,
+          username: p.username ?? p.author?.username ?? '',
+          content: p.content ?? '',
+          timestamp: p.timestamp ?? p.createdAt ?? p.publishedAt ?? '',
+          media_url: p.media_url ?? (Array.isArray(p.media) && p.media.length > 0 ? p.media[0].url : undefined),
+          likes_count: typeof p.likes_count === 'number' ? p.likes_count : (Array.isArray(p.likes) ? p.likes.length : 0),
+          comments_count: typeof p.comments_count === 'number' ? p.comments_count : (Array.isArray(p.comments) ? p.comments.length : 0),
+          is_liked: p.is_liked ?? false,
+          author: {
+            username: p.author?.username ?? '',
+            display_name: p.author?.display_name ?? p.author?.username ?? '',
+            profile_picture: p.author?.profile_picture ?? p.author?.profilePic ?? ''
+          },
+          createdAt: p.createdAt,
+          publishedAt: p.publishedAt
+        }));
+        // Sort posts by timestamp in descending order
+        const sortedData = postsData.sort((postA: Post, postB: Post) =>
+          new Date(postB.timestamp).getTime() - new Date(postA.timestamp).getTime()
+        );
+
+        setPosts(sortedData);
+        // Cache the feed for offline use
+        await offlineManager.cacheFeed(sortedData);
+      } else {
+        // Offline mode: load from cache
+        console.log('Offline mode: Loading posts from cache');
+        const cachedPosts = await offlineManager.getCachedFeed();
+        if (cachedPosts) {
+          setPosts(cachedPosts);
+          // Banner handled by OfflineBanner component
+        } else {
+          Alert.alert('Offline', 'No cached feed available. Please connect to internet to update.');
+        }
+      }
     } catch (error: any) {
       console.error("Failed to fetch posts:", error);
-      Alert.alert("Error", "Failed to load posts.");
+
+      // If fetch fails (even if we thought we were online), try cache
+      const cachedPosts = await offlineManager.getCachedFeed();
+      if (cachedPosts && cachedPosts.length > 0) {
+        setPosts(cachedPosts);
+        console.log('Loaded cached posts after fetch error');
+      } else {
+        Alert.alert("Error", "Failed to load posts.");
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -378,31 +341,49 @@ export default function PostScreen() {
       return;
     }
 
+    // Optimistic update
+    const postIdStr = typeof postId === 'number' ? postId.toString() : postId;
+    const previousPosts = [...posts]; // Keep copy for rollback if needed
+
+    // Update UI immediately
+    setPosts(prevPosts => prevPosts.map(post => {
+      if (String(post.id) === String(postId)) {
+        const isLiked = !post.is_liked;
+        const currentLikes = typeof post.likes_count === 'number' && !isNaN(post.likes_count) ? post.likes_count : 0;
+        return {
+          ...post,
+          is_liked: isLiked,
+          likes_count: isLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1)
+        };
+      }
+      return post;
+    }));
+
+    // Check connectivity
+    if (!offlineManager.getNetworkStatus()) {
+      // Offline: Add to sync queue
+      await offlineManager.addToSyncQueue({
+        type: 'UPDATE',
+        endpoint: `/posts/${postIdStr}/like`,
+        method: 'POST',
+        payload: { userId: user.id.toString() }
+      });
+      console.log('Like action queued for sync');
+      return;
+    }
+
     try {
-      // Ensure both postId and userId are strings for the API call
-      const postIdStr = typeof postId === 'number' ? postId.toString() : postId;
-      const userIdStr = user.id.toString();
-      const response = await api.posts.likePost(postIdStr, { userId: userIdStr });
-      
-      setPosts(posts.map(post => {
-        // Compare IDs as strings to handle both string and number IDs
-        if (String(post.id) === String(postId)) {
-          // If the response contains the updated post, use its data
-          // Otherwise, toggle the like status locally
-          const updatedPost = response.data || response;
-          const isLiked = updatedPost.likes?.includes?.(user.id) ?? !post.is_liked;
-          // Ensure likes_count is always a valid number
-          const currentLikes = typeof post.likes_count === 'number' && !isNaN(post.likes_count) ? post.likes_count : 0;
-          return {
-            ...post,
-            is_liked: isLiked,
-            likes_count: isLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1)
-          };
-        }
-        return post;
-      }));
+      const response = await api.posts.likePost(postIdStr, { userId: user.id.toString() });
+
+      // If successful, we can optionally update with server response, 
+      // but we already did optimistic update.
+      // Just ensure cache is updated with new state
+      offlineManager.cacheFeed(posts);
+
     } catch (error) {
       console.error('Error liking post:', error);
+      // Rollback on error
+      setPosts(previousPosts);
       Alert.alert('Error', 'Failed to like post.');
     }
   };
@@ -413,47 +394,82 @@ export default function PostScreen() {
       return false;
     }
 
+    // Prepare optimistic comment
+    const optimisticComment: Comment = {
+      id: Date.now(), // Temporary ID
+      post_id: postId,
+      user_id: parseInt(user.id.toString()) || 0,
+      username: user.username || 'Anonymous',
+      display_name: user.display_name || user.username || 'User',
+      profile_picture: user.profile_picture || '',
+      content: comment,
+      timestamp: new Date().toISOString(),
+      is_liked: false,
+      likes_count: 0,
+      parent_comment_id: null,
+      replies: []
+    };
+
+    // Optimistically update comments
+    setComments(prev => ({
+      ...prev,
+      [postId]: [optimisticComment, ...(prev[postId] || [])]
+    }));
+
+    // Optimistically update post's comment count
+    setPosts(prevPosts => prevPosts.map(post =>
+      post.id === postId
+        ? { ...post, comments_count: (post.comments_count || 0) + 1 }
+        : post
+    ));
+
+    // Check offline status
+    if (!offlineManager.getNetworkStatus()) {
+      await offlineManager.addToSyncQueue({
+        type: 'CREATE',
+        endpoint: `/posts/${postId}/comments`,
+        method: 'POST',
+        payload: {
+          content: comment,
+          author: user.id, // Match 'author' field expected by backend
+          post: postId
+        }
+      });
+      console.log('Comment queued for sync');
+      return true;
+    }
+
     try {
       const response = await api.posts.commentOnPost(postId, {
         content: comment,
         userId: user.id
       });
-      
-      // The backend should return the created comment with all necessary fields
+
       const responseData = response.data || response;
-      
-      const newComment: Comment = {
-        id: responseData._id || responseData.id || Date.now(),
-        post_id: postId,
-        user_id: responseData.author || user.id,
-        username: user.username || 'Anonymous',
-        display_name: user.display_name || user.username || 'User',
-        profile_picture: user.profile_picture || '',
-        content: responseData.content || comment,
-        timestamp: responseData.createdAt || new Date().toISOString(),
-        is_liked: false,
-        likes_count: 0,
-        parent_comment_id: null,
-        replies: []
-      };
-      
-      // Update the comments for this post
-      setComments(prev => ({
-        ...prev,
-        [postId]: [newComment, ...(prev[postId] || [])]
-      }));
-      
-      // Update the comments count in the posts list
-      setPosts(prevPosts => prevPosts.map(post => 
-        post.id === postId 
-          ? { ...post, comments_count: (post.comments_count || 0) + 1 }
-          : post
-      ));
-      
+
+      // Update with real ID from server
+      setComments(prev => {
+        const postComments = prev[postId] || [];
+        // Replace the temporary comment (identified by timestamp match or optimistic ID)
+        // For simplicity here, we just replace the first one since we added it to top
+        const updatedComments = [...postComments];
+        if (updatedComments.length > 0) {
+          updatedComments[0] = {
+            ...updatedComments[0],
+            id: responseData._id || responseData.id || updatedComments[0].id
+          };
+        }
+        return {
+          ...prev,
+          [postId]: updatedComments
+        };
+      });
+
       return true;
     } catch (error) {
       console.error('Error posting comment:', error);
       Alert.alert('Error', 'Failed to post comment.');
+      // Ideally revert optimistic update here
       return false;
     }
   };
@@ -473,7 +489,7 @@ export default function PostScreen() {
         content: replyText.trim(),
         userId: user.id
       });
-      
+
       const newReply: Comment = {
         ...(response.data || response),
         id: response.data?.id || Date.now(),
@@ -489,7 +505,7 @@ export default function PostScreen() {
         parent_comment_id: parentId,
         replies: []
       };
-      
+
       // Update the comments for this post
       setComments(prev => {
         const currentComments = prev[selectedPost.id] || [];
@@ -498,14 +514,14 @@ export default function PostScreen() {
           [selectedPost.id]: [newReply, ...currentComments]
         };
       });
-      
+
       // Update the comments count in the posts list
-      setPosts(prevPosts => prevPosts.map(post => 
+      setPosts(prevPosts => prevPosts.map(post =>
         post.id === selectedPost.id
           ? { ...post, comments_count: (post.comments_count || 0) + 1 }
           : post
       ));
-      
+
       setReplyingTo(null);
       setReplyText('');
     } catch (error) {
@@ -523,14 +539,14 @@ export default function PostScreen() {
     try {
       // Using the posts API to like a comment
       const response = await api.posts.likeComment(commentId, { userId: user.id });
-      
+
       // The response should contain the updated comment data
       const updatedComment = response.data || response;
-      
+
       // Update the comments in the UI
       setComments(prev => {
         const updatedComments = { ...prev };
-        
+
         // Find which post contains this comment
         for (const postId in updatedComments) {
           const commentIndex = updatedComments[postId].findIndex(c => c.id === commentId);
@@ -542,13 +558,13 @@ export default function PostScreen() {
               is_liked: updatedComment.is_liked,
               likes_count: updatedComment.likes_count || updatedPostComments[commentIndex].likes_count
             };
-            
+
             // Update the comments for this post
             updatedComments[postId] = updatedPostComments;
             break;
           }
         }
-        
+
         return updatedComments;
       });
     } catch (error) {
@@ -567,11 +583,11 @@ export default function PostScreen() {
         Alert.alert('Authentication Required', 'Please log in to view comments');
         return;
       }
-      
+
       console.log(`[API] Fetching comments for post ${postId}`);
       const response = await api.posts.getComments(postId);
       const commentsData = Array.isArray(response) ? response : response?.data?.comments || [];
-      
+
       // Transform comments to ensure they have all required fields
       const processedComments = commentsData.map((comment: Comment) => ({
         ...comment,
@@ -580,22 +596,22 @@ export default function PostScreen() {
         parent_comment_id: comment.parent_comment_id || null,
         replies: comment.replies || []
       }));
-      
+
       console.log(`[API] Fetched ${processedComments.length} comments for post ${postId}`);
-      
+
       setComments(prev => ({
         ...prev,
         [postId]: processedComments
       }));
     } catch (error: any) {
       console.error('Error fetching comments:', error);
-      
+
       // Handle specific error cases
       if (error.response) {
         // The request was made and the server responded with a status code
         console.error('Response data:', error.response.data);
         console.error('Response status:', error.response.status);
-        
+
         if (error.response.status === 401) {
           // Handle unauthorized (token expired or invalid)
           Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
@@ -709,66 +725,9 @@ export default function PostScreen() {
     fetchPosts();
   };
 
-  // Restore formatTimestamp for post time display
-  const formatTimestamp = (timestamp: string) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return '';
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    if (diffInSeconds < 0) {
-      return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } else if (diffInSeconds < 60) {
-      return 'just now';
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    } else if (diffInSeconds < 604800) {
-      const days = Math.floor(diffInSeconds / 86400);
-      return `${days} day${days > 1 ? 's' : ''} ago`;
-    } else {
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
-  };
+  // formatTimestamp imported from utils
 
-  function formatTime(ms: number) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
-
-  const renderHeader = () => (
-    <SafeAreaView style={{ backgroundColor: '#121212' }}>
-      <View style={styles.feedHeader}>
-        <Text style={styles.feedHeaderTitle}>Campus Feed</Text>
-        <View style={styles.feedHeaderRight}>
-          <TouchableOpacity style={{ marginRight: 12 }}>
-            <Ionicons name="notifications-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.feedHeaderAvatar}>
-            {user?.profile_picture ? (
-              <Image source={{ uri: user.profile_picture }} style={{ width: 32, height: 32, borderRadius: 16 }} />
-            ) : (
-              <Text style={styles.feedHeaderAvatarText}>{getInitials(user?.display_name || user?.username || '')}</Text>
-            )}
-          </View>
-        </View>
-      </View>
-    </SafeAreaView>
-  );
+  // Header component extracted
 
   const renderPost = (item: Post) => {
     const hashtags = extractHashtags(item.content || '');
@@ -802,7 +761,7 @@ export default function PostScreen() {
           // Pause all other videos to ensure only one plays
           Object.entries(videoRefs.current).forEach(([key, ref]) => {
             if (Number(key) !== item.id) {
-              try { ref?.pauseAsync && ref.pauseAsync(); } catch {}
+              try { ref?.pauseAsync && ref.pauseAsync(); } catch { }
             }
           });
           // Play the selected video
@@ -814,12 +773,12 @@ export default function PostScreen() {
     // Use the first available date field
     const postTimestamp = item.timestamp || item.createdAt || item.publishedAt || '';
     return (
-      <View style={[styles.postCard, { backgroundColor: '#1E1E1E' }]}> 
+      <View style={[styles.postCard, { backgroundColor: '#1E1E1E' }]}>
         <View style={styles.postHeaderRow}>
           {item.author?.profile_picture ? (
             <Image source={{ uri: item.author.profile_picture }} style={styles.postAvatar} />
           ) : (
-            <View style={[styles.postAvatar, { backgroundColor: avatarColor }]}> 
+            <View style={[styles.postAvatar, { backgroundColor: avatarColor }]}>
               <Text style={styles.postAvatarText}>{initials}</Text>
             </View>
           )}
@@ -835,166 +794,166 @@ export default function PostScreen() {
             <MaterialCommunityIcons name="dots-horizontal" size={22} color="#888" />
           </TouchableOpacity>
         </View>
-    
-    {/* If image, show image first, then content below */}
-    {item.media_url && (
-      <>
-        {item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i) ? (
-          <View style={{ position: 'relative' }}>
-            <TouchableWithoutFeedback
-              onPress={() => {
-                setControlsVisible(prev => ({ ...prev, [item.id]: true }));
-                if (hideTimersRef.current[item.id]) {
-                  clearTimeout(hideTimersRef.current[item.id]!);
-                  hideTimersRef.current[item.id] = null;
-                }
-                togglePlayPause();
-                const isNowPlaying = playingVideoId !== item.id;
-                if (isNowPlaying) {
-                  hideTimersRef.current[item.id] = setTimeout(() => {
-                    setControlsVisible(cv => ({ ...cv, [item.id]: false }));
-                    hideTimersRef.current[item.id] = null;
-                  }, 2000);
-                }
-              }}
-            >
-              <Video
-                ref={ref => { videoRefs.current[item.id] = ref; }}
-                source={{ uri: item.media_url! }}
-                style={[styles.postImage, { backgroundColor: 'transparent' }]}
-                resizeMode={ResizeMode.CONTAIN}
-                isLooping
-                shouldPlay={playingVideoId === item.id}
-                useNativeControls={USE_NATIVE_FEED_CONTROLS}
-                isMuted={!!mutedMap[item.id]}
-                onError={() => Alert.alert('Error', 'Failed to load video')}
-                onPlaybackStatusUpdate={status => handlePlaybackStatusUpdate(item.id, status)}
-              />
-            </TouchableWithoutFeedback>
-            {/* Transparent overlay controls */}
-            {(!USE_NATIVE_FEED_CONTROLS) && (
-              <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                {/* Top-right controls */}
-                <View style={{ position: 'absolute', top: 8, right: 8, flexDirection: 'row' }}>
-                  <TouchableOpacity
-                    onPress={() => setMutedMap(m => ({ ...m, [item.id]: !m[item.id] }))}
-                    style={{ backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 18, padding: 6 }}
-                    accessibilityLabel={mutedMap[item.id] ? 'Unmute' : 'Mute'}
-                    accessibilityRole="button"
-                  >
-                    <MaterialCommunityIcons name={mutedMap[item.id] ? 'volume-off' : 'volume-high'} size={20} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const v: any = videoRefs.current[item.id];
-                      if (v && typeof v.presentFullscreenPlayer === 'function') {
-                        v.presentFullscreenPlayer();
-                      }
-                    }}
-                    style={{ backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 18, padding: 6, marginLeft: 8 }}
-                    accessibilityLabel="Enter fullscreen"
-                    accessibilityRole="button"
-                  >
-                    <MaterialCommunityIcons name="fullscreen" size={20} color="#fff" />
-                  </TouchableOpacity>
-                  </View>
 
-                  {/* Center play/pause */}
-                  {(controlsVisible[item.id] || playingVideoId !== item.id) && (
-                    <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}>
-                      <View style={{ backgroundColor: 'rgba(0,0,0,0.35)', padding: 12, borderRadius: 28 }}>
-                        <MaterialCommunityIcons name={playingVideoId === item.id ? 'pause' : 'play'} size={28} color="#fff" />
-                      </View>
+        {/* If image, show image first, then content below */}
+        {item.media_url && (
+          <>
+            {item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i) ? (
+              <View style={{ position: 'relative' }}>
+                <TouchableWithoutFeedback
+                  onPress={() => {
+                    setControlsVisible(prev => ({ ...prev, [item.id]: true }));
+                    if (hideTimersRef.current[item.id]) {
+                      clearTimeout(hideTimersRef.current[item.id]!);
+                      hideTimersRef.current[item.id] = null;
+                    }
+                    togglePlayPause();
+                    const isNowPlaying = playingVideoId !== item.id;
+                    if (isNowPlaying) {
+                      hideTimersRef.current[item.id] = setTimeout(() => {
+                        setControlsVisible(cv => ({ ...cv, [item.id]: false }));
+                        hideTimersRef.current[item.id] = null;
+                      }, 2000);
+                    }
+                  }}
+                >
+                  <Video
+                    ref={ref => { videoRefs.current[item.id] = ref; }}
+                    source={{ uri: item.media_url! }}
+                    style={[styles.postImage, { backgroundColor: 'transparent' }]}
+                    resizeMode={ResizeMode.CONTAIN}
+                    isLooping
+                    shouldPlay={playingVideoId === item.id}
+                    useNativeControls={USE_NATIVE_FEED_CONTROLS}
+                    isMuted={!!mutedMap[item.id]}
+                    onError={() => Alert.alert('Error', 'Failed to load video')}
+                    onPlaybackStatusUpdate={status => handlePlaybackStatusUpdate(item.id, status)}
+                  />
+                </TouchableWithoutFeedback>
+                {/* Transparent overlay controls */}
+                {(!USE_NATIVE_FEED_CONTROLS) && (
+                  <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                    {/* Top-right controls */}
+                    <View style={{ position: 'absolute', top: 8, right: 8, flexDirection: 'row' }}>
+                      <TouchableOpacity
+                        onPress={() => setMutedMap(m => ({ ...m, [item.id]: !m[item.id] }))}
+                        style={{ backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 18, padding: 6 }}
+                        accessibilityLabel={mutedMap[item.id] ? 'Unmute' : 'Mute'}
+                        accessibilityRole="button"
+                      >
+                        <MaterialCommunityIcons name={mutedMap[item.id] ? 'volume-off' : 'volume-high'} size={20} color="#fff" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          const v: any = videoRefs.current[item.id];
+                          if (v && typeof v.presentFullscreenPlayer === 'function') {
+                            v.presentFullscreenPlayer();
+                          }
+                        }}
+                        style={{ backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 18, padding: 6, marginLeft: 8 }}
+                        accessibilityLabel="Enter fullscreen"
+                        accessibilityRole="button"
+                      >
+                        <MaterialCommunityIcons name="fullscreen" size={20} color="#fff" />
+                      </TouchableOpacity>
                     </View>
-                  )}
 
-                  {/* Bottom progress */}
-                  <View
-                    style={{ position: 'absolute', left: 12, right: 12, bottom: Math.max(12, insets.bottom), paddingVertical: 8 }}
-                    onLayout={(e) => {
-                      const { x, width } = e.nativeEvent.layout;
-                      progressBarLayout.current[item.id] = { left: x, width };
-                      setBarWidths(prev => ({ ...prev, [item.id]: width }));
-                    }}
-                  >
-                    {(() => {
-                      const barW = barWidths[item.id] || 1;
-                      const prog = videoProgress[item.id] || { position: 0, duration: 1 };
-                      const percent = prog.duration > 0 ? prog.position / prog.duration : 0;
-                      let thumbX = (draggingThumb.active && draggingThumb.id === item.id)
-                        ? draggingThumb.percent * barW
-                        : percent * barW;
-                      thumbX = Math.max(0, Math.min(barW, thumbX));
-                      return (
-                        <View>
-                          <TouchableWithoutFeedback
-                            onPress={(evt) => handleSeek(item.id, evt.nativeEvent.pageX)}
-                            onPressIn={() => setDraggingThumb({ id: item.id, percent, active: true })}
-                            onPressOut={() => setDraggingThumb({ id: null, percent: 0, active: false })}
-                          >
-                            <View style={{ height: 28, justifyContent: 'center' }}>
-                              <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2 }} />
-                              <Animated.View
-                                style={{
-                                  position: 'absolute',
-                                  left: 0,
-                                  right: 0,
-                                  height: 3,
-                                  backgroundColor: primaryColor,
-                                  width: dragAnimated[item.id] ? dragAnimated[item.id].interpolate({ inputRange: [0, 1], outputRange: [0, barW] }) : 0,
-                                  borderRadius: 2
-                                }}
-                              />
-                              {/* Thumb */}
-                              <View style={{ position: 'absolute', left: thumbX - 6, width: 12, height: 12, borderRadius: 6, backgroundColor: primaryColor }} />
-                            </View>
-                          </TouchableWithoutFeedback>
-                          {/* Timestamp row */}
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-                            <Text style={{ color: '#fff', fontSize: 12 }}>
-                              {formatMillis(videoProgress[item.id]?.position || 0)}
-                            </Text>
-                            <Text style={{ color: '#fff', fontSize: 12 }}>
-                              {formatMillis(videoProgress[item.id]?.duration || 0)}
-                            </Text>
-                          </View>
+                    {/* Center play/pause */}
+                    {(controlsVisible[item.id] || playingVideoId !== item.id) && (
+                      <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}>
+                        <View style={{ backgroundColor: 'rgba(0,0,0,0.35)', padding: 12, borderRadius: 28 }}>
+                          <MaterialCommunityIcons name={playingVideoId === item.id ? 'pause' : 'play'} size={28} color="#fff" />
                         </View>
-                      );
-                    })()}
+                      </View>
+                    )}
+
+                    {/* Bottom progress */}
+                    <View
+                      style={{ position: 'absolute', left: 12, right: 12, bottom: Math.max(12, insets.bottom), paddingVertical: 8 }}
+                      onLayout={(e) => {
+                        const { x, width } = e.nativeEvent.layout;
+                        progressBarLayout.current[item.id] = { left: x, width };
+                        setBarWidths(prev => ({ ...prev, [item.id]: width }));
+                      }}
+                    >
+                      {(() => {
+                        const barW = barWidths[item.id] || 1;
+                        const prog = videoProgress[item.id] || { position: 0, duration: 1 };
+                        const percent = prog.duration > 0 ? prog.position / prog.duration : 0;
+                        let thumbX = (draggingThumb.active && draggingThumb.id === item.id)
+                          ? draggingThumb.percent * barW
+                          : percent * barW;
+                        thumbX = Math.max(0, Math.min(barW, thumbX));
+                        return (
+                          <View>
+                            <TouchableWithoutFeedback
+                              onPress={(evt) => handleSeek(item.id, evt.nativeEvent.pageX)}
+                              onPressIn={() => setDraggingThumb({ id: item.id, percent, active: true })}
+                              onPressOut={() => setDraggingThumb({ id: null, percent: 0, active: false })}
+                            >
+                              <View style={{ height: 28, justifyContent: 'center' }}>
+                                <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2 }} />
+                                <Animated.View
+                                  style={{
+                                    position: 'absolute',
+                                    left: 0,
+                                    right: 0,
+                                    height: 3,
+                                    backgroundColor: primaryColor,
+                                    width: dragAnimated[item.id] ? dragAnimated[item.id].interpolate({ inputRange: [0, 1], outputRange: [0, barW] }) : 0,
+                                    borderRadius: 2
+                                  }}
+                                />
+                                {/* Thumb */}
+                                <View style={{ position: 'absolute', left: thumbX - 6, width: 12, height: 12, borderRadius: 6, backgroundColor: primaryColor }} />
+                              </View>
+                            </TouchableWithoutFeedback>
+                            {/* Timestamp row */}
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+                              <Text style={{ color: '#fff', fontSize: 12 }}>
+                                {formatMillis(videoProgress[item.id]?.position || 0)}
+                              </Text>
+                              <Text style={{ color: '#fff', fontSize: 12 }}>
+                                {formatMillis(videoProgress[item.id]?.duration || 0)}
+                              </Text>
+                            </View>
+                          </View>
+                        );
+                      })()}
+                    </View>
                   </View>
-                </View>
-              )}
-          </View>
-        ) : (
-<TouchableOpacity activeOpacity={0.9} onPress={() => openFullscreen(item)}>
-            <Image source={{ uri: item.media_url! }} style={styles.postImage} resizeMode="contain" />
-          </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <TouchableOpacity activeOpacity={0.9} onPress={() => openFullscreen(item)}>
+                <Image source={{ uri: item.media_url! }} style={styles.postImage} resizeMode="contain" />
+              </TouchableOpacity>
+            )}
+          </>
         )}
-      </>
-    )}
-      
-      {/* Show post content if it exists */}
-      {contentWithoutTags.length > 0 && (
-        <Text style={styles.postContent}>{contentWithoutTags}</Text>
-      )}
-      
-      {/* Show hashtags if any */}
-      {hashtags.length > 0 && (
-        <View style={styles.hashtagRow}>
-          {hashtags.map((tag, idx) => (
-            <View key={tag + idx} style={[styles.hashtagChip, { backgroundColor: idx % 2 === 0 ? '#232323' : '#222D44' }]}>
-              <Text style={styles.hashtagText}>#{tag}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-      
-      {/* Post actions */}
-      <View style={styles.postActionsRow}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => handleLike(item.id)}>
-          <Ionicons name={item.is_liked ? 'heart' : 'heart-outline'} size={20} color={item.is_liked ? '#FF6B6B' : '#888'} />
-          <Text style={styles.actionCount}>{item.likes_count}</Text>
-        </TouchableOpacity>
+
+        {/* Show post content if it exists */}
+        {contentWithoutTags.length > 0 && (
+          <Text style={styles.postContent}>{contentWithoutTags}</Text>
+        )}
+
+        {/* Show hashtags if any */}
+        {hashtags.length > 0 && (
+          <View style={styles.hashtagRow}>
+            {hashtags.map((tag, idx) => (
+              <View key={tag + idx} style={[styles.hashtagChip, { backgroundColor: idx % 2 === 0 ? '#232323' : '#222D44' }]}>
+                <Text style={styles.hashtagText}>#{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Post actions */}
+        <View style={styles.postActionsRow}>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => handleLike(item.id)}>
+            <Ionicons name={item.is_liked ? 'heart' : 'heart-outline'} size={20} color={item.is_liked ? '#FF6B6B' : '#888'} />
+            <Text style={styles.actionCount}>{item.likes_count}</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={() => showCommentsModal(item)}>
             <Ionicons name="chatbubble-outline" size={20} color="#888" />
             <Text style={styles.actionCount}>{item.comments_count}</Text>
@@ -1055,7 +1014,7 @@ export default function PostScreen() {
       >
         {/* Avatar */}
         {isValidProfilePic(comment.profile_picture) ? (
-            <Image
+          <Image
             source={{ uri: getProfilePicUrl(comment.profile_picture) }}
             style={{
               width: isReply ? 28 : 36,
@@ -1064,9 +1023,9 @@ export default function PostScreen() {
               marginRight: 10,
               marginTop: 2,
               backgroundColor: '#232323',
-              }}
-            />
-          ) : (
+            }}
+          />
+        ) : (
           <View
             style={{
               width: isReply ? 28 : 36,
@@ -1080,8 +1039,8 @@ export default function PostScreen() {
             }}
           >
             <Ionicons name="person" size={isReply ? 18 : 22} color="#FFFFFF" />
-            </View>
-          )}
+          </View>
+        )}
         {/* Bubble */}
         <View style={{ flex: 1 }}>
           <View
@@ -1108,19 +1067,19 @@ export default function PostScreen() {
               )} */}
               <ThemedText style={{ color: '#888', fontSize: 12, marginLeft: 8 }} type="default">
                 {formatTimestamp(comment.timestamp || comment.createdAt || comment.publishedAt || '')}
-          </ThemedText>
-        </View>
+              </ThemedText>
+            </View>
             {/* Content */}
             <ThemedText style={{ color: '#fff', fontSize: 14, marginBottom: 4 }} type="default">
               {comment.content}
-        </ThemedText>
+            </ThemedText>
             {/* Actions row */}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginRight: 18 }} onPress={() => handleCommentLike(comment.id)}>
                 <Ionicons name={comment.is_liked ? "heart" : "heart-outline"} size={16} color={comment.is_liked ? "#FF6B6B" : '#888'} />
                 <ThemedText style={{ color: '#888', fontSize: 13, marginLeft: 4 }} type="default">
                   {comment.likes_count || ''}
-          </ThemedText>
+                </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginRight: 18 }} onPress={() => setReplyingTo(comment.id)}>
                 <Ionicons name="chatbubble-ellipses-outline" size={16} color={primaryColor} />
@@ -1131,7 +1090,7 @@ export default function PostScreen() {
                   <ThemedText style={{ color: '#4D96FF', fontSize: 13 }} type="default">
                     View Replies ({comment.replies?.length || 0})
                   </ThemedText>
-          </TouchableOpacity>
+                </TouchableOpacity>
               )}
               {hasReplies && showReplies && (
                 <TouchableOpacity onPress={() => toggleReplies(comment.id)}>
@@ -1208,9 +1167,9 @@ export default function PostScreen() {
     // Pause all in-feed videos to avoid multiple audio sources
     try {
       Object.values(videoRefs.current).forEach(ref => {
-        try { (ref as any)?.pauseAsync && (ref as any).pauseAsync(); } catch {}
+        try { (ref as any)?.pauseAsync && (ref as any).pauseAsync(); } catch { }
       });
-    } catch {}
+    } catch { }
     setPlayingVideoId(null);
     // Open our in-app fullscreen overlay to place navigation above system UI
     setFullscreenPostId(post.id);
@@ -1228,7 +1187,7 @@ export default function PostScreen() {
 
   const renderPostMedia = (post: Post) => {
     if (!post.media_url) return null;
-    
+
     return (
       <View style={styles.mediaContainer}>
         <Video
@@ -1253,14 +1212,14 @@ export default function PostScreen() {
             }
           }}
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.playButton}
           onPress={() => openFullscreen(post)}
           activeOpacity={0.9}
         >
           <Ionicons name="play-circle" size={60} color="rgba(255,255,255,0.9)" />
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.fullscreenButton}
           onPress={() => openFullscreen(post)}
           activeOpacity={0.9}
@@ -1270,8 +1229,8 @@ export default function PostScreen() {
             <ThemedText style={styles.fullscreenButtonText}>Tap to go fullscreen</ThemedText>
           </View>
         </TouchableOpacity>
-        <Image 
-          source={{ uri: post.media_url }} 
+        <Image
+          source={{ uri: post.media_url }}
           style={styles.postMedia}
           resizeMode="cover"
           onError={() => Alert.alert('Error', 'Failed to load image')}
@@ -1281,7 +1240,7 @@ export default function PostScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#121212' }}>
+    <View style={{ flex: 1, backgroundColor }}>
       {/* In-app Fullscreen Modal */}
       <Modal
         visible={fullscreenPostId != null}
@@ -1350,7 +1309,8 @@ export default function PostScreen() {
           })()}
         </View>
       </Modal>
-      {renderHeader()}
+      <PostHeader user={user} backgroundColor={backgroundColor} />
+      <OfflineBanner />
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={primaryColor} />
@@ -1374,53 +1334,24 @@ export default function PostScreen() {
         />
       )}
 
-      <Modal
+      <CommentsModal
         visible={showComments}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowComments(false)}
-      >
-        <View style={[styles.modalContainer, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-          <View style={[styles.modalContent, { backgroundColor: cardColor }]}>
-            <View style={styles.modalHeader}>
-              <ThemedText style={styles.modalTitle} type="subtitle">Comments</ThemedText>
-              <TouchableOpacity onPress={() => setShowComments(false)}>
-                <Ionicons name="close" size={24} color={textColor} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.commentsList}>
-              {!selectedPost || !comments[selectedPost.id] || comments[selectedPost.id].length === 0 ? (
-                <ThemedText style={styles.emptyText} type="default">
-                  No comments yet. Be the first to comment!
-                </ThemedText>
-              ) : (
-                comments[selectedPost.id].map(comment => renderCommentTree(comment))
-              )}
-            </ScrollView>
-            <View style={styles.commentInputContainer}>
-              <TextInput
-                style={[styles.commentInput, { color: textColor, borderColor: primaryColor }]}
-                placeholder="Add a comment..."
-                placeholderTextColor={textSecondaryColor}
-                value={commentText}
-                onChangeText={setCommentText}
-                multiline
-              />
-              <TouchableOpacity 
-                style={[styles.commentButton, { backgroundColor: primaryColor }]}
-                onPress={() => {
-                if (selectedPost && commentText.trim()) {
-                  handleComment(selectedPost.id, commentText);
-                  setCommentText('');
-                }
-              }}
-              >
-                <Ionicons name="send" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        comments={selectedPost ? comments[selectedPost.id] || [] : []}
+        commentText={commentText}
+        onClose={() => setShowComments(false)}
+        onChangeText={setCommentText}
+        onSubmit={() => {
+          if (selectedPost && commentText.trim()) {
+            handleComment(selectedPost.id, commentText);
+            setCommentText('');
+          }
+        }}
+        renderComment={(comment) => renderCommentTree(comment)}
+        cardColor={cardColor}
+        textColor={textColor}
+        textSecondaryColor={textSecondaryColor}
+        primaryColor={primaryColor}
+      />
 
       {/* Android delete modal */}
       {showPostOptions.visible && showPostOptions.post && Platform.OS !== 'ios' && (
@@ -1449,6 +1380,15 @@ export default function PostScreen() {
           </View>
         </Modal>
       )}
+
+      {/* FAB - Floating Action Button for creating new post */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => router.push('/(tabs)/create')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -1458,40 +1398,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  feedHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#121212',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 10,
-  },
-  feedHeaderTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  feedHeaderRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  feedHeaderAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#8A2BE2',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  feedHeaderAvatarText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+
   postCard: {
     borderRadius: 16,
     padding: 16,
@@ -1659,33 +1566,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    height: '80%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  commentsList: {
-    flex: 1,
-    marginBottom: 16,
-  },
+
   commentItem: {
     marginBottom: 16,
     padding: 12,
@@ -1814,5 +1695,21 @@ const styles = StyleSheet.create({
   commentLikeCount: {
     marginLeft: 4,
     fontSize: 12,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 80,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2196F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
 }); 

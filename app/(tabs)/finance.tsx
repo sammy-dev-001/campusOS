@@ -11,6 +11,7 @@ import {
     KeyboardAvoidingView,
     TouchableWithoutFeedback,
     Keyboard,
+    Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -18,9 +19,13 @@ import { useFinance } from '../../src/contexts/FinanceContext';
 import { EduFiColors, formatNaira, EduFiSpacing, EduFiFonts } from '../../src/theme/edufi';
 import { useTheme } from '../../src/contexts/NewThemeContext';
 import BudgetAlerts from '../../components/BudgetAlerts';
+import QuickAddInput from '../../components/finance/QuickAddInput';
+import { ParsedTransaction } from '../../src/utils/transactionParser';
+
+const { width } = Dimensions.get('window');
 
 export default function FinanceScreen() {
-    const { transactions, budgets, addTransaction, categories } = useFinance();
+    const { transactions, addTransaction, categories } = useFinance();
     const [showAddModal, setShowAddModal] = useState(false);
     const router = useRouter();
     const { theme } = useTheme();
@@ -50,131 +55,155 @@ export default function FinanceScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor }]}>
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={[styles.title, { color: EduFiColors.primary }]}>Finance</Text>
-                    <Text style={[styles.subtitle, { color: textSecondary }]}>Manage your student budget</Text>
-                </View>
-
-                {/* Budget Alerts */}
-                <BudgetAlerts
-                    textColor={textColor}
-                    onViewBudgets={() => router.push('/finance/budget')}
-                />
-
-                {/* Balance Cards */}
-                <View style={styles.balanceCards}>
-                    <View style={[styles.balanceCard, styles.primaryCard]}>
-                        <Text style={styles.balanceLabel}>Current Balance</Text>
-                        <Text style={styles.balanceAmount}>{formatNaira(balance)}</Text>
-                        <Text style={styles.balancePeriod}>Last 30 days</Text>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+            >
+                <ScrollView
+                    style={styles.scrollView}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={styles.scrollContent}
+                >
+                    {/* 1. Header */}
+                    <View style={styles.header}>
+                        <Text style={[styles.title, { color: EduFiColors.primary }]}>Finance</Text>
+                        <Text style={[styles.subtitle, { color: textSecondary }]}>Manage your student budget</Text>
                     </View>
 
-                    <View style={styles.balanceRow}>
-                        <View style={[styles.balanceCard, styles.incomeCard, { backgroundColor: cardBackground }]}>
-                            <Ionicons name="arrow-down-circle" size={24} color={EduFiColors.income} />
-                            <Text style={[styles.smallLabel, { color: textSecondary }]}>Income</Text>
-                            <Text style={[styles.smallAmount, { color: textColor }]}>{formatNaira(totalIncome)}</Text>
+                    {/* Budget Alerts */}
+                    <BudgetAlerts
+                        textColor={textColor}
+                        onViewBudgets={() => router.push('/finance/budget')}
+                    />
+
+                    {/* 2. & 3. Balance Card & Stats */}
+                    <View style={styles.balanceContainer}>
+                        <View style={[styles.balanceCard, styles.primaryCard]}>
+                            <Text style={styles.balanceLabel}>Current Balance</Text>
+                            <Text style={styles.balanceAmount}>{formatNaira(Math.abs(balance))}</Text>
+
+                            <TouchableOpacity
+                                style={styles.addIncomeButton}
+                                onPress={() => setShowAddModal(true)}
+                            >
+                                <Text style={styles.addIncomeText}>Add Income</Text>
+                            </TouchableOpacity>
+
+                            <Text style={styles.balancePeriod}>Last 30 days</Text>
                         </View>
 
-                        <View style={[styles.balanceCard, styles.expenseCard, { backgroundColor: cardBackground }]}>
-                            <Ionicons name="arrow-up-circle" size={24} color={EduFiColors.expense} />
-                            <Text style={[styles.smallLabel, { color: textSecondary }]}>Expenses</Text>
-                            <Text style={[styles.smallAmount, { color: textColor }]}>{formatNaira(totalExpense)}</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Quick Actions */}
-                <View style={styles.quickActions}>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => setShowAddModal(true)}
-                    >
-                        <Ionicons name="add-circle" size={20} color="#fff" />
-                        <Text style={styles.actionText}>Add Transaction</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionButtonSecondary, { backgroundColor: cardBackground }]}
-                        onPress={() => router.push('/finance/analytics')}
-                    >
-                        <Ionicons name="stats-chart" size={20} color={EduFiColors.primary} />
-                        <Text style={styles.actionTextSecondary}>Analytics</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Budget Button */}
-                <View style={styles.quickActions}>
-                    <TouchableOpacity
-                        style={[styles.actionButtonSecondary, { backgroundColor: cardBackground, flex: 1 }]}
-                        onPress={() => router.push('/finance/budget')}
-                    >
-                        <Ionicons name="wallet" size={20} color={EduFiColors.primary} />
-                        <Text style={styles.actionTextSecondary}>Set Budgets</Text>
-                    </TouchableOpacity>
-
-                    {Platform.OS === 'android' && (
-                        <TouchableOpacity
-                            style={[styles.actionButtonSecondary, { backgroundColor: cardBackground, flex: 1 }]}
-                            onPress={() => router.push('/finance/sms-permission')}
-                        >
-                            <Ionicons name="mail-unread" size={20} color={EduFiColors.primary} />
-                            <Text style={styles.actionTextSecondary}>Auto-Detect</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-
-                {/* AI Insights Card */}
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: textColor }]}>AI Insights</Text>
-                    <View style={[styles.aiInsightsCard, { backgroundColor: cardBackground }]}>
-                        <View style={styles.aiInsightsHeader}>
-                            <View style={[styles.aiIconBadge, { backgroundColor: EduFiColors.primary }]}>
-                                <Ionicons name="sparkles" size={20} color="#fff" />
+                        <View style={styles.statsRow}>
+                            <View style={[styles.statCard, { backgroundColor: cardBackground }]}>
+                                <Ionicons name="arrow-down-circle" size={24} color={EduFiColors.income} />
+                                <Text style={[styles.statLabel, { color: textSecondary }]}>Income</Text>
+                                <Text style={[styles.statAmount, { color: textColor }]}>{formatNaira(totalIncome)}</Text>
                             </View>
-                            <View style={styles.aiInsightsText}>
-                                <Text style={[styles.aiInsightsTitle, { color: textColor }]}>
-                                    Eddy
-                                </Text>
-                                <Text style={[styles.aiInsightsSubtitle, { color: textSecondary }]}>
-                                    {totalExpense > totalIncome
-                                        ? "⚠️ You've spent more than you earned this month"
-                                        : totalExpense > 0
-                                            ? `💰 You've saved ${formatNaira(totalIncome - totalExpense)} this month`
-                                            : "📊 Add transactions to get insights"}
-                                </Text>
+
+                            <View style={[styles.statCard, { backgroundColor: cardBackground }]}>
+                                <Ionicons name="arrow-up-circle" size={24} color={EduFiColors.expense} />
+                                <Text style={[styles.statLabel, { color: textSecondary }]}>Expenses</Text>
+                                <Text style={[styles.statAmount, { color: textColor }]}>{formatNaira(totalExpense)}</Text>
                             </View>
                         </View>
+                    </View>
+
+                    {/* 4. Log Expense Input */}
+                    <View style={styles.inputSection}>
+                        <QuickAddInput
+                            variant="inline"
+                            label="LOG EXPENSE"
+                            onTransactionSaved={(parsed: ParsedTransaction) => {
+                                addTransaction({
+                                    amount: Math.abs(parsed.amount),
+                                    category: parsed.category,
+                                    note: parsed.remark,
+                                    date: parsed.date.toISOString(),
+                                    type: 'expense',
+                                    source: 'manual',
+                                });
+                            }}
+                            theme={{
+                                background: backgroundColor,
+                                card: cardBackground,
+                                text: textColor,
+                                textSecondary: textSecondary,
+                                primary: EduFiColors.primary,
+                                border: theme?.border || '#333',
+                            }}
+                        />
+                    </View>
+
+                    {/* 5. AI Insights (Under Log Expense) */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>AI Insights</Text>
+                        <View style={[styles.aiCard, { backgroundColor: cardBackground }]}>
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16 }}>
+                                <View style={[styles.aiIconBadge, { backgroundColor: EduFiColors.primary }]}>
+                                    <Ionicons name="sparkles" size={20} color="#FFF" />
+                                </View>
+                                <View style={styles.aiContent}>
+                                    <Text style={[styles.aiName, { color: textColor }]}>Eddy</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                        <Ionicons name="warning" size={16} color="#FFD700" style={{ marginRight: 6 }} />
+                                        <Text style={[styles.aiText, { color: textSecondary, flex: 1 }]}>
+                                            You've spent more than you earned this month
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity
+                                style={[styles.askAiButton, { backgroundColor: EduFiColors.primary }]}
+                                onPress={() => router.push('/ai-chat')}
+                            >
+                                <Ionicons name="chatbubble-ellipses-outline" size={20} color="#FFF" style={{ marginRight: 8 }} />
+                                <Text style={styles.askAiButtonText}>Ask AI for Advice</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* 6. Action Buttons (Above Transactions) */}
+                    <View style={styles.actionButtonsContainer}>
                         <TouchableOpacity
-                            style={styles.askAiButton}
-                            onPress={() => router.push('/finance-ai')}
+                            style={[styles.outlinedButton, { borderColor: EduFiColors.primary }]}
+                            onPress={() => router.push('/finance/budget')}
                         >
-                            <Ionicons name="chatbubble-ellipses" size={18} color="#fff" />
-                            <Text style={styles.askAiButtonText}>Ask AI for Advice</Text>
+                            <Text style={[styles.outlinedButtonText, { color: EduFiColors.primary }]}>Set Budgets</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.outlinedButton, { borderColor: EduFiColors.primary }]}
+                            onPress={() => {
+                                if (Platform.OS === 'android') {
+                                    router.push('/finance/sms-permission');
+                                }
+                            }}
+                        >
+                            <Text style={[styles.outlinedButtonText, { color: EduFiColors.primary }]}>Auto-Detect</Text>
                         </TouchableOpacity>
                     </View>
-                </View>
 
-                {/* Recent Transactions */}
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: textColor }]}>Recent Transactions</Text>
-                    {transactions.length === 0 ? (
-                        <View style={styles.emptyState}>
-                            <Ionicons name="wallet-outline" size={48} color={EduFiColors.disabled} />
-                            <Text style={[styles.emptyText, { color: textSecondary }]}>No transactions yet</Text>
-                            <Text style={[styles.emptySubtext, { color: textSecondary }]}>Tap the button above to add your first transaction</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.transactionList}>
-                            {transactions.slice(0, 10).map((transaction) => (
-                                <TransactionItem key={transaction.id} transaction={transaction} />
-                            ))}
-                        </View>
-                    )}
-                </View>
-            </ScrollView>
+                    {/* 7. Recent Transactions (Bottom) */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: textColor }]}>Recent Transactions</Text>
+                        {transactions.length === 0 ? (
+                            <View style={styles.emptyState}>
+                                <Ionicons name="wallet-outline" size={48} color={EduFiColors.disabled} />
+                                <Text style={[styles.emptyText, { color: textSecondary }]}>No transactions yet</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.transactionList}>
+                                {transactions.slice(0, 10).map((transaction) => (
+                                    <TransactionItem key={transaction.id} transaction={transaction} />
+                                ))}
+                            </View>
+                        )}
+                    </View>
+
+                </ScrollView>
+            </KeyboardAvoidingView>
 
             {/* Add Transaction Modal */}
             <AddTransactionModal
@@ -197,12 +226,9 @@ function TransactionItem({ transaction }: { transaction: any }) {
             <View style={[styles.categoryIcon, { backgroundColor: categoryColor + '20' }]}>
                 <Text style={styles.categoryEmoji}>{getCategoryEmoji(transaction.category)}</Text>
             </View>
-
             <View style={styles.transactionInfo}>
                 <Text style={styles.transactionCategory}>{transaction.category}</Text>
-                <Text style={styles.transactionNote} numberOfLines={1}>
-                    {transaction.note || 'No description'}
-                </Text>
+                <Text style={styles.transactionNote} numberOfLines={1}>{transaction.note || 'No description'}</Text>
                 <Text style={styles.transactionDate}>
                     {new Date(transaction.date).toLocaleDateString('en-NG', {
                         month: 'short',
@@ -210,7 +236,6 @@ function TransactionItem({ transaction }: { transaction: any }) {
                     })}
                 </Text>
             </View>
-
             <Text style={[styles.transactionAmount, isIncome ? styles.incomeAmount : styles.expenseAmount]}>
                 {isIncome ? '+' : ''}{formatNaira(transaction.amount)}
             </Text>
@@ -231,7 +256,6 @@ function AddTransactionModal({ visible, onClose, onAdd, categories }: any) {
             alert('Please enter a valid amount');
             return;
         }
-
         setLoading(true);
         try {
             await onAdd({
@@ -241,7 +265,6 @@ function AddTransactionModal({ visible, onClose, onAdd, categories }: any) {
                 note,
                 date: new Date().toISOString(),
             });
-            // Reset form
             setAmount('');
             setNote('');
             setCategory(categories[0]);
@@ -262,36 +285,27 @@ function AddTransactionModal({ visible, onClose, onAdd, categories }: any) {
                         style={styles.keyboardAvoidingView}
                     >
                         <View style={styles.modalContent}>
-                            {/* Header */}
                             <View style={styles.modalHeader}>
                                 <Text style={styles.modalTitle}>Add Transaction</Text>
                                 <TouchableOpacity onPress={onClose}>
                                     <Ionicons name="close" size={24} color={EduFiColors.text.primary} />
                                 </TouchableOpacity>
                             </View>
-
                             <ScrollView showsVerticalScrollIndicator={false}>
-                                {/* Type Toggle */}
                                 <View style={styles.typeToggle}>
                                     <TouchableOpacity
                                         style={[styles.typeButton, type === 'expense' && styles.typeButtonActive]}
                                         onPress={() => setType('expense')}
                                     >
-                                        <Text style={[styles.typeText, type === 'expense' && styles.typeTextActive]}>
-                                            Expense
-                                        </Text>
+                                        <Text style={[styles.typeText, type === 'expense' && styles.typeTextActive]}>Expense</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={[styles.typeButton, type === 'income' && styles.typeButtonActive]}
                                         onPress={() => setType('income')}
                                     >
-                                        <Text style={[styles.typeText, type === 'income' && styles.typeTextActive]}>
-                                            Income
-                                        </Text>
+                                        <Text style={[styles.typeText, type === 'income' && styles.typeTextActive]}>Income</Text>
                                     </TouchableOpacity>
                                 </View>
-
-                                {/* Amount Input */}
                                 <View style={styles.inputGroup}>
                                     <Text style={styles.inputLabel}>Amount (₦)</Text>
                                     <TextInput
@@ -303,15 +317,9 @@ function AddTransactionModal({ visible, onClose, onAdd, categories }: any) {
                                         placeholderTextColor={EduFiColors.text.light}
                                     />
                                 </View>
-
-                                {/* Category Selector */}
                                 <View style={styles.inputGroup}>
                                     <Text style={styles.inputLabel}>Category</Text>
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        style={styles.categoryScroll}
-                                    >
+                                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
                                         {categories.map((cat: string) => (
                                             <TouchableOpacity
                                                 key={cat}
@@ -319,17 +327,11 @@ function AddTransactionModal({ visible, onClose, onAdd, categories }: any) {
                                                 onPress={() => setCategory(cat)}
                                             >
                                                 <Text style={styles.categoryChipEmoji}>{getCategoryEmoji(cat)}</Text>
-                                                <Text
-                                                    style={[styles.categoryChipText, category === cat && styles.categoryChipTextActive]}
-                                                >
-                                                    {cat}
-                                                </Text>
+                                                <Text style={[styles.categoryChipText, category === cat && styles.categoryChipTextActive]}>{cat}</Text>
                                             </TouchableOpacity>
                                         ))}
                                     </ScrollView>
                                 </View>
-
-                                {/* Note Input */}
                                 <View style={styles.inputGroup}>
                                     <Text style={styles.inputLabel}>Note (Optional)</Text>
                                     <TextInput
@@ -341,8 +343,6 @@ function AddTransactionModal({ visible, onClose, onAdd, categories }: any) {
                                         multiline
                                     />
                                 </View>
-
-                                {/* Submit Button */}
                                 <TouchableOpacity
                                     style={[styles.submitButton, loading && styles.submitButtonDisabled]}
                                     onPress={handleSubmit}
@@ -361,19 +361,10 @@ function AddTransactionModal({ visible, onClose, onAdd, categories }: any) {
     );
 }
 
-// Helper function for category emojis
 function getCategoryEmoji(category: string): string {
     const emojis: { [key: string]: string } = {
-        Food: '🍔',
-        Transport: '🚗',
-        Data: '📱',
-        Bills: '💡',
-        Shopping: '🛍️',
-        Health: '🏥',
-        Entertainment: '🎮',
-        Education: '📚',
-        Savings: '💰',
-        Other: '📦',
+        Food: '🍔', Transport: '🚗', Data: '📱', Bills: '💡', Shopping: '🛍️',
+        Health: '🏥', Entertainment: '🎮', Education: '📚', Savings: '💰', Other: '📦',
     };
     return emojis[category] || '📦';
 }
@@ -385,6 +376,9 @@ const styles = StyleSheet.create({
     },
     scrollView: {
         flex: 1,
+    },
+    scrollContent: {
+        paddingBottom: 100,
     },
     header: {
         paddingHorizontal: EduFiSpacing.md,
@@ -400,16 +394,17 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: EduFiFonts.sizes.md,
         color: EduFiColors.text.secondary,
+        marginBottom: 8,
     },
-    balanceCards: {
+    balanceContainer: {
         paddingHorizontal: EduFiSpacing.md,
-        marginBottom: EduFiSpacing.lg,
+        gap: EduFiSpacing.sm,
+        marginBottom: EduFiSpacing.md,
     },
     balanceCard: {
         backgroundColor: EduFiColors.card,
         borderRadius: 16,
         padding: EduFiSpacing.md,
-        marginBottom: EduFiSpacing.sm,
         shadowColor: EduFiColors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -429,6 +424,20 @@ const styles = StyleSheet.create({
         fontSize: EduFiFonts.sizes.xxxl,
         fontWeight: EduFiFonts.weights.bold,
         color: EduFiColors.background,
+        marginBottom: 8,
+    },
+    addIncomeButton: {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        marginBottom: 8,
+        alignSelf: 'flex-start',
+    },
+    addIncomeText: {
+        fontSize: EduFiFonts.sizes.sm,
+        fontWeight: EduFiFonts.weights.semibold,
+        color: EduFiColors.background,
     },
     balancePeriod: {
         fontSize: EduFiFonts.sizes.xs,
@@ -436,62 +445,96 @@ const styles = StyleSheet.create({
         opacity: 0.7,
         marginTop: 4,
     },
-    balanceRow: {
+    statsRow: {
         flexDirection: 'row',
         gap: EduFiSpacing.sm,
     },
-    incomeCard: {
+    statCard: {
         flex: 1,
+        backgroundColor: EduFiColors.card,
+        borderRadius: 16,
+        padding: EduFiSpacing.md,
+        shadowColor: EduFiColors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 2,
     },
-    expenseCard: {
-        flex: 1,
-    },
-    smallLabel: {
+    statLabel: {
         fontSize: EduFiFonts.sizes.xs,
-        color: EduFiColors.text.secondary,
         marginTop: 8,
     },
-    smallAmount: {
+    statAmount: {
         fontSize: EduFiFonts.sizes.lg,
         fontWeight: EduFiFonts.weights.semibold,
-        color: EduFiColors.text.primary,
         marginTop: 4,
     },
-    quickActions: {
-        flexDirection: 'row',
-        gap: EduFiSpacing.sm,
-        paddingHorizontal: EduFiSpacing.md,
-        marginBottom: EduFiSpacing.lg,
+    aiCard: {
+        borderRadius: 16,
+        padding: EduFiSpacing.md,
+        shadowColor: EduFiColors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
     },
-    actionButton: {
+    aiIconBadge: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    aiContent: {
         flex: 1,
-        backgroundColor: EduFiColors.primary,
+        justifyContent: 'center',
+    },
+    aiTitle: {
+        fontSize: EduFiFonts.sizes.lg,
+        fontWeight: EduFiFonts.weights.semibold,
+        marginBottom: 4,
+    },
+    aiName: {
+        fontSize: EduFiFonts.sizes.md,
+        fontWeight: EduFiFonts.weights.bold,
+    },
+    aiText: {
+        fontSize: EduFiFonts.sizes.sm,
+        lineHeight: 18,
+    },
+    askAiButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: EduFiSpacing.md,
+        paddingVertical: 12,
         borderRadius: 12,
-        gap: 8,
+        width: '100%',
     },
-    actionText: {
-        color: EduFiColors.background,
+    askAiButtonText: {
+        color: '#FFF',
         fontSize: EduFiFonts.sizes.md,
         fontWeight: EduFiFonts.weights.semibold,
     },
-    actionButtonSecondary: {
-        flex: 1,
-        backgroundColor: EduFiColors.background,
+    inputSection: {
+        paddingHorizontal: EduFiSpacing.md,
+        marginVertical: 20,
+    },
+    actionButtonsContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: EduFiSpacing.md,
+        gap: EduFiSpacing.md,
+        paddingHorizontal: EduFiSpacing.md,
+        marginBottom: 20,
+    },
+    outlinedButton: {
+        flex: 1,
+        paddingVertical: 12,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: EduFiColors.primary,
-        gap: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    actionTextSecondary: {
-        color: EduFiColors.primary,
+    outlinedButtonText: {
         fontSize: EduFiFonts.sizes.md,
         fontWeight: EduFiFonts.weights.semibold,
     },
@@ -502,92 +545,19 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: EduFiFonts.sizes.lg,
         fontWeight: EduFiFonts.weights.semibold,
-        color: EduFiColors.text.primary,
         marginBottom: EduFiSpacing.md,
     },
-    // AI Insights Card Styles
-    aiInsightsCard: {
-        borderRadius: 16,
-        padding: EduFiSpacing.md,
-        shadowColor: EduFiColors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    aiInsightsHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    aiIconBadge: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    aiInsightsText: {
-        flex: 1,
-    },
-    aiInsightsTitle: {
-        fontSize: EduFiFonts.sizes.lg,
-        fontWeight: EduFiFonts.weights.semibold,
-        marginBottom: 4,
-    },
-    aiInsightsSubtitle: {
-        fontSize: EduFiFonts.sizes.sm,
-        lineHeight: 18,
-    },
-    aiInsightsActions: {
-        marginTop: 12,
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.05)',
-    },
-    askAiButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: EduFiColors.primary,
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        marginTop: 16,
-        gap: 8,
-        shadowColor: EduFiColors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-    },
-    askAiButtonText: {
-        color: '#fff',
-        fontSize: EduFiFonts.sizes.md,
-        fontWeight: EduFiFonts.weights.bold,
-    },
-    askAiText: {
-        fontSize: EduFiFonts.sizes.md,
-        fontWeight: EduFiFonts.weights.semibold,
+    transactionList: {
+        gap: EduFiSpacing.sm,
     },
     emptyState: {
         alignItems: 'center',
-        paddingVertical: EduFiSpacing.xxl,
+        paddingVertical: EduFiSpacing.lg,
     },
     emptyText: {
         fontSize: EduFiFonts.sizes.lg,
         fontWeight: EduFiFonts.weights.medium,
-        color: EduFiColors.text.secondary,
         marginTop: EduFiSpacing.md,
-    },
-    emptySubtext: {
-        fontSize: EduFiFonts.sizes.sm,
-        color: EduFiColors.text.light,
-        marginTop: 8,
-        textAlign: 'center',
-    },
-    transactionList: {
-        gap: EduFiSpacing.sm,
     },
     transactionItem: {
         flexDirection: 'row',

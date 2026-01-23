@@ -10,18 +10,37 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
+    "module": "esnext",
     "target": "es2015",
-    "lib": ["es2015", "es2017", "dom"],
+    "lib": [
+      "es2015",
+      "es2017",
+      "dom"
+    ],
     "downlevelIteration": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@/contexts/*": ["./src/contexts/*"],
-      "@/components/*": ["./components/*"],
-      "@/constants/*": ["./constants/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@/contexts/*": [
+        "./src/contexts/*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/constants/*": [
+        "./constants/*"
+      ]
     },
-    "types": ["node", "jest"],
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "types": [
+      "node",
+      "jest"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types"
+    ],
     "skipDefaultLibCheck": true
   },
   "include": [

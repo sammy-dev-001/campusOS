@@ -26,6 +26,7 @@ import {
 import MapView, { Marker, PROVIDER_DEFAULT, UrlTile } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useTheme } from '../src/contexts/NewThemeContext';
+import { useUser } from '../src/contexts/UserContext';
 import {
     Campus,
     CampusLocation,
@@ -46,9 +47,22 @@ import {
 
 const { width, height } = Dimensions.get('window');
 
+// Map university names to campus IDs
+const UNIVERSITY_TO_CAMPUS: Record<string, string> = {
+    'University of Lagos': 'unilag',
+    'UNILAG': 'unilag',
+    'Obafemi Awolowo University': 'oau',
+    'OAU': 'oau',
+    'University of Ibadan': 'ui',
+    'UI': 'ui',
+    'Lagos State University': 'lasu',
+    'LASU': 'lasu',
+};
+
 export default function CampusMapScreen() {
     const { theme } = useTheme();
     const router = useRouter();
+    const { currentUser } = useUser();
 
     const [selectedCampus, setSelectedCampus] = useState<Campus>(SAMPLE_CAMPUSES[0]);
     const [selectedLocation, setSelectedLocation] = useState<CampusLocation | null>(null);
@@ -65,6 +79,29 @@ export default function CampusMapScreen() {
         description: '',
         coordinates: { latitude: 0, longitude: 0 },
     });
+
+    // Auto-select campus based on user's university
+    useEffect(() => {
+        if (currentUser?.university) {
+            const campusId = UNIVERSITY_TO_CAMPUS[currentUser.university];
+            if (campusId) {
+                const matchedCampus = SAMPLE_CAMPUSES.find(c => c.id === campusId);
+                if (matchedCampus) {
+                    setSelectedCampus(matchedCampus);
+                }
+            } else {
+                // Try fuzzy matching - check if university name contains any campus name
+                const matchedCampus = SAMPLE_CAMPUSES.find(c =>
+                    currentUser.university.toLowerCase().includes(c.name.toLowerCase()) ||
+                    currentUser.university.toLowerCase().includes(c.shortName.toLowerCase()) ||
+                    c.name.toLowerCase().includes(currentUser.university.toLowerCase())
+                );
+                if (matchedCampus) {
+                    setSelectedCampus(matchedCampus);
+                }
+            }
+        }
+    }, [currentUser?.university]);
 
     // Load custom locations when campus changes
     useEffect(() => {

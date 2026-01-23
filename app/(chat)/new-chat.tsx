@@ -62,7 +62,7 @@ export default function NewChatScreen() {
     // Only search if query is at least 2 characters
     if (searchQuery.length >= 2) {
       setLoading(true);
-      
+
       // Set a new timeout to debounce the search
       searchTimeoutRef.current = setTimeout(() => {
         fetchUsers(searchQuery);
@@ -91,7 +91,7 @@ export default function NewChatScreen() {
 
       // If userRef is a string (user ID), fetch the full user data
       const userId = typeof userRef === 'string' ? userRef : userRef?._id;
-      
+
       if (!userId) {
         console.error('No valid user reference provided');
         return null;
@@ -99,12 +99,12 @@ export default function NewChatScreen() {
 
       const authData = await AsyncStorage.getItem('authData');
       const token = authData ? JSON.parse(authData).token : null;
-      
+
       if (!token) {
         console.error('No auth token available for fetching user data');
         return null;
       }
-      
+
       console.log(`Fetching user data for ID: ${userId}`);
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         headers: {
@@ -112,11 +112,11 @@ export default function NewChatScreen() {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch user data: ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -125,52 +125,42 @@ export default function NewChatScreen() {
   };
 
   const fetchUsers = async (query: string) => {
-    // Check if auth context is available
     if (!auth) {
-      console.error('[fetchUsers] Auth context is not available');
       setError('Authentication error. Please try logging in again.');
       return;
     }
 
-    console.log('[fetchUsers] Starting user search with query:', query);
-    
     if (!query.trim()) {
-      console.log('[fetchUsers] Empty search query, clearing users');
       setUsers([]);
       return;
     }
 
-    // Clear any existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
     setError(null);
     setLoading(true);
-    
+
     try {
-      // Get auth data
       const authData = await AsyncStorage.getItem('authData');
       if (!authData) {
         throw new Error('Authentication required. Please log in again.');
       }
-      
+
       const parsedAuth = JSON.parse(authData);
       const token = parsedAuth?.token;
-      
+
       if (!token) {
         throw new Error('Authentication token not found. Please log in again.');
       }
 
-      // Make the API request with error boundaries
       const searchUrl = new URL(`${API_URL}/users/search`);
-      searchUrl.searchParams.append('q', query.trim()); // Use the query parameter instead of searchQuery
-      
-      console.log(`[fetchUsers] Making request to: ${searchUrl.toString()}`);
-      
+      searchUrl.searchParams.append('q', query.trim());
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       let response;
       try {
         response = await fetch(searchUrl.toString(), {
@@ -192,20 +182,14 @@ export default function NewChatScreen() {
         clearTimeout(timeoutId);
       }
 
-      console.log(`[fetchUsers] Response status: ${response.status}`);
-      
-      // Get response text first to handle both JSON and text responses
       const responseText = await response.text();
-      console.log('[fetchUsers] Raw response:', responseText);
-      
-      // Handle non-OK responses
+
       if (!response.ok) {
         let errorDetails = 'No error details';
         try {
           const errorData = JSON.parse(responseText);
           errorDetails = errorData.message || JSON.stringify(errorData);
-          
-          // Don't show error for short queries, just clear results
+
           if (response.status === 400 && errorData.code === 'QUERY_TOO_SHORT') {
             setUsers([]);
             return;
@@ -213,361 +197,112 @@ export default function NewChatScreen() {
         } catch (e) {
           errorDetails = responseText || 'No error details';
         }
-        
+
         if (response.status === 401) {
-          // Try to refresh the token via AuthContext; if refresh succeeds, retry the search once.
           try {
-            console.log('[fetchUsers] Received 401, attempting token refresh...');
             if (auth && typeof auth.refreshAuthToken === 'function') {
               const refreshed = await auth.refreshAuthToken();
               if (refreshed) {
-                console.log('[fetchUsers] Token refreshed, retrying search');
-                // Retry the search recursively once
                 return await fetchUsers(query);
               }
-            } else {
-              console.warn('[fetchUsers] refreshAuthToken is not available on auth context', { 
-                authAvailable: !!auth,
-                refreshTokenAvailable: auth && typeof auth.refreshAuthToken
-              });
             }
           } catch (e) {
-            console.warn('[fetchUsers] Token refresh attempt failed', e);
+            console.warn('Token refresh failed');
           }
-          // If we get here, token refresh failed or is unavailable — log out and prompt user to sign in again
           if (typeof auth.logout === 'function') {
             await auth.logout();
           }
           throw new Error('Your session has expired. Please log in again.');
         }
-        
+
         if (response.status === 500) {
-          console.error('[fetchUsers] Server error details:', errorDetails);
-          throw new Error('Unable to search for users at this time. The server encountered an error.');
+          throw new Error('Unable to search for users at this time.');
         }
-        
+
         throw new Error(`Error: ${errorDetails}`);
       }
 
-      // Parse successful response
       let data;
       try {
         data = JSON.parse(responseText);
-        
-        // Handle both array and object with results property
         if (data && data.results && Array.isArray(data.results)) {
-          data = data.results; // Use the results array
+          data = data.results;
         } else if (!Array.isArray(data)) {
-          console.error('[fetchUsers] Expected array or object with results array but got:', typeof data, data);
           throw new Error('Unexpected response format from server');
         }
       } catch (e) {
-        console.error('[fetchUsers] Error parsing response:', e, 'Response:', responseText);
         throw new Error('Unable to process the response from the server');
       }
-      
-      console.log(`[fetchUsers] Received ${data.length} chat items`);
-      
-      // Log the raw data structure using console.dir for better inspection
-      console.log('[fetchUsers] Raw data structure:');
-      console.dir({
-        dataLength: data.length,
-        firstChat: data[0] ? {
-          ...data[0],
-          participants: data[0].participants?.map((p: any) => ({
-            ...p,
-            user: p.user ? {
-              _id: p.user._id,
-              name: p.user.name,
-              username: p.user.username,
-              email: p.user.email,
-              profilePicture: p.user.profilePicture || p.user.profile_picture || p.user.avatar,
-              keys: Object.keys(p.user)
-            } : null
-          }))
-        } : 'No chats',
-        dataKeys: Object.keys(data[0] || {})
-      }, { depth: null, colors: true });
-      
-      // Log the first participant's user data if available
-      if (data[0]?.participants?.[0]?.user) {
-        console.log('First participant user data:', {
-          ...data[0].participants[0].user,
-          // Add any other user properties you want to see
-        });
-      }
-      
-      // Map and filter users with better error handling
+
       const currentUserId = String(currentUser?.id);
       const validUsers: User[] = [];
-      
-      // Enhanced logging to show full participant data with proper typing
-      interface LoggableUser {
-        _id: string;
-        displayName: string;
-        email: string;
-        profilePicture: string | null;
-      }
 
-      interface LoggableParticipant {
-        isAdmin: boolean;
-        lastRead: string;
-        unreadCount: number;
-        user: LoggableUser | null;
-      }
-
-      interface LoggableChat {
-        id: string;
-        participants: LoggableParticipant[];
-        [key: string]: any;
-      }
-
-      const loggableData: LoggableChat[] = data.map((chat: any) => ({
-        ...chat,
-        participants: chat.participants?.map((participant: any) => ({
-          ...participant,
-          user: participant.user ? {
-            _id: participant.user._id,
-            displayName: participant.user.displayName || participant.user.name || participant.user.username || 'Unknown',
-            email: participant.user.email || '',
-            profilePicture: participant.user.profilePicture || participant.user.profile_picture || participant.user.avatar || null
-          } : null
-        }))
-      }));
-      
-      // Log the raw data structure to understand its shape
-      console.log('Raw chat data structure:', {
-        chatCount: data.length,
-        firstChat: data[0] ? {
-          ...data[0],
-          participants: data[0].participants?.map((p: any) => ({
-            ...p,
-            user: p.user ? 'UserObject' : null
-          }))
-        } : 'No chats',
-        dataKeys: data[0] ? Object.keys(data[0]) : []
-      });
-
-      // Log the first participant's user data if available
-      if (data[0]?.participants?.[0]?.user) {
-        console.log('First participant user data keys:', Object.keys(data[0].participants[0].user));
-      }
-      
-      // Process each chat item or user object
       for (const item of data) {
         try {
-          // If the API returned a plain user object (id, username, displayName...), map it directly
+          // Handle plain user objects from search
           if (item && (item.id || item._id) && (item.username || item.displayName) && !item.participants) {
             const userId = String(item._id || item.id);
-            if (userId === currentUser?.id) {
-              console.log('Skipping current user (search result):', userId);
-              continue;
-            }
+            if (userId === currentUser?.id) continue;
 
             const displayName = item.displayName || item.name || item.username || 'Unknown User';
             const email = item.email || '';
             const profilePicture = item.profilePicture || item.profile_picture || item.profilePic || item.avatar || undefined;
 
-            const existingUserIndex = validUsers.findIndex((u: User) => u.id === userId);
-            if (existingUserIndex === -1) {
+            if (!validUsers.some(u => u.id === userId)) {
               validUsers.push({ id: userId, displayName, email, profilePicture });
-            } else {
-              console.log('User already exists in validUsers with ID:', userId);
             }
-
             continue;
           }
 
+          // Handle chat objects with participants
           const chat = item;
-          if (!chat || !chat.participants || !Array.isArray(chat.participants)) {
-            console.log('Skipping invalid chat item:', chat);
-            continue;
-          }
+          if (!chat?.participants || !Array.isArray(chat.participants)) continue;
 
-          console.log('Processing chat:', {
-            id: chat._id || chat.id,
-            name: chat.name,
-            isGroup: chat.isGroupChat,
-            participantCount: chat.participants?.length || 0
-          });
-
-          // Extract all users from participants
           for (const participant of chat.participants) {
             try {
-// Log the participant data for debugging
-              interface LoggableParticipantData {
-                isAdmin: boolean;
-                lastRead: string;
-                unreadCount: number;
-                user: {
-                  _id: string;
-                  displayName: string;
-                  email: string;
-                  profilePicture: string | null;
-                } | null;
-                [key: string]: any;
-              }
+              if (!participant.user || typeof participant.user !== 'object') continue;
 
-              const loggableParticipant: LoggableParticipantData = {
-                ...participant,
-                user: participant.user ? {
-                  _id: participant.user._id,
-                  displayName: participant.user.displayName || participant.user.name || participant.user.username || 'Unknown',
-                  email: participant.user.email || '',
-                  profilePicture: participant.user.profilePicture || participant.user.profile_picture || participant.user.avatar || null
-                } : null
-              };
-              
-              // Create a deep clone of the participant to avoid reference issues
-              const participantClone = JSON.parse(JSON.stringify(participant));
-              
-              // Log the participant with all its properties
-              console.log('Processing participant:');
-              console.dir({
-                ...participantClone,
-                user: participantClone.user ? {
-                  ...participantClone.user,
-                  // Add any additional user properties you want to see
-                  profilePicture: participantClone.user.profilePicture || 
-                                participantClone.user.profile_picture || 
-                                participantClone.user.avatar
-                } : null
-              }, { depth: null, colors: true });
-              
-              // Log the raw user object properties if available
-              if (participantClone.user) {
-                console.log('User properties:');
-                console.table(
-                  Object.entries(participantClone.user).map(([key, value]) => ({
-                    Property: key,
-                    Type: typeof value,
-                    Value: typeof value === 'object' ? JSON.stringify(value) : String(value)
-                  }))
-                );
-              }
-              
-              // Skip if participant has no user data or is the current user
-              if (!participant.user || typeof participant.user !== 'object') {
-                console.log('Skipping participant - invalid user data');
-                continue;
-              }
-              
-              // Handle user data which might be a direct object, reference, or string ID
               let userData = participant.user;
-              
-              // If userData is a string (ID), fetch the full user data
+
               if (typeof userData === 'string' || (userData && !userData._id)) {
                 const fetchedUser = await fetchUserData(userData);
-                if (fetchedUser) {
-                  userData = fetchedUser;
-                  console.log('Fetched user data:', {
-                    id: userData._id || userData.id,
-                    username: userData.username,
-                    name: userData.name,
-                    email: userData.email,
-                    hasProfilePic: !!(userData.profilePic || userData.profilePicture || userData.avatar)
-                  });
-                } else {
-                  console.log('Skipping participant - could not fetch user data for:', userData);
-                  continue;
-                }
+                if (!fetchedUser) continue;
+                userData = fetchedUser;
               }
-              
-              // Ensure we have a valid user ID
-              if (!userData?._id && !userData?.id) {
-                console.log('Skipping participant - no valid user ID:', userData);
-                continue;
-              }
-              
-              if (!userData || !userData._id) {
-                console.log('Skipping participant - no valid user ID:', participant);
-                continue;
-              }
-              
+
+              if (!userData?._id && !userData?.id) continue;
+
               const userId = String(userData._id || userData.id);
-              if (userId === currentUser?.id) {
-                console.log('Skipping current user:', userId);
-                continue;
-              }
-              
-              // Extract display name from various possible fields
-              const displayName = userData.displayName || 
-                               userData.name || 
-                               userData.username || 
-                               (userData.profile && (userData.profile.name || userData.profile.username)) ||
-                               'Unknown User';
-              
-              // Extract email from various possible fields
-              const email = userData.email || 
-                          (userData.profile && userData.profile.email) || 
-                          '';
-              
-              // Extract profile picture from various possible fields
-              const profilePicture = userData.profilePicture || 
-                                  userData.profile_picture || 
-                                  userData.profilePic || 
-                                  userData.avatar || 
-                                  (userData.profile && (userData.profile.picture || 
-                                                       userData.profile.avatar || 
-                                                       userData.profile.image)) ||
-                                  undefined;
-              
-              console.log('Processed user:', {
-                id: userId,
-                displayName,
-                email,
-                hasPicture: !!profilePicture,
-                userData: {
-                  ...userData,
-                  // Include only relevant user data fields
-                  _id: userData._id,
-                  id: userData.id,
-                  name: userData.name,
-                  username: userData.username,
-                  email: userData.email,
-                  profilePic: userData.profilePic,
-                  profilePicture: userData.profilePicture,
-                  avatar: userData.avatar,
-                  hasProfile: !!userData.profile
-                }
-              });
-              
-              // Check if user already exists in validUsers
-              const existingUserIndex = validUsers.findIndex((u: User) => u.id === userId);
-              if (existingUserIndex === -1) {
-                const newUser: User = {
-                  id: userId,
-                  displayName,
-                  email,
-                  profilePicture
-                };
-                validUsers.push(newUser);
-              } else {
-                console.log('User already exists in validUsers with ID:', userId);
+              if (userId === currentUser?.id) continue;
+
+              const displayName = userData.displayName || userData.name || userData.username ||
+                (userData.profile && (userData.profile.name || userData.profile.username)) || 'Unknown User';
+              const email = userData.email || (userData.profile && userData.profile.email) || '';
+              const profilePicture = userData.profilePicture || userData.profile_picture || userData.profilePic || userData.avatar ||
+                (userData.profile && (userData.profile.picture || userData.profile.avatar || userData.profile.image)) || undefined;
+
+              if (!validUsers.some(u => u.id === userId)) {
+                validUsers.push({ id: userId, displayName, email, profilePicture });
               }
             } catch (e) {
-              console.error('Error processing participant:', participant, e);
+              // Skip invalid participant silently
             }
           }
         } catch (e) {
-          console.error('Error processing chat item:', item, e);
+          // Skip invalid item silently
         }
       }
-      
-      // Filter out current user and invalid entries
-      const filteredUsers = validUsers.filter(u => 
+
+      const filteredUsers = validUsers.filter(u =>
         u.id !== currentUserId && u.displayName !== 'Unknown User'
       );
-      
-  console.log(`[fetchUsers] Found ${filteredUsers.length} valid users after filtering`);
-  // Populate component state so the UI renders the results
-  setUsers(filteredUsers);
-  return filteredUsers;
-      
+
+      setUsers(filteredUsers);
+      return filteredUsers;
+
     } catch (error) {
-      console.error('[fetchUsers] Error:', error);
+      console.error('Search error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      console.error('[fetchUsers] Error details:', error);
       setError(errorMessage);
       setUsers([]);
     } finally {
@@ -587,7 +322,7 @@ export default function NewChatScreen() {
       }
 
       console.log('Creating chat with participants:', [selectedUser.id]);
-      
+
       const response = await fetch(`${API_BASE_URL}/chats`, {
         method: 'POST',
         headers: {
@@ -606,14 +341,14 @@ export default function NewChatScreen() {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to create chat');
       }
-      
+
       const chat = await response.json();
-      
+
       // Refresh chat list to include the new chat
       if (refreshChatsRef.current) {
         await refreshChatsRef.current();
       }
-      
+
       // Add a small delay to ensure navigation is ready
       setTimeout(() => {
         router.push(`/(chat)/${chat.id}`);
@@ -626,14 +361,14 @@ export default function NewChatScreen() {
 
   const handleUserPress = useCallback(async (selectedUser: User) => {
     console.log('handleUserPress called with user:', selectedUser);
-    
+
     if (!currentUser) {
       console.error('No current user found');
       setError('Please log in to start a chat');
       return null;
     }
     let effectiveUser = currentUser;
-    
+
     if (!effectiveUser?.id) {
       console.error('No current user ID - current user state:', effectiveUser);
       // Try to get user from AsyncStorage as a fallback
@@ -643,7 +378,7 @@ export default function NewChatScreen() {
           const { user: storedUser } = JSON.parse(authData);
           if (storedUser?.id) {
             console.log('Using user data from AsyncStorage');
-            effectiveUser = { 
+            effectiveUser = {
               id: storedUser.id,
               display_name: storedUser.display_name || storedUser.username || '',
               email: storedUser.email,
@@ -655,33 +390,33 @@ export default function NewChatScreen() {
       } catch (error) {
         console.error('Error getting user from AsyncStorage:', error);
       }
-      
+
       if (!effectiveUser?.id) {
         setError('Please log in to start a chat');
         return null;
       }
     }
-    
+
     try {
       setLoading(true);
       setError('');
-      
+
       // Get auth token from AsyncStorage
       const authData = await AsyncStorage.getItem('authData');
       console.log('Auth data from storage:', authData ? 'exists' : 'missing');
-      
+
       const token = authData ? JSON.parse(authData).token : null;
-      
+
       if (!token) {
         console.error('No auth token found');
         throw new Error('Authentication token not found');
       }
-      
+
       if (!currentUser?.id) {
         throw new Error('Current user ID is missing');
       }
       console.log('Checking for existing chat between:', currentUser.id, 'and', selectedUser.id);
-      
+
       // First, try to find an existing chat
       console.log('Checking for existing chat with participant:', selectedUser.id);
       const checkResponse = await fetch(`${API_BASE_URL}/chats/check`, {
@@ -696,16 +431,16 @@ export default function NewChatScreen() {
           isGroupChat: false
         }),
       });
-      
+
       console.log('Check chat response status:', checkResponse.status);
-      
+
       let chatId: string | null = null;
-      
+
       if (checkResponse.ok) {
         // If chat exists, get its ID
         const checkData = await checkResponse.json();
         console.log('Check chat response data:', checkData);
-        
+
         chatId = checkData.chatId || checkData.id || (checkData._id ? checkData._id.toString() : null);
         console.log('Found existing chat ID:', chatId);
       } else if (checkResponse.status !== 404) {
@@ -714,11 +449,11 @@ export default function NewChatScreen() {
         console.error('Error checking for chat:', errorData);
         throw new Error(errorData.message || 'Error checking for existing chat');
       }
-      
+
       // If no chat exists, create a new one
       if (!chatId) {
         console.log('No existing chat found, creating new one...');
-        
+
         const createResponse = await fetch(`${API_BASE_URL}/chats`, {
           method: 'POST',
           headers: {
@@ -731,42 +466,42 @@ export default function NewChatScreen() {
             type: 'individual',
           }),
         });
-        
+
         console.log('Create chat response status:', createResponse.status);
-        
+
         if (!createResponse.ok) {
           const errorData = await createResponse.json().catch(() => ({}));
           console.error('Error creating chat:', errorData);
           throw new Error(errorData.message || 'Failed to create chat');
         }
-        
+
         const createData = await createResponse.json();
         console.log('Create chat response data:', createData);
-        
+
         chatId = createData.id || createData._id || null;
         console.log('Created new chat with ID:', chatId);
-        
+
         if (!chatId) {
           throw new Error('No chat ID received from server');
         }
-        
+
         // Refresh chat list to include the new chat using the ref
         console.log('Refreshing chat list...');
         if (refreshChatsRef.current) {
           await refreshChatsRef.current();
         }
       }
-      
+
       if (!chatId) {
         throw new Error('No chat ID available');
       }
-      
+
       console.log('Navigating to chat:', chatId);
-      
+
       // Navigate to the chat screen with just the chat ID
       // The chat screen will fetch the full chat details
       router.push(`/(chat)/${chatId}`);
-      
+
       return chatId;
     } catch (error) {
       console.error('Error in handleUserPress:', error);
@@ -787,16 +522,16 @@ export default function NewChatScreen() {
     try {
       const authData = await AsyncStorage.getItem('authData');
       const token = authData ? JSON.parse(authData).token : null;
-      
+
       const response = await fetch(`${API_BASE_URL}/chats?userId=${currentUser.id}`, {
         headers: {
           'Content-Type': 'application/json',
           ...(token && { 'Authorization': `Bearer ${token}` }),
         },
       });
-      
+
       console.log('Chats response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Chats data received:', data);
@@ -817,18 +552,18 @@ export default function NewChatScreen() {
 
   const handleSearch = (text: string) => {
     setSearchQuery(text);
-    
+
     // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     // Don't search for queries shorter than 2 characters
     if (text.trim().length < 2) {
       setUsers([]);
       return;
     }
-    
+
     // Set new timeout for debouncing
     setLoading(true);
     searchTimeoutRef.current = setTimeout(() => {
@@ -881,10 +616,10 @@ export default function NewChatScreen() {
         paddingHorizontal: 12,
         height: 50,
       }}>
-        <Ionicons 
-          name="search" 
-          size={20} 
-          color={isDark ? '#666' : '#999'} 
+        <Ionicons
+          name="search"
+          size={20}
+          color={isDark ? '#666' : '#999'}
           style={{ marginRight: 8 }}
         />
         <TextInput
@@ -902,7 +637,7 @@ export default function NewChatScreen() {
           autoCorrect={false}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => {
               setSearchQuery('');
               setUsers([]);
@@ -914,7 +649,7 @@ export default function NewChatScreen() {
           </TouchableOpacity>
         )}
       </View>
-      
+
       {/* Error message */}
       {error ? (
         <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
@@ -922,7 +657,7 @@ export default function NewChatScreen() {
         </View>
       ) : null}
 
-{loading ? (
+      {loading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
         </View>
@@ -958,7 +693,7 @@ export default function NewChatScreen() {
                   console.log('User item pressed - TouchableOpacity onPress fired');
                   console.log('User ID:', item.id);
                   console.log('User Name:', item.displayName);
-                  
+
                   // Directly call handleUserPress
                   setSelectedUser(item);
                   setLoading(true);
@@ -976,15 +711,15 @@ export default function NewChatScreen() {
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 {/* User item content */}
                 {item.profilePicture ? (
-                  <Image 
-                    source={{ uri: item.profilePicture }} 
+                  <Image
+                    source={{ uri: item.profilePicture }}
                     style={{
                       width: 50,
                       height: 50,
                       borderRadius: 25,
                       marginRight: 16,
                       backgroundColor: '#444'
-                    }} 
+                    }}
                   />
                 ) : (
                   <View style={{

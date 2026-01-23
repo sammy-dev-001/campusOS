@@ -3,14 +3,17 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import * as VideoThumbnails from 'expo-video-thumbnails';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import MediaViewer from '../../components/MediaViewer';
+import KeyboardSafeWrapper from '../../components/KeyboardSafeWrapper';
 import { API_BASE_URL } from '../../config/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Chat, Message, useChat } from '../../src/contexts/ChatContext';
+import { uploadToCloudinary } from '../../utils/fileUpload';
 import { ChatWrapper } from './_chat-wrapper';
 
 function getInitials(name?: string) {
@@ -282,10 +285,13 @@ function ChatScreenContent() {
         // Copy content URI video to cache file path to ensure fetch can read it
         try {
           const ext = safeName.split('.').pop() || 'mp4';
-          const dest = `${FileSystem.cacheDirectory || FileSystem.documentDirectory || ''}upload-${Date.now()}.${ext}`;
-          console.log('[ChatDetail] normalize video via copy to cache', { dest });
-          await FileSystem.copyAsync({ from: fileUri, to: dest });
-          uploadUri = dest;
+          const cacheDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+          if (cacheDir) {
+            const dest = `${cacheDir}upload-${Date.now()}.${ext}`;
+            console.log('[ChatDetail] normalize video via copy to cache', { dest });
+            await FileSystem.copyAsync({ from: fileUri, to: dest });
+            uploadUri = dest;
+          }
         } catch (copyErr) {
           console.warn('[ChatDetail] video normalization failed, using original uri', copyErr);
         }
@@ -296,9 +302,6 @@ function ChatScreenContent() {
 
     try {
       console.log('[ChatDetail] uploading file to Cloudinary:', { uri: uploadUri, name: safeName, type: safeType });
-
-      // Import the upload utility
-      const { uploadToCloudinary } = await import('../../utils/fileUpload');
 
       // Upload to Cloudinary
       const result = await uploadToCloudinary({
@@ -557,25 +560,18 @@ function ChatScreenContent() {
         if (info.exists) return cached;
       }
       // Create deterministic filename under cacheDirectory
+      const cacheDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+      if (!cacheDir) return undefined;
+
       const safe = encodeURIComponent(normalized).replace(/%/g, '_');
-      const dest = `${FileSystem.cacheDirectory || FileSystem.documentDirectory || ''}thumb-${safe}.jpg`;
+      const dest = `${cacheDir}thumb-${safe}.jpg`;
       const existing = await FileSystem.getInfoAsync(dest);
       if (existing.exists) {
         thumbCacheRef.current.set(normalized, dest);
         return dest;
       }
-      // Lazy-load module once
-      if (!videoThumbsModuleRef.current) {
-        try {
-          videoThumbsModuleRef.current = await import('expo-video-thumbnails');
-        } catch (e) {
-          console.warn('[VideoThumb] module import failed', e);
-          return undefined;
-        }
-      }
-      const mod = videoThumbsModuleRef.current;
-      if (!mod?.getThumbnailAsync) return undefined;
-      const result = await mod.getThumbnailAsync(normalized, { time: 0 });
+
+      const result = await VideoThumbnails.getThumbnailAsync(normalized, { time: 0 });
       if (result?.uri) {
         // Move/copy into deterministic cache path
         try {
@@ -854,11 +850,8 @@ function ChatScreenContent() {
         )}
         <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{chatName}</Text>
       </View>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        // Use measured header height for iOS; Android uses height behavior with zero offset
-        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
+      <KeyboardSafeWrapper
+        keyboardVerticalOffset={headerHeight}
       >
         <FlatList
           ref={flatListRef}
@@ -905,7 +898,7 @@ function ChatScreenContent() {
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardSafeWrapper>
       {/* Media Composer Modal */}
       <Modal
         animationType="slide"

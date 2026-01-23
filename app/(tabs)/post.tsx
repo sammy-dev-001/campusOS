@@ -1380,15 +1380,6 @@ export default function PostScreen() {
           </View>
         </Modal>
       )}
-
-      {/* FAB - Floating Action Button for creating new post */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/(tabs)/create')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
     </View>
   );
 };
@@ -1549,7 +1540,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   postListContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 0,
     paddingBottom: 20,
   },
   // Fullscreen button with better visibility will be defined below

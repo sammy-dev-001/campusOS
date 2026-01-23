@@ -37,7 +37,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: 20000, // 30 seconds timeout
 });
 
 // Helper function to create standardized error objects
@@ -1260,15 +1260,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let mimeType = 'image/jpeg';
       if (fileExtension === 'png') mimeType = 'image/png';
       else if (fileExtension === 'gif') mimeType = 'image/gif';
-
-      // Create form data for file upload
-      const formData = new FormData();
-
-      // Create a file with the correct MIME type
-      const file = new File([blob], fileName, { type: mimeType });
-
-      // Append the file to form data with the correct field name
-      formData.append('profile_picture', file);
 
       // Get the authentication token
       const token = await AsyncStorage.getItem('token');

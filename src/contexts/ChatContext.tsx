@@ -93,6 +93,7 @@ interface ChatContextType {
   markAsDelivered: (messageIds: string[], chatId: string) => void;
   setActiveChat: (chatId: string | null) => void;
   setChats: (chats: Chat[]) => void;
+  deleteChat: (chatId: string) => Promise<void>;
   createGroup: (name: string, userIds: number[], image?: string) => Promise<void>;
   fetchChats: () => Promise<void>;
   fetchMessages: (chatId: string) => Promise<void>;
@@ -150,7 +151,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       return '';
     }
   };
-  
+
   // Define all the required functions with proper types
   const sendMessageFn = useCallback(async (chatId: string, message: Partial<Message>) => {
     if (!chatId) throw new Error('Invalid chatId');
@@ -199,7 +200,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
 
       const makeReq = makeAuthenticatedRequestRef.current;
       if (!makeReq) throw new Error('Auth request helper not available');
-      
+
       const response = await makeReq(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -216,8 +217,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       // Normalize server message to our Message shape
       const serverMessage: Message = {
         id: serverMsgRaw._id?.toString?.() || serverMsgRaw.id?.toString?.() || tempId,
-        senderId: serverMsgRaw.sender?._id?.toString?.() || serverMsgRaw.sender?.id?.toString?.() || 
-                 (serverMsgRaw.sender?.toString?.() || optimisticMessage.senderId),
+        senderId: serverMsgRaw.sender?._id?.toString?.() || serverMsgRaw.sender?.id?.toString?.() ||
+          (serverMsgRaw.sender?.toString?.() || optimisticMessage.senderId),
         chatId: chatId,
         content: serverMsgRaw.content || content,
         createdAt: serverMsgRaw.createdAt || new Date().toISOString(),
@@ -269,21 +270,21 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       return serverMessage;
     } catch (error) {
       console.error('[sendMessageFn] Error sending message:', error);
-      
+
       // Mark message as failed in the UI
       setMessages(prev => ({
         ...prev,
-        [chatId]: (prev[chatId] || []).map(m => 
-          m.tempId === tempId 
+        [chatId]: (prev[chatId] || []).map(m =>
+          m.tempId === tempId
             ? { ...m, status: 'failed', error: error instanceof Error ? error.message : 'Failed to send' }
             : m
         )
       }));
-      
+
       throw error;
     }
   }, []);
-  
+
   const deleteMessageFn = useCallback(async (messageId: string, chatId: string) => {
     try {
       if (!chatId) throw new Error('Invalid chatId for deleteMessage');
@@ -335,41 +336,69 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       });
     }
   }, []);
-  
+
   const editMessageFn = useCallback(async (chatId: string, messageId: string, newContent: string) => {
     // Implementation for editing a message
   }, []);
-  
+
   const reactToMessageFn = useCallback((chatId: string, messageId: string, emoji: string) => {
     // Implementation for reacting to a message
   }, []);
-  
+
 
   const forwardMessageFn = useCallback((message: Message, chatIds: string[]) => {
     // Implementation for forwarding a message
   }, []);
-  
+
   const markAsReadFn = useCallback((messageIds: string[], chatId: string) => {
     // Implementation for marking messages as read
   }, []);
-  
+
   const markAsDeliveredFn = useCallback((messageIds: string[], chatId: string) => {
     // Implementation for marking messages as delivered
   }, []);
-  
- 
-  
+
+
+
+  const deleteChatFn = useCallback(async (chatId: string): Promise<void> => {
+    try {
+      const makeReq = makeAuthenticatedRequestRef.current;
+      if (!makeReq) throw new Error('Auth request helper not available');
+
+      const url = `${API_BASE_URL}/chats/${chatId}`;
+      const response = await makeReq(url, { method: 'DELETE' });
+
+      if (response.ok) {
+        // Remove chat from state
+        setChats(prev => prev.filter(chat => chat.id !== chatId));
+        // Also remove messages for this chat
+        setMessages(prev => {
+          const newMessages = { ...prev };
+          delete newMessages[chatId];
+          return newMessages;
+        });
+      } else {
+        throw new Error(`Failed to delete chat: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('[deleteChatFn] Error deleting chat:', error);
+      // Still remove locally on error to allow user to continue
+      setChats(prev => prev.filter(chat => chat.id !== chatId));
+      throw error;
+    }
+  }, []);
+
   const sendTypingIndicatorFn = useCallback((chatId: string, isTyping: boolean) => {
     // Implementation for sending typing indicator
   }, []);
-  
+
   // Refs
   const isFetchingRef = useRef(false);
   const fetchCountRef = useRef(0);
   const typingTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
   const MAX_FETCH_ATTEMPTS = 3;
   const initializationAttempted = useRef(false);
-  
+
   // Hooks
   const { socket: wsSocket, isConnected: isWsConnected } = useWebSocket();
   const { user, logout, refreshToken } = useAuth();
@@ -377,12 +406,12 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
   const socket = wsSocket as Socket | null;
 
   // ...existing code...
-  
+
   // Initialize chat functionality when WebSocket connects
   useEffect(() => {
     const initializeChat = async () => {
       if (isInitialized || !isWsConnected || !user?.id || initializationAttempted.current) return;
-      
+
       try {
         console.log('[ChatProvider] Initializing chat functionality');
         initializationAttempted.current = true;
@@ -394,14 +423,14 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         initializationAttempted.current = false;
       }
     };
-    
+
     initializeChat();
   }, [isWsConnected, user?.id, isInitialized]);
-  
+
   // Search messages function
   const searchMessages = useCallback(async (query: string): Promise<Message[]> => {
     if (!query.trim()) return [];
-    
+
     const results: Message[] = [];
     Object.values(messages).forEach(chatMessages => {
       chatMessages.forEach(message => {
@@ -410,22 +439,22 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         }
       });
     });
-    
+
     return results;
   }, [messages]);
 
   // Typing indicator function
   const sendTypingIndicator = useCallback((chatId: string, isTyping: boolean) => {
     if (!socket) return;
-    
+
     // Clear any existing timeout
     if (typingTimeouts.current[chatId]) {
       clearTimeout(typingTimeouts.current[chatId]);
     }
-    
+
     // Send typing indicator
     socket.emit('typing', { chatId, isTyping, userId: user?.id });
-    
+
     // Set a timeout to automatically set typing to false after 3 seconds
     if (isTyping) {
       typingTimeouts.current[chatId] = setTimeout(() => {
@@ -482,26 +511,26 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
     console.error('[ChatProvider] Session expired:', errorMessage);
     setAuthError('Your session has expired. Please log in again.');
     setChats([]);
-    
+
     if (!refreshAuthToken) {
       console.error('[ChatProvider] refreshToken function is not available');
       return false;
     }
-    
+
     try {
       // Try to refresh token first
       console.log('[ChatProvider] Attempting to refresh token...');
       const newTokens = await refreshAuthToken();
-      
+
       if (newTokens) {
         // Token refresh successful, retry the operation
         console.log('[ChatProvider] Token refreshed successfully');
         return true;
       }
-      
+
       // If we get here, token refresh failed
       console.log('[ChatProvider] Token refresh failed, logging out');
-      
+
       // Show alert first
       Alert.alert(
         'Session Expired',
@@ -525,7 +554,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
           }
         ]
       );
-      
+
       return false;
     } catch (error) {
       console.error('[ChatProvider] Error during session expiration handling:', error);
@@ -544,30 +573,30 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
 
   // Helper function to make authenticated requests with token refresh
   const makeAuthenticatedRequest = useCallback(async (
-    url: string, 
+    url: string,
     options: RequestInit = {},
     retryCount = 0
   ): Promise<Response> => {
     const maxRetries = 1; // Maximum number of retry attempts
-    
+
     try {
       // Log the request details for debugging
       console.log(`[makeAuthenticatedRequest] Making ${options.method || 'GET'} request to:`, url);
-      
+
       // Get the current auth token
       const authData = await AsyncStorage.getItem('authData');
       if (!authData) {
         throw new Error('No authentication data found in storage');
       }
-      
+
       const { token } = JSON.parse(authData);
       if (!token) {
         console.error('[makeAuthenticatedRequest] No token found in auth data');
         throw new Error('No authentication token found');
       }
-      
+
       console.log('[makeAuthenticatedRequest] Making request to:', url);
-      
+
       const response = await fetch(url, {
         ...options,
         headers: {
@@ -576,27 +605,27 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
           ...options.headers,
         },
       });
-      
+
       // If token expired, try to refresh it and retry
       if (response.status === 401) {
         console.log('[makeAuthenticatedRequest] Token expired or invalid, attempting refresh...');
-        
+
         // If we've already retried, don't try again
         if (retryCount >= maxRetries) {
           console.log('[makeAuthenticatedRequest] Max retries reached, logging out');
           await logout();
           return response;
         }
-        
+
         try {
           if (!refreshAuthToken) {
             console.error('[makeAuthenticatedRequest] refreshToken function is not available');
             throw new Error('Authentication service not available');
           }
-          
+
           console.log('[makeAuthenticatedRequest] Refreshing token...');
           const refreshSuccess = await refreshAuthToken();
-          
+
           if (refreshSuccess) {
             console.log('[makeAuthenticatedRequest] Token refreshed, retrying request');
             // Recursively call this function with incremented retry count
@@ -612,27 +641,27 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
           return response;
         }
       }
-      
+
       return response;
     } catch (error) {
       console.error('[makeAuthenticatedRequest] Request failed:', error);
-        // If it's an auth-related error, decide whether to log out.
-        // Do NOT log out for missing auth data (startup race) — only for real auth failures.
-        if (error instanceof Error) {
-          const msg = error.message || '';
-          // If auth data is simply missing from storage (likely because AuthProvider
-          // hasn't hydrated yet), don't force a logout. Let callers handle the error.
-          if (msg.includes('No authentication data found in storage') || msg.includes('No authentication token found')) {
-            console.log('[makeAuthenticatedRequest] Auth data missing in storage; not logging out (possible startup race)');
-            throw error;
-          }
-
-          // For explicit 401 / token-expired errors or when refresh failed, perform logout
-          if (msg.includes('401') || msg.includes('Token expired') || msg.includes('Authentication service not available')) {
-            console.log('[makeAuthenticatedRequest] Auth error detected, logging out...');
-            await logout();
-          }
+      // If it's an auth-related error, decide whether to log out.
+      // Do NOT log out for missing auth data (startup race) — only for real auth failures.
+      if (error instanceof Error) {
+        const msg = error.message || '';
+        // If auth data is simply missing from storage (likely because AuthProvider
+        // hasn't hydrated yet), don't force a logout. Let callers handle the error.
+        if (msg.includes('No authentication data found in storage') || msg.includes('No authentication token found')) {
+          console.log('[makeAuthenticatedRequest] Auth data missing in storage; not logging out (possible startup race)');
+          throw error;
         }
+
+        // For explicit 401 / token-expired errors or when refresh failed, perform logout
+        if (msg.includes('401') || msg.includes('Token expired') || msg.includes('Authentication service not available')) {
+          console.log('[makeAuthenticatedRequest] Auth error detected, logging out...');
+          await logout();
+        }
+      }
       throw error;
     }
   }, [refreshAuthToken, logout]);
@@ -645,53 +674,53 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
     console.log('[fetchChats] Starting fetchChats');
     console.log('[fetchChats] User ID:', user?.id);
     console.log('[fetchChats] API Base URL:', API_BASE_URL);
-    
+
     if (!user?.id) {
       console.log('[fetchChats] No user ID available, skipping chat fetch');
       setChats([]);
       return;
     }
-    
+
     if (isFetchingRef.current) {
       console.log('[fetchChats] Already fetching chats, skipping');
       return;
     }
-    
+
     if (fetchCountRef.current >= MAX_FETCH_ATTEMPTS) {
       console.log(`[fetchChats] Max fetch attempts (${MAX_FETCH_ATTEMPTS}) reached, skipping`);
       return;
     }
-    
+
     console.log('[fetchChats] Starting chat fetch');
     isFetchingRef.current = true;
     fetchCountRef.current += 1;
-    
+
     try {
       const endpoint = `${API_BASE_URL}/chats`;
       console.log(`[fetchChats] Making API request to: ${endpoint}`);
-      
+
       const startTime = Date.now();
       let response;
       let responseText;
-      
+
       try {
         console.log('[fetchChats] Sending fetch request...');
         response = await makeAuthenticatedRequest(endpoint, {
           method: 'GET',
         });
-        
+
         const endTime = Date.now();
         console.log(`[fetchChats] Request completed in ${endTime - startTime}ms`);
         console.log('[fetchChats] Response status:', response.status);
-        
+
         responseText = await response.text();
         console.log('[fetchChats] Response text length:', responseText.length);
-        
+
         if (!response.ok) {
           console.error('[fetchChats] API request failed with status:', response.status);
           const errorData = responseText ? JSON.parse(responseText) : null;
           console.error('[fetchChats] Error response data:', errorData);
-          
+
           // Handle 401 Unauthorized (token expired)
           if (response.status === 401) {
             console.log('[fetchChats] Token expired, attempting to refresh...');
@@ -704,13 +733,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
             console.log('[fetchChats] Session refreshed, retrying chat fetch');
             return fetchChats();
           }
-          
+
           throw new Error(`API request failed with status ${response.status}: ${errorData?.message || response.statusText}`);
         }
       } catch (error) {
         console.error('[fetchChats] Network error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown network error';
-        
+
         // Check for 401 in error message
         if (errorMessage.includes('401') || errorMessage.includes('Token expired')) {
           const sessionRefreshed = await handleSessionExpired('Session expired');
@@ -720,10 +749,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
           }
           return;
         }
-        
+
         throw new Error(`Network error: ${errorMessage}`);
       }
-      
+
       let data;
       try {
         data = responseText ? JSON.parse(responseText) : null;
@@ -741,7 +770,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         console.error('[fetchChats] Failed to parse response as JSON:', errorMessage);
         throw new Error(`Invalid JSON response (status ${response.status}): ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`);
       }
-      
+
       // Check if data is an array or if it's nested under a 'data' property
       let chatsData = data;
       if (data && !Array.isArray(data) && data.data && Array.isArray(data.data)) {
@@ -752,17 +781,17 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         setChats([]);
         return;
       }
-      
+
       if (!Array.isArray(chatsData)) {
         console.error('[fetchChats] Invalid chats data format after processing:', chatsData);
         setChats([]);
         return;
       }
-      
+
       console.log(`[fetchChats] Found ${chatsData.length} chats in response`);
-      
+
       console.log(`[fetchChats] Processing ${data.length} chats`);
-      
+
       // Transform the API response to match the Chat interface
       const transformedChats = (chatsData as any[])
         .filter((chat: any) => {
@@ -774,13 +803,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         })
         .map((chat: any) => {
           console.log(`[fetchChats] Processing chat:`, chat.id);
-          
+
           // Log the full participant data for debugging
           console.log(`[fetchChats] Raw participants data:`, JSON.stringify(chat.participants));
-          
-          const otherParticipants: Array<{id: string, displayName?: string, username?: string, profilePicture?: string}> = [];
+
+          const otherParticipants: Array<{ id: string, displayName?: string, username?: string, profilePicture?: string }> = [];
           if (Array.isArray(chat.participants)) {
-            chat.participants.forEach((p: {user?: {id: string, displayName?: string, username?: string}}) => {
+            chat.participants.forEach((p: { user?: { id: string, displayName?: string, username?: string } }) => {
               if (p.user && p.user.id !== user?.id) {
                 otherParticipants.push({
                   id: p.user.id,
@@ -790,8 +819,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
               }
             });
           }
-          
-          console.log(`[fetchChats] Chat ${chat.id} has ${otherParticipants.length} other participants:`, 
+
+          console.log(`[fetchChats] Chat ${chat.id} has ${otherParticipants.length} other participants:`,
             otherParticipants.map(p => ({
               id: p.id,
               displayName: p.displayName || 'no-displayName',
@@ -799,7 +828,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
               profilePicture: p.profilePicture || 'no-avatar'
             }))
           );
-          
+
           // Try to get the best available name in this order: chat.name, user.displayName, user.username, or fallback
           let chatName = 'Unknown User';
           if (chat.isGroup) {
@@ -807,14 +836,14 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
           } else if (otherParticipants.length > 0) {
             const otherUser = otherParticipants[0];
             chatName = otherUser.displayName || otherUser.username || 'Unknown User';
-            
+
             // If we still have Unknown User, log the full participant for debugging
             if (chatName === 'Unknown User') {
-              console.warn(`[fetchChats] Could not determine name for user in chat ${chat.id}:`, 
+              console.warn(`[fetchChats] Could not determine name for user in chat ${chat.id}:`,
                 JSON.stringify(otherUser, null, 2));
             }
           }
-          
+
           const transformedChat = {
             id: chat.id.toString(),
             name: chatName,
@@ -835,23 +864,23 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
             updatedAt: chat.updatedAt || chat.lastMessage?.createdAt || chat.createdAt,
             avatar: chat.avatar || (otherParticipants[0]?.profilePicture || null),
           };
-          
+
           console.log(`[fetchChats] Transformed chat ${chat.id}:`, transformedChat);
           return transformedChat;
         });
-      
+
       console.log('Transformed chats:', transformedChats);
       setChats(transformedChats);
       fetchCountRef.current = 0;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error in fetchChats:', errorMessage);
-      
+
       if (chats.length === 0) {
         console.log('No chats available, setting empty array');
         setChats([]);
       }
-      
+
       throw error;
     } finally {
       isFetchingRef.current = false;
@@ -905,7 +934,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         const chat = chats.find(c => c.id === chatId);
         const sender = chat?.participants?.find(p => p.id === message.senderId);
         const senderName = sender?.displayName || sender?.username || 'Someone';
-        
+
         // Show notification
         notifyNewMessage(
           senderName,
@@ -976,18 +1005,18 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
   // Set up WebSocket listeners
   useEffect(() => {
     if (!socket) return;
-    
+
     console.log('Setting up WebSocket listeners');
-    
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     // Support both legacy 'new_message' and server's 'newMessage' event names
     socket.on('new_message', handleNewMessage);
     socket.on('newMessage', handleNewMessage);
-    
+
     // Initial connection state
     setIsConnected(socket.connected);
-    
+
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
@@ -995,22 +1024,22 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       socket.off('newMessage', handleNewMessage);
     };
   }, [socket, onConnect, onDisconnect, handleNewMessage]);
-  
+
   // Fetch chats on mount and when user changes
   useEffect(() => {
     let mounted = true;
-    
+
     const fetchIfNeeded = async () => {
       if (!user?.id || !mounted) return;
-      
+
       if (!isFetchingRef.current && fetchCountRef.current === 0) {
         console.log('Triggering initial chat fetch for user:', user.id);
         await fetchChats();
       }
     };
-    
+
     fetchIfNeeded();
-    
+
     return () => {
       mounted = false;
     };
@@ -1030,38 +1059,38 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
   const fetchMessagesFn = useCallback(async (chatId: string): Promise<void> => {
     try {
       console.log('[fetchMessages] Fetching messages for chat:', chatId);
-      
+
       // Early return if chatId is not a string or is empty
       if (!chatId || typeof chatId !== 'string') {
         console.warn('[fetchMessages] Invalid chat ID (not a string or empty):', chatId);
         return;
       }
-      
+
       // Get current messages before fetching to preserve pending states
       const currentMessages = messages[chatId] || [];
-      const pendingMessages = currentMessages.filter(m => 
+      const pendingMessages = currentMessages.filter(m =>
         m.status === 'sending' || m.status === 'failed' || m.tempId
       );
-      
+
       console.log(`[fetchMessages] Found ${pendingMessages.length} pending messages to preserve`);
-      
+
       // Clean the chat ID to remove any potential whitespace
       const cleanedChatId = chatId.trim();
-      
+
       // Simple validation for MongoDB ObjectId format (24 hex characters)
       const objectIdRegex = /^[0-9a-fA-F]{24}$/;
       if (!objectIdRegex.test(cleanedChatId)) {
         console.warn('[fetchMessages] Skipping fetch - invalid chat ID format, expected 24 hex characters:', cleanedChatId);
         return;
       }
-      
+
       // Get the base URL from environment or config
       const baseUrl = API_BASE_URL || 'https://campusos-backend.onrender.com/api/v1';
-      
+
       // Construct the URL with the cleaned chat ID
       const url = `${baseUrl}/chats/${cleanedChatId}`;
       console.log('[fetchMessages] Making request to:', url);
-      
+
       try {
         // Make the authenticated request
         const response = await makeAuthenticatedRequest(url, {
@@ -1070,13 +1099,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
             'Content-Type': 'application/json',
           },
         });
-        
+
         console.log(`[fetchMessages] Response status: ${response.status}`);
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           console.error(`[fetchMessages] Request failed with status ${response.status}:`, errorText);
-          
+
           if (response.status === 401) {
             console.log('[fetchMessages] Token might be expired, attempting to refresh...');
             const sessionRefreshed = await handleSessionExpired('Session expired. Please log in again.');
@@ -1086,15 +1115,15 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
             }
             return;
           }
-          
+
           throw new Error(`Server responded with status ${response.status}: ${errorText}`);
         }
-        
+
         const responseData = await response.json();
         console.log('[fetchMessages] Response data:', responseData);
-        
+
         let serverMessages: Message[] = [];
-        
+
         // Check if the response has a 'messages' or 'data' property
         if (responseData.messages && Array.isArray(responseData.messages)) {
           serverMessages = responseData.messages;
@@ -1103,7 +1132,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
         } else if (responseData) {
           console.log('[fetchMessages] No messages array found in response, using empty array');
         }
-        
+
         // Normalize incoming messages
         const normalizedMessages: Message[] = (serverMessages || []).map((m: any) => {
           const rawId = m._id ?? m.id ?? m.tempId ?? `srv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -1126,28 +1155,28 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
 
         // Merge server messages with pending messages
         const mergedMessages = [...normalizedMessages];
-        
+
         // Add any pending messages that aren't already in the server response
         pendingMessages.forEach(pendingMsg => {
-          const exists = mergedMessages.some(m => 
-            m.id === pendingMsg.id || 
+          const exists = mergedMessages.some(m =>
+            m.id === pendingMsg.id ||
             (m.tempId && m.tempId === pendingMsg.tempId) ||
-            (m.content === pendingMsg.content && 
-             m.senderId === pendingMsg.senderId &&
-             Math.abs(new Date(m.createdAt).getTime() - new Date(pendingMsg.createdAt).getTime()) < 60000)
+            (m.content === pendingMsg.content &&
+              m.senderId === pendingMsg.senderId &&
+              Math.abs(new Date(m.createdAt).getTime() - new Date(pendingMsg.createdAt).getTime()) < 60000)
           );
-          
+
           if (!exists) {
             console.log(`[fetchMessages] Preserving pending message: ${pendingMsg.content?.substring(0, 20)}...`);
             mergedMessages.push(pendingMsg);
           }
         });
-        
+
         // Sort by timestamp
-        const sortedMessages = mergedMessages.sort((a, b) => 
+        const sortedMessages = mergedMessages.sort((a, b) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
-        
+
         console.log(`[fetchMessages] Merged ${normalizedMessages.length} server messages with ${pendingMessages.length} pending messages`);
 
         // Update the messages in the state using the merged and sorted array
@@ -1155,11 +1184,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
           ...prev,
           [chatId]: sortedMessages
         }));
-        
+
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error('[fetchMessages] Request error:', errorMessage);
-        
+
         // If it's an auth error, try to refresh the session
         if (errorMessage.includes('auth') || errorMessage.includes('token') || errorMessage.includes('401')) {
           console.log('[fetchMessages] Authentication error, attempting to refresh session');
@@ -1169,22 +1198,22 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
             return fetchMessagesFn(chatId);
           }
         }
-        
+
         // Even if we couldn't fetch new messages, keep the existing ones
         if (currentMessages.length > 0) {
           console.log('[fetchMessages] Keeping existing messages after error');
           return;
         }
-        
+
         throw error;
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[fetchMessages] Error in fetchMessagesFn:', errorMessage, error);
-      
+
       // Don't clear existing messages on error, just log it
       console.log('[fetchMessages] Preserving existing messages after error');
-      
+
       // Re-throw the error to be handled by the caller if needed
       throw new Error(`Failed to fetch messages: ${errorMessage}`);
     }
@@ -1207,6 +1236,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
     markAsDelivered: markAsDeliveredFn,
     setActiveChat,
     setChats,
+    deleteChat: deleteChatFn,
     createGroup: createGroupFn,
     fetchChats,
     fetchMessages: fetchMessagesFn,
@@ -1229,6 +1259,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
     markAsDeliveredFn,
     setActiveChat,
     setChats,
+    deleteChatFn,
     createGroupFn,
     fetchChats,
     fetchMessagesFn,

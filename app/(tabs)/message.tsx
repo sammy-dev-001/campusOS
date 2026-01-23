@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Modal, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
@@ -10,6 +10,9 @@ import { API_BASE_URL } from '../../src/constants/Config';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Chat, Message, useChat } from '../../src/contexts/ChatContext';
 import { useTheme } from '../../src/contexts/NewThemeContext';
+
+// Filter type for segmented tabs
+type FilterType = 'all' | 'groups' | 'dms';
 
 // Extend the Chat interface to include any additional properties needed for the UI
 interface ChatItem extends Omit<Chat, 'lastMessage' | 'updatedAt'> {
@@ -53,12 +56,15 @@ export default function MessageScreen() {
   const { theme } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { chats, userStatus, fetchChats } = useChat();
+  const { chats, userStatus, fetchChats, deleteChat } = useChat();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showFabModal, setShowFabModal] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Load chats when the screen is focused
   React.useEffect(() => {
@@ -79,14 +85,41 @@ export default function MessageScreen() {
     loadChats();
   }, []);
 
-  // Sort chats by most recent activity (last message or chat creation time)
+  // Sort and filter chats by most recent activity
   const sortedChats = useMemo(() => {
-    return [...chats].sort((a, b) => {
+    let filtered = [...chats];
+
+    // Apply filter based on active tab
+    if (activeFilter === 'groups') {
+      filtered = filtered.filter(chat => chat.isGroup === true);
+    } else if (activeFilter === 'dms') {
+      filtered = filtered.filter(chat => chat.isGroup !== true);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(chat => {
+        // Search in chat name
+        const chatName = chat.name?.toLowerCase() || '';
+        // Search in participant names
+        const participantNames = chat.participants?.map(p =>
+          (p.displayName || p.username || p.user?.displayName || p.user?.username || '').toLowerCase()
+        ).join(' ') || '';
+        // Search in last message content
+        const lastMsg = (chat.lastMessage?.content || '').toLowerCase();
+
+        return chatName.includes(query) || participantNames.includes(query) || lastMsg.includes(query);
+      });
+    }
+
+    // Sort by most recent
+    return filtered.sort((a, b) => {
       const aTime = a.lastMessage?.createdAt || a.createdAt;
       const bTime = b.lastMessage?.createdAt || b.createdAt;
       return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
-  }, [chats]);
+  }, [chats, activeFilter, searchQuery]);
 
   // Debug: log context vs local counts
   React.useEffect(() => {
@@ -108,8 +141,25 @@ export default function MessageScreen() {
   };
 
   const handleDeleteChat = (chatId: string | number) => {
-    // TODO: Implement delete logic
-    alert('Delete chat ' + chatId);
+    Alert.alert(
+      'Delete Chat',
+      'Are you sure you want to delete this conversation? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteChat(String(chatId));
+            } catch (error) {
+              console.error('Failed to delete chat:', error);
+              Alert.alert('Error', 'Failed to delete chat. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const onRefresh = useCallback(async () => {
@@ -204,11 +254,13 @@ export default function MessageScreen() {
       return p.user?.profilePicture || p.user?.profile_picture || p.user?.avatar || p.profilePicture || p.avatar;
     };
 
-    // For direct messages, always use the other participant's username
+    // For direct messages, prefer displayName/fullName over username
     // For group chats, use the chat name or 'Group Chat' as fallback
     const displayName = item.isGroup
       ? item.name || 'Group Chat'
-      : (otherParticipant?.user?.username || otherParticipant?.username || 'Chat');
+      : (otherParticipant?.user?.displayName || otherParticipant?.displayName ||
+        otherParticipant?.user?.fullName || otherParticipant?.fullName ||
+        otherParticipant?.user?.username || otherParticipant?.username || 'Chat');
 
     const avatarColor = getAvatarColor(item.id);
 
@@ -286,17 +338,27 @@ export default function MessageScreen() {
             {avatarUri ? (
               <Image
                 source={{ uri: avatarUri }}
-                style={[styles.avatar, styles.avatarBorder, styles.avatarImage]}
+                style={[
+                  styles.avatar,
+                  styles.avatarBorder,
+                  styles.avatarImage,
+                  item.isGroup && styles.groupAvatar
+                ]}
                 accessibilityLabel={`Profile picture of ${displayName}`}
               />
             ) : (
-              <View style={[styles.avatarPlaceholder, styles.avatarBorder, { backgroundColor: avatarColor }]}>
+              <View style={[
+                styles.avatarPlaceholder,
+                styles.avatarBorder,
+                { backgroundColor: avatarColor },
+                item.isGroup && styles.groupAvatar
+              ]}>
                 <ThemedText style={styles.avatarText}>
                   {getInitials(displayName)}
                 </ThemedText>
               </View>
             )}
-            {otherParticipant && (
+            {!item.isGroup && otherParticipant && (
               <View
                 style={[styles.statusDot, { backgroundColor: isOnline ? '#4CAF50' : '#BDBDBD' }]}
                 accessibilityLabel={isOnline ? 'Online' : 'Offline'}
@@ -378,47 +440,139 @@ export default function MessageScreen() {
 
       <View style={styles.searchBarContainer}>
         <Ionicons name="search" size={20} color={theme.secondary} style={{ marginLeft: 12, marginRight: 8 }} />
-        <ThemedText style={styles.searchBarText}>Search conversations...</ThemedText>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search conversations..."
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} style={{ paddingRight: 12 }}>
+            <Ionicons name="close-circle" size={20} color="#888" />
+          </TouchableOpacity>
+        )}
       </View>
 
-      <View style={styles.actionButtonsRow}>
-        <TouchableOpacity style={styles.newChatButton} onPress={handleNewChat}>
-          <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
-          <ThemedText style={styles.newChatButtonText}>New Chat</ThemedText>
+      {/* Segmented Filter Tabs */}
+      <View style={styles.segmentedControl}>
+        <TouchableOpacity
+          style={[styles.segmentTab, activeFilter === 'all' && styles.segmentTabActive]}
+          onPress={() => setActiveFilter('all')}
+        >
+          <ThemedText style={[styles.segmentTabText, activeFilter === 'all' && styles.segmentTabTextActive]}>All</ThemedText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.newGroupButton} onPress={handleNewGroup}>
-          <Ionicons name="people-outline" size={18} color="#FFD600" style={{ marginRight: 6 }} />
-          <ThemedText style={styles.newGroupButtonText}>New Group</ThemedText>
+        <TouchableOpacity
+          style={[styles.segmentTab, activeFilter === 'groups' && styles.segmentTabActive]}
+          onPress={() => setActiveFilter('groups')}
+        >
+          <ThemedText style={[styles.segmentTabText, activeFilter === 'groups' && styles.segmentTabTextActive]}>Groups</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentTab, activeFilter === 'dms' && styles.segmentTabActive]}
+          onPress={() => setActiveFilter('dms')}
+        >
+          <ThemedText style={[styles.segmentTabText, activeFilter === 'dms' && styles.segmentTabTextActive]}>DMs</ThemedText>
         </TouchableOpacity>
       </View>
 
       {(() => { console.log('[MessageScreen] render gate local length:', sortedChats?.length || 0); return null; })()}
-      {sortedChats && sortedChats.length > 0 ? (
-        <FlatList
-          style={{ flex: 1 }}
-          data={sortedChats}
-          renderItem={renderChatItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.chatList}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="chatbubbles" size={64} color={theme.secondary} />
-              <ThemedText style={[styles.emptyText, { color: theme.secondary }]}>
-                No chats yet. Start a new conversation!
+
+      <FlatList
+        style={{ flex: 1 }}
+        data={sortedChats}
+        renderItem={renderChatItem}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.chatList}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListHeaderComponent={
+          /* Eddy AI Assistant Pin */
+          <TouchableOpacity
+            style={[styles.chatItem, styles.eddyPinItem]}
+            onPress={() => router.push('/ai-buddy' as any)}
+            accessibilityLabel="Chat with Eddy AI Assistant"
+            accessibilityRole="button"
+          >
+            <View style={styles.avatarContainer}>
+              <View style={[styles.eddyAvatar]}>
+                <Ionicons name="sparkles" size={22} color="#FFF" />
+              </View>
+            </View>
+            <View style={styles.chatInfo}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <ThemedText style={[styles.chatName, { color: '#FFF' }]}>Eddy (AI Assistant)</ThemedText>
+                <View style={styles.eddyBadge}>
+                  <ThemedText style={styles.eddyBadgeText}>AI</ThemedText>
+                </View>
+              </View>
+              <ThemedText style={[styles.lastMessage, { color: '#AAA', marginTop: 2 }]} numberOfLines={1}>
+                I'm here to help with studies & finance!
               </ThemedText>
             </View>
-          }
-        />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="chatbubbles" size={64} color={theme.secondary} />
-          <ThemedText style={[styles.emptyText, { color: theme.secondary }]}>
-            No chats yet. Start a new conversation!
-          </ThemedText>
-        </View>
-      )}
+          </TouchableOpacity>
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="chatbubbles" size={64} color={theme.secondary} />
+            <ThemedText style={[styles.emptyText, { color: theme.secondary }]}>
+              No chats yet. Tap + to start a conversation!
+            </ThemedText>
+          </View>
+        }
+      />
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowFabModal(true)}
+        accessibilityLabel="New conversation"
+        accessibilityRole="button"
+      >
+        <Ionicons name="add" size={28} color="#FFF" />
+      </TouchableOpacity>
+
+      {/* FAB Modal */}
+      <Modal
+        visible={showFabModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowFabModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowFabModal(false)}
+        >
+          <View style={styles.fabModalContent}>
+            <TouchableOpacity
+              style={styles.fabModalOption}
+              onPress={() => {
+                setShowFabModal(false);
+                handleNewChat();
+              }}
+            >
+              <View style={[styles.fabModalIcon, { backgroundColor: '#2196F3' }]}>
+                <Ionicons name="chatbubble-ellipses-outline" size={22} color="#FFF" />
+              </View>
+              <ThemedText style={styles.fabModalText}>Start Chat</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.fabModalOption}
+              onPress={() => {
+                setShowFabModal(false);
+                handleNewGroup();
+              }}
+            >
+              <View style={[styles.fabModalIcon, { backgroundColor: '#4CAF50' }]}>
+                <Ionicons name="people-outline" size={22} color="#FFF" />
+              </View>
+              <ThemedText style={styles.fabModalText}>Create Group</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -445,6 +599,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     position: 'relative',
     marginBottom: 10,
+    paddingHorizontal: 16,
   },
   headerTitle: {
     fontSize: 22,
@@ -492,6 +647,12 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 15,
   },
+  searchInput: {
+    flex: 1,
+    color: '#FFF',
+    fontSize: 15,
+    paddingVertical: 8,
+  },
   actionButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -532,8 +693,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#23242A',
     borderRadius: 14,
     marginHorizontal: 12,
-    marginBottom: 14,
-    padding: 12,
+    marginBottom: 18,
+    padding: 14,
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 2,
@@ -564,6 +725,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#23242A',
   },
+  groupAvatar: {
+    borderRadius: 10,
+  },
   statusDot: {
     position: 'absolute',
     bottom: 2,
@@ -579,8 +743,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   chatList: {
-    // Avoid flex here; contentContainerStyle with flex can prevent scrolling
-    paddingBottom: 16,
+    paddingBottom: 100,
   },
   chatTime: {
     color: '#888',
@@ -610,10 +773,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 60,
   },
   emptyText: {
     color: '#888',
     fontSize: 16,
+    marginTop: 12,
+    textAlign: 'center',
+    paddingHorizontal: 32,
   },
   actionButton: {
     flexDirection: 'row',
@@ -634,5 +801,109 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     resizeMode: 'cover',
+  },
+  // Segmented Control Tabs
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: '#23242A',
+    borderRadius: 10,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 4,
+  },
+  segmentTab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  segmentTabActive: {
+    backgroundColor: '#2196F3',
+  },
+  segmentTabText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  segmentTabTextActive: {
+    color: '#FFF',
+  },
+  // Eddy AI Assistant Pin
+  eddyPinItem: {
+    backgroundColor: '#001F3F',
+    borderWidth: 1,
+    borderColor: '#0A3D62',
+  },
+  eddyAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#2196F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  eddyBadge: {
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  eddyBadgeText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  // Floating Action Button
+  fab: {
+    position: 'absolute',
+    bottom: 120,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#2196F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 999,
+  },
+  // FAB Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
+    paddingBottom: 100,
+    paddingRight: 20,
+    alignItems: 'flex-end',
+  },
+  fabModalContent: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 16,
+    padding: 8,
+    minWidth: 180,
+  },
+  fabModalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  fabModalIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  fabModalText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

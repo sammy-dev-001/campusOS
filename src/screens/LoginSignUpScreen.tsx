@@ -2,7 +2,8 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, FlatList, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Dimensions, FlatList, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import KeyboardSafeWrapper from '../../components/KeyboardSafeWrapper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '../../components/ThemedText';
 import { Button } from '../../components/ui/Button';
@@ -255,6 +256,24 @@ const styles = StyleSheet.create({
     height: 50,
     marginLeft: 5,
   },
+  pickerModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  pickerModalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 30,
+  },
+  pickerModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(128, 128, 128, 0.3)',
+  },
 });
 
 interface MovingDoodleProps {
@@ -364,6 +383,7 @@ const LoginSignUpScreen = () => {
   const [course, setCourse] = useState('');
   const [showUniversitySuggestions, setShowUniversitySuggestions] = useState(false);
   const [universitySuggestions, setUniversitySuggestions] = useState<string[]>([]);
+  const [showLevelPicker, setShowLevelPicker] = useState(false);
 
   const router = useRouter();
   const { login, signup, user } = useAuth();
@@ -398,6 +418,8 @@ const LoginSignUpScreen = () => {
     '300 Level',
     '400 Level',
     '500 Level',
+    '600 Level',
+    '700 Level',
     'Graduate/Masters',
     'PhD'
   ];
@@ -452,6 +474,15 @@ const LoginSignUpScreen = () => {
       }
       if (!fullName.trim()) {
         newErrors.fullName = 'Full name is required';
+      }
+      if (!university.trim()) {
+        newErrors.university = 'University is required';
+      }
+      if (!level) {
+        newErrors.level = 'Academic level is required';
+      }
+      if (!course.trim()) {
+        newErrors.course = 'Course/Major is required';
       }
       if (!email.trim()) {
         newErrors.email = 'Email is required';
@@ -552,14 +583,31 @@ const LoginSignUpScreen = () => {
       setErrors({ email: 'Please enter your email address' });
       return;
     }
+
+    setLoading(true);
     try {
-      // Implement forgot password logic here
-      console.log('Forgot password for:', email);
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert(
+          'Check Your Email',
+          'If an account exists with this email, you will receive a password reset code. Check your email and use the code to reset your password.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Error', data.message || 'Failed to process request');
+      }
     } catch (error: any) {
-      setErrors((prev: Record<string, string>) => ({
-        ...prev,
-        auth: `Password reset failed: ${error.message}`
-      }));
+      console.error('Forgot password error:', error);
+      Alert.alert('Error', 'Unable to connect to the server. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -652,8 +700,7 @@ const LoginSignUpScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardSafeWrapper
       style={[styles.container, { backgroundColor }]}
     >
       <DoodleBackground />
@@ -720,7 +767,7 @@ const LoginSignUpScreen = () => {
                   <Ionicons name="school-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
                   <TextInput
                     style={[styles.input, { color: textColor }]}
-                    placeholder="University (Optional)"
+                    placeholder="University"
                     placeholderTextColor={textSecondaryColor}
                     value={university}
                     onChangeText={handleUniversityChange}
@@ -746,23 +793,74 @@ const LoginSignUpScreen = () => {
               </View>
 
               {/* Level Picker */}
-              <View style={[styles.inputContainer, { borderColor: errors.level ? '#ff4444' : borderColor, paddingHorizontal: 5 }]}>
-                <Ionicons name="bar-chart-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-                <Picker
-                  selectedValue={level}
-                  onValueChange={(itemValue) => {
-                    setLevel(itemValue);
-                    setErrors(prev => ({ ...prev, level: '' }));
-                  }}
-                  style={[styles.picker, { color: textColor }]}
-                  dropdownIconColor={textSecondaryColor}
-                >
-                  <Picker.Item label="Select Level (Optional)" value="" />
-                  {LEVELS.map((lvl) => (
-                    <Picker.Item key={lvl} label={lvl} value={lvl} />
-                  ))}
-                </Picker>
-              </View>
+              {Platform.OS === 'ios' ? (
+                // iOS: Use TouchableOpacity to open modal picker
+                <>
+                  <TouchableOpacity
+                    style={[styles.inputContainer, { borderColor: errors.level ? '#ff4444' : borderColor }]}
+                    onPress={() => setShowLevelPicker(true)}
+                  >
+                    <Ionicons name="bar-chart-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                    <ThemedText style={[styles.input, { color: level ? textColor : textSecondaryColor }]}>
+                      {level || 'Select Level'}
+                    </ThemedText>
+                    <Ionicons name="chevron-down" size={20} color={textSecondaryColor} />
+                  </TouchableOpacity>
+
+                  {/* iOS Level Picker Modal */}
+                  <Modal
+                    visible={showLevelPicker}
+                    transparent={true}
+                    animationType="slide"
+                  >
+                    <View style={styles.pickerModalOverlay}>
+                      <View style={[styles.pickerModalContent, { backgroundColor: cardColor }]}>
+                        <View style={styles.pickerModalHeader}>
+                          <TouchableOpacity onPress={() => setShowLevelPicker(false)}>
+                            <ThemedText style={{ color: theme.primary, fontSize: 16 }}>Cancel</ThemedText>
+                          </TouchableOpacity>
+                          <ThemedText style={{ fontWeight: 'bold', fontSize: 16 }}>Select Level</ThemedText>
+                          <TouchableOpacity onPress={() => setShowLevelPicker(false)}>
+                            <ThemedText style={{ color: theme.primary, fontSize: 16, fontWeight: 'bold' }}>Done</ThemedText>
+                          </TouchableOpacity>
+                        </View>
+                        <Picker
+                          selectedValue={level}
+                          onValueChange={(itemValue) => {
+                            setLevel(itemValue);
+                            setErrors(prev => ({ ...prev, level: '' }));
+                          }}
+                          itemStyle={{ color: textColor, fontSize: 18 }}
+                        >
+                          <Picker.Item label="Select Level" value="" />
+                          {LEVELS.map((lvl) => (
+                            <Picker.Item key={lvl} label={lvl} value={lvl} />
+                          ))}
+                        </Picker>
+                      </View>
+                    </View>
+                  </Modal>
+                </>
+              ) : (
+                // Android: Use inline picker
+                <View style={[styles.inputContainer, { borderColor: errors.level ? '#ff4444' : borderColor, paddingHorizontal: 5 }]}>
+                  <Ionicons name="bar-chart-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                  <Picker
+                    selectedValue={level}
+                    onValueChange={(itemValue) => {
+                      setLevel(itemValue);
+                      setErrors(prev => ({ ...prev, level: '' }));
+                    }}
+                    style={[styles.picker, { color: textColor }]}
+                    dropdownIconColor={textSecondaryColor}
+                  >
+                    <Picker.Item label="Select Level" value="" />
+                    {LEVELS.map((lvl) => (
+                      <Picker.Item key={lvl} label={lvl} value={lvl} />
+                    ))}
+                  </Picker>
+                </View>
+              )}
               {errors.level && <ThemedText style={styles.fieldError}>{errors.level}</ThemedText>}
 
               {/* Course/Major Field */}
@@ -770,7 +868,7 @@ const LoginSignUpScreen = () => {
                 <Ionicons name="book-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { color: textColor }]}
-                  placeholder="Course/Major (Optional)"
+                  placeholder="Course/Major"
                   placeholderTextColor={textSecondaryColor}
                   value={course}
                   onChangeText={(text) => {
@@ -963,7 +1061,7 @@ const LoginSignUpScreen = () => {
           </View>
         </View>
       )}
-    </KeyboardAvoidingView>
+    </KeyboardSafeWrapper>
   );
 };
 

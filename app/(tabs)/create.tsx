@@ -2,11 +2,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { ResizeMode, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useUser } from '../../src/contexts/UserContext';
 import { useTheme } from '../../src/contexts/NewThemeContext';
+
+// Video compression constants
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const WARNING_VIDEO_SIZE = 25 * 1024 * 1024; // 25MB
 
 // Helper functions
 function getInitials(name?: string) {
@@ -27,11 +32,20 @@ function getAvatarColor(name: string) {
   return colors[Math.abs(hash) % colors.length];
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 // Component
 const CreatePostScreen = () => {
   const [content, setContent] = useState('');
-  const [media, setMedia] = useState<{ uri: string; type: 'image' | 'video' } | null>(null);
+  const [media, setMedia] = useState<{ uri: string; type: 'image' | 'video'; fileSize?: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const router = useRouter();
   const { user } = useUser();
   const { theme } = useTheme();
@@ -44,22 +58,128 @@ const CreatePostScreen = () => {
         return;
       }
 
+      // First, pick with original quality to check size
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: false,
         quality: 1,
+        videoMaxDuration: 300, // 5 minutes max
       });
 
       if (!result.canceled && result.assets.length > 0) {
         const asset = result.assets[0];
+        const isVideo = asset.type === 'video';
+
+        // Get file size
+        let fileSize = 0;
+        try {
+          const fileInfo = await FileSystem.getInfoAsync(asset.uri);
+          if (fileInfo.exists && 'size' in fileInfo) {
+            fileSize = fileInfo.size || 0;
+          }
+        } catch (e) {
+          console.warn('Could not get file size:', e);
+        }
+
+        console.log(`[CreatePost] Selected ${asset.type}, size: ${formatFileSize(fileSize)}`);
+
+        // Check if video is too large
+        if (isVideo && fileSize > MAX_VIDEO_SIZE) {
+          Alert.alert(
+            'Video Too Large',
+            `Your video is ${formatFileSize(fileSize)}. Maximum allowed is ${formatFileSize(MAX_VIDEO_SIZE)}.\n\nWould you like to select a compressed version?`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Select & Compress',
+                onPress: () => pickCompressedVideo(),
+              },
+            ]
+          );
+          return;
+        }
+
+        // Warn for large files
+        if (isVideo && fileSize > WARNING_VIDEO_SIZE) {
+          Alert.alert(
+            'Large Video',
+            `This video is ${formatFileSize(fileSize)}. Upload may take a while.\n\nWould you like to continue or select a compressed version?`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Compress', onPress: () => pickCompressedVideo() },
+              {
+                text: 'Continue',
+                onPress: () => setMedia({ uri: asset.uri, type: 'video', fileSize })
+              },
+            ]
+          );
+          return;
+        }
+
         setMedia({
           uri: asset.uri,
-          type: asset.type as 'image' | 'video'
+          type: asset.type as 'image' | 'video',
+          fileSize,
         });
       }
     } catch (error) {
       console.error('Error picking media:', error);
       Alert.alert('Error', 'Failed to pick media');
+    }
+  };
+
+  const pickCompressedVideo = async () => {
+    try {
+      setIsCompressing(true);
+
+      // Pick with compression options
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        allowsEditing: true, // Enable editing for trimming
+        quality: 0.5, // Lower quality
+        videoMaxDuration: 60, // Limit to 1 minute
+        videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+      });
+
+      if (!result.canceled && result.assets.length > 0) {
+        const asset = result.assets[0];
+
+        // Get compressed file size
+        let fileSize = 0;
+        try {
+          const fileInfo = await FileSystem.getInfoAsync(asset.uri);
+          if (fileInfo.exists && 'size' in fileInfo) {
+            fileSize = fileInfo.size || 0;
+          }
+        } catch (e) {
+          console.warn('Could not get file size:', e);
+        }
+
+        console.log(`[CreatePost] Compressed video size: ${formatFileSize(fileSize)}`);
+
+        // Still check if it's acceptable
+        if (fileSize > MAX_VIDEO_SIZE) {
+          Alert.alert(
+            'Still Too Large',
+            `The video is still ${formatFileSize(fileSize)}.\n\nPlease try:\n• Trimming to a shorter length\n• Recording at lower resolution\n• Using a different video`,
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+
+        setMedia({
+          uri: asset.uri,
+          type: 'video',
+          fileSize,
+        });
+
+        Alert.alert('Success', `Video compressed to ${formatFileSize(fileSize)}`);
+      }
+    } catch (error) {
+      console.error('Error picking compressed video:', error);
+      Alert.alert('Error', 'Failed to compress video');
+    } finally {
+      setIsCompressing(false);
     }
   };
 

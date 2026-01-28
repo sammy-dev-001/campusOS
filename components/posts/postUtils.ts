@@ -68,7 +68,7 @@ export function formatMillis(ms: number): string {
 }
 
 /**
- * Format a timestamp as a relative time string
+ * Format a timestamp as a short relative time string (e.g., "2h", "3d", "1w")
  */
 export function formatTimestamp(timestamp: string): string {
     if (!timestamp) return '';
@@ -79,28 +79,26 @@ export function formatTimestamp(timestamp: string): string {
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 0) {
-        return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        return 'now';
     } else if (diffInSeconds < 60) {
-        return 'just now';
+        return 'now';
     } else if (diffInSeconds < 3600) {
         const minutes = Math.floor(diffInSeconds / 60);
-        return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        return `${minutes}m`;
     } else if (diffInSeconds < 86400) {
         const hours = Math.floor(diffInSeconds / 3600);
-        return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        return `${hours}h`;
     } else if (diffInSeconds < 604800) {
         const days = Math.floor(diffInSeconds / 86400);
-        return `${days} day${days > 1 ? 's' : ''} ago`;
+        return `${days}d`;
+    } else if (diffInSeconds < 2592000) { // Less than 30 days
+        const weeks = Math.floor(diffInSeconds / 604800);
+        return `${weeks}w`;
     } else {
+        // For older posts, show date
         return date.toLocaleDateString('en-US', {
-            year: 'numeric',
             month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            day: 'numeric'
         });
     }
 }

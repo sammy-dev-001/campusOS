@@ -5,12 +5,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AnnouncementProvider } from '../src/contexts/AnnouncementContext';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { ChatProvider } from '../src/contexts/ChatContext';
+import { DocumentProvider } from '../src/contexts/DocumentContext';
 import { FinanceProvider } from '../src/contexts/FinanceContext';
 import { GpaProvider } from '../src/contexts/GpaContext';
 import { ThemeProvider, useTheme } from '../src/contexts/NewThemeContext';
 import { NotificationProvider } from '../src/contexts/NotificationContext';
 import { TimetableProvider } from '../src/contexts/TimetableContext';
 import { UserProvider } from '../src/contexts/UserContext';
+
 
 // Error boundary component
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
@@ -133,9 +135,11 @@ const App = () => {
                     <GpaProvider>
                       <TimetableProvider>
                         <AnnouncementProvider>
-                          <InitialAuthCheck>
-                            <AuthContent />
-                          </InitialAuthCheck>
+                          <DocumentProvider>
+                            <InitialAuthCheck>
+                              <AuthContent />
+                            </InitialAuthCheck>
+                          </DocumentProvider>
                         </AnnouncementProvider>
                       </TimetableProvider>
                     </GpaProvider>

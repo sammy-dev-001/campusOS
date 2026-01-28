@@ -32,68 +32,31 @@ interface ClassItem {
   venue?: string;
 }
 
-const studyGroups = [
-  {
-    id: 'cs-majors-1',
-    icon: 'flower-tulip-outline',
-    title: 'CS Majors Club',
-    members: 15,
-    description: 'Discussions, coding challenges & tech talks',
-    iconColor: '#ffb3ba', // A pinkish color for the tulip
-  },
-  {
-    id: 'creative-writing-2',
-    icon: 'creation',
-    title: 'Creative Writing',
-    members: 8,
-    description: 'Share your stories and get feedback.',
-    iconColor: '#8ecae6', // A blue/teal color
-  },
-];
-
-interface UserProfile {
-  id: number;
-  username: string;
-  display_name: string;
-  firstName?: string;
-  lastName?: string;
-  profile_picture?: string;
-  email?: string;
-  bio?: string;
-}
-
-// Constants
-const ICON_SIZE = 24;
-
-// Navigation grid items
-const navGridItems = [
-  { label: 'Tutor or Study Group', icon: 'account-group-outline' },
-  { label: 'Time Table', icon: 'calendar-month-outline' },
-  { label: 'Notes and Past questions', icon: 'book-open-outline' },
-  { label: 'Polls and surveys', icon: 'poll' }
-];
-
-// Quick actions
+// Quick Actions - Unified 2x2 Grid (MVP Priority)
 const quickActions = [
   {
     label: 'Announcements',
     icon: 'megaphone-outline',
     color: '#FF6B6B',
+    route: '/announcements',
   },
   {
-    label: 'Events',
+    label: 'Time Table',
     icon: 'calendar-outline',
-    color: '#FFD93D',
+    color: '#4D96FF',
+    route: '/time-table',
   },
   {
     label: 'GPA Tracker',
     icon: 'school-outline',
-    color: '#4D96FF',
+    color: '#6BCB77',
+    route: '/gpa-tracker',
   },
   {
-    label: 'Menu',
-    icon: 'menu-outline',
-    color: '#6BCB77',
+    label: 'Notes & Past Qs',
+    icon: 'book-outline',
+    color: '#FFD93D',
+    route: '/notes-past-questions',
   },
 ];
 
@@ -109,9 +72,6 @@ export default function HomeScreen() {
     if (!user) return 'Student';
     return user.display_name || user.username || 'Student';
   }, [user]);
-
-  // Get today's classes - this is a mock function
-  const getTodaysClasses = () => [];
 
   // Use theme values directly from the theme object
   const themeColors = React.useMemo(() => ({
@@ -129,10 +89,7 @@ export default function HomeScreen() {
   // Force refresh when the refresh parameter changes
   useEffect(() => {
     if (refresh) {
-      // Force a re-render by updating the refresh key
       setRefreshKey(prev => prev + 1);
-
-      // Remove the refresh parameter from the URL
       const newParams = { ...searchParams };
       delete newParams.refresh;
       router.setParams(newParams);
@@ -144,43 +101,8 @@ export default function HomeScreen() {
   const { getTodaysClasses: getTodaysClassesFn } = useTimetable();
   const todayClasses = useMemo(() => getTodaysClassesFn(), [getTodaysClassesFn]);
 
-  const handleQuickActionPress = (actionLabel: string) => {
-    switch (actionLabel) {
-      case 'Announcements':
-        router.push('/announcements');
-        break;
-      case 'Events':
-        router.push('/events');
-        break;
-      case 'GPA Tracker':
-        router.push('/gpa-tracker');
-        break;
-      case 'Menu':
-        router.push('/menu');
-        break;
-      default:
-        console.log('No route defined for:', actionLabel);
-    }
-  };
-
-
-  const handleNavGridPress = (label: string) => {
-    switch (label) {
-      case 'Tutor or Study Group':
-        router.push('/tutor-study-group');
-        break;
-      case 'Time Table':
-        router.push('/time-table');
-        break;
-      case 'Notes and Past questions':
-        router.push('/notes-past-questions');
-        break;
-      case 'Polls and surveys':
-        router.push('/polls-surveys');
-        break;
-      default:
-        console.log('No route defined for:', label);
-    }
+  const handleQuickActionPress = (route: string) => {
+    router.push(route as any);
   };
 
   const getInitials = (name: string) => {
@@ -192,12 +114,11 @@ export default function HomeScreen() {
       .substring(0, 2);
   };
 
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       >
         <View style={styles.contentContainer}>
           {/* Header */}
@@ -222,44 +143,34 @@ export default function HomeScreen() {
 
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={themeColors.secondary} style={{ marginRight: 10 }} />
+            <Ionicons name="search" size={20} color="#888888" style={{ marginRight: 10 }} />
             <TextInput
               placeholder="Search courses, groups..."
-              placeholderTextColor={themeColors.secondary}
+              placeholderTextColor="#888888"
               style={[styles.searchInput, { color: themeColors.text }]}
             />
           </View>
 
-
-          {/* Quick Actions Grid */}
-          <View style={styles.quickActionsGrid}>
-            {quickActions.map((action) => (
-              <TouchableOpacity
-                key={action.label}
-                style={styles.quickActionItem}
-                onPress={() => handleQuickActionPress(action.label)}
-              >
-                <View style={styles.quickActionIconContainer}>
-                  <Ionicons name={action.icon as any} size={ICON_SIZE} color={action.color} />
-                </View>
-                <ThemedText
-                  style={styles.quickActionLabel}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.7}
-                >
-                  {action.label}
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
+          {/* Today's Classes - Live Data */}
+          <View style={styles.sectionHeader}>
+            <ThemedText style={styles.sectionTitle}>Today's Classes</ThemedText>
+            <TouchableOpacity
+              style={styles.sectionEditButton}
+              onPress={() => router.push('/add-class')}
+            >
+              <Ionicons name="add" size={20} color="#4D96FF" />
+              <Text style={styles.sectionEditText}>Add</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Today's Classes */}
-          <ThemedText style={styles.sectionTitle}>Today's Classes</ThemedText>
           {todayClasses.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.classesScroll}>
               {todayClasses.map((item) => (
-                <View key={item.id} style={styles.classCard}>
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.classCard}
+                  activeOpacity={0.7}
+                  onPress={() => console.log('Navigate to class details:', item.id)}
+                >
                   <View style={styles.classTimeContainer}>
                     <Ionicons name="time-outline" size={16} color="#A7C7E7" />
                     <Text style={styles.classTime}>{item.time}</Text>
@@ -272,18 +183,8 @@ export default function HomeScreen() {
                     <Ionicons name="location-outline" size={16} color={themeColors.secondary} />
                     <Text style={styles.classLocation}>{item.venue}</Text>
                   </View>
-                  <TouchableOpacity style={styles.classButton}>
-                    <Text style={styles.classButtonText}>Details</Text>
-                  </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               ))}
-              <TouchableOpacity
-                style={styles.addClassCard}
-                onPress={() => router.push('/add-class')}
-              >
-                <Ionicons name="add-circle-outline" size={40} color="#2196F3" />
-                <Text style={styles.addClassText}>Add Class</Text>
-              </TouchableOpacity>
             </ScrollView>
           ) : (
             <View style={styles.noClassesContainer}>
@@ -297,37 +198,25 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* Central Nav Hub */}
-          <View style={styles.navHubContainer}>
-            <View style={styles.navGrid}>
-              {navGridItems.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.navGridItem}
-                  onPress={() => handleNavGridPress(item.label)}
-                >
-                  <MaterialCommunityIcons name={item.icon as any} size={32} color={themeColors.text} />
-                  <Text style={styles.navGridLabel}>{item.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity
-              style={styles.centerButtonContainer}
-              onPress={() => router.push('/market-place')}
-            >
-              <LinearGradient
-                colors={["#4D96FF", "#6BCB77"]}
-                style={styles.centerButton}
+          {/* Quick Actions - Unified 2x2 Grid */}
+          <ThemedText style={[styles.sectionTitle, styles.sectionTitleStandalone]}>Quick Actions</ThemedText>
+          <View style={styles.quickActionsGrid}>
+            {quickActions.map((action) => (
+              <TouchableOpacity
+                key={action.label}
+                style={styles.quickActionCard}
+                onPress={() => handleQuickActionPress(action.route)}
               >
-                <MaterialCommunityIcons name="cart-outline" size={40} color="#fff" />
-                <Text style={styles.centerButtonText}>Campus</Text>
-                <Text style={styles.centerButtonSubText}>market place</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <View style={[styles.quickActionIconContainer, { backgroundColor: `${action.color}20` }]}>
+                  <Ionicons name={action.icon as any} size={28} color={action.color} />
+                </View>
+                <ThemedText style={styles.quickActionLabel}>{action.label}</ThemedText>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          {/* Campus AI Assistant */}
-          <ThemedText style={styles.sectionTitle}>EduFi AI Assistant</ThemedText>
+          {/* Campus AI Assistant - Eddy */}
+          <ThemedText style={[styles.sectionTitle, styles.sectionTitleStandalone]}>EduFi AI Assistant</ThemedText>
           <LinearGradient
             colors={["#0B3C5D", "#4CAF50"]}
             start={{ x: 0, y: 0 }}
@@ -347,8 +236,8 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </LinearGradient>
 
-          {/* Campus Map */}
-          <ThemedText style={styles.sectionTitle}>Explore Campus</ThemedText>
+          {/* Campus Map Banner */}
+          <ThemedText style={[styles.sectionTitle, styles.sectionTitleStandalone]}>Explore Campus</ThemedText>
           <TouchableOpacity
             style={styles.campusMapCard}
             onPress={() => router.push('/campus-map')}
@@ -386,75 +275,7 @@ interface ThemeColors {
   secondary: string;
 }
 
-interface Styles {
-  container: ViewStyle;
-  contentContainer: ViewStyle;
-  section: ViewStyle;
-  sectionHeader: ViewStyle;
-  sectionTitle: TextStyle;
-  headerLeft: ViewStyle;
-  logoText: TextStyle;
-  avatar: ViewStyle;
-  avatarImage: ImageStyle;
-  avatarText: TextStyle;
-  searchContainer: ViewStyle;
-  searchIcon: ViewStyle;
-  searchInput: TextStyle;
-  quickActionsGrid: ViewStyle;
-  quickActionItem: ViewStyle;
-  quickActionIconContainer: ViewStyle;
-  quickActionLabel: TextStyle;
-  classesScroll: ViewStyle;
-  classCard: ViewStyle;
-  classTimeContainer: ViewStyle;
-  classTime: TextStyle;
-  classTitle: TextStyle;
-  classCourse: TextStyle;
-  classLocationContainer: ViewStyle;
-  classLocation: TextStyle;
-  classButton: ViewStyle;
-  classButtonText: TextStyle;
-  addClassCard: ViewStyle;
-  addClassText: TextStyle;
-  noClassesContainer: ViewStyle;
-  noClassesText: TextStyle;
-  addSubjectsButton: ViewStyle;
-  addSubjectsButtonText: TextStyle;
-  navHubContainer: ViewStyle;
-  navGrid: ViewStyle;
-  navGridItem: ViewStyle;
-  navGridLabel: TextStyle;
-  centerButtonContainer: ViewStyle;
-  centerButton: ViewStyle;
-  centerButtonText: TextStyle;
-  centerButtonSubText: TextStyle;
-  aiAssistantCard: ViewStyle;
-  aiIconContainer: ViewStyle;
-  aiTitle: TextStyle;
-  aiSubtitle: TextStyle;
-  aiButton: ViewStyle;
-  aiButtonText: TextStyle;
-  studyGroupsGrid: ViewStyle;
-  studyGroupCard: ViewStyle;
-  studyGroupHeader: ViewStyle;
-  studyGroupIcon: ViewStyle;
-  studyGroupTitle: TextStyle;
-  studyGroupInfo: ViewStyle;
-  studyGroupMeta: TextStyle;
-  studyGroupDescription: TextStyle;
-  studyGroupButton: ViewStyle;
-  studyGroupButtonText: TextStyle;
-  header: ViewStyle;
-  campusMapCard: ViewStyle;
-  campusMapGradient: ViewStyle;
-  campusMapContent: ViewStyle;
-  campusMapIcon: ViewStyle;
-  campusMapInfo: ViewStyle;
-  campusMapTitle: TextStyle;
-  campusMapSubtitle: TextStyle;
-}
-
-const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<Styles>({
+const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.background,
@@ -464,23 +285,14 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<S
     width: '100%',
     maxWidth: isDesktop ? 1200 : '100%',
   } as ViewStyle,
-  section: {
-    marginBottom: 24,
-  } as ViewStyle,
-  sectionHeader: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 5,
   } as ViewStyle,
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.text,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  } as TextStyle,
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -515,61 +327,60 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<S
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1E1E1E',
-    borderRadius: 10,
+    borderRadius: 12,
     marginHorizontal: 20,
     paddingHorizontal: 15,
     height: 50,
     marginTop: 10,
+    marginBottom: 20,
   } as ViewStyle,
-  searchIcon: {
-    marginRight: 10,
-  } as any, // Using any to bypass the Ionicons style type issue
   searchInput: {
     flex: 1,
     color: theme.text,
     fontSize: 16,
     padding: 0,
-    userSelect: 'text' as const,
   } as TextStyle,
-  quickActionsGrid: {
+  sectionHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: isDesktop ? 'flex-start' : 'space-around',
-    marginHorizontal: 10,
-    marginTop: 25,
-  } as ViewStyle,
-  quickActionItem: {
-    width: isDesktop ? 'auto' : '23%',
-    flexGrow: isDesktop ? 1 : 0,
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    marginHorizontal: isDesktop ? 10 : 0,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    marginTop: 8,
   } as ViewStyle,
-  quickActionIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 15,
-    backgroundColor: '#1E1E1E',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  } as ViewStyle,
-  quickActionLabel: {
-    fontSize: 12,
-    textAlign: 'center',
-    color: theme.secondary,
-    flexShrink: 1,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.text,
   } as TextStyle,
+  sectionTitleStandalone: {
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    marginTop: 20,
+  } as ViewStyle,
+  sectionEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  } as ViewStyle,
+  sectionEditText: {
+    color: '#4D96FF',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
+  } as TextStyle,
+  // Today's Classes styles
   classesScroll: {
     paddingLeft: 20,
     paddingRight: 10,
   } as ViewStyle,
   classCard: {
     backgroundColor: '#1E1E1E',
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 15,
-    width: 250,
-    marginRight: 15,
+    width: 220,
+    marginRight: 12,
   } as ViewStyle,
   classTimeContainer: {
     flexDirection: 'row',
@@ -579,120 +390,130 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<S
     paddingVertical: 5,
     paddingHorizontal: 10,
     alignSelf: 'flex-start',
-    marginBottom: 15,
+    marginBottom: 12,
   } as ViewStyle,
   classTime: {
     color: '#A7C7E7',
     marginLeft: 5,
     fontWeight: 'bold',
+    fontSize: 15,
   } as TextStyle,
   classTitle: {
     color: theme.text,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 4,
   } as TextStyle,
   classCourse: {
     color: theme.secondary,
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 14,
+    marginBottom: 8,
   } as TextStyle,
   classLocationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 'auto',
-    marginBottom: 15,
+    marginBottom: 12,
   } as ViewStyle,
   classLocation: {
     color: theme.secondary,
-    fontSize: 14,
+    fontSize: 13,
     marginLeft: 5,
   } as TextStyle,
   classButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4D96FF',
     borderRadius: 10,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
   } as ViewStyle,
   classButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    fontWeight: '600',
+    fontSize: 14,
   } as TextStyle,
-  navHubContainer: {
-    marginHorizontal: 20,
-    marginTop: 30,
-    height: 280,
+  addClassCard: {
+    width: 140,
+    borderRadius: 16,
+    backgroundColor: '#1E1E1E',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginRight: 15,
+    borderWidth: 1,
+    borderColor: '#333',
+    borderStyle: 'dashed',
   } as ViewStyle,
-  navGrid: {
+  addClassText: {
+    color: '#2196F3',
+    marginTop: 8,
+    fontWeight: '500',
+    fontSize: 14,
+  } as TextStyle,
+  noClassesContainer: {
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 16,
+    marginHorizontal: 20,
+  } as ViewStyle,
+  noClassesText: {
+    color: theme.text,
+    marginBottom: 16,
+    fontSize: 16,
+  } as TextStyle,
+  addSubjectsButton: {
+    backgroundColor: '#4D96FF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+  } as ViewStyle,
+  addSubjectsButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 15,
+  } as TextStyle,
+  // Quick Actions - 2x2 Grid
+  quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    width: '100%',
+    marginHorizontal: 20,
+    marginBottom: 16,
+    marginTop: 8,
   } as ViewStyle,
-  navGridItem: {
+  quickActionCard: {
     width: '48%',
-    height: 120,
     backgroundColor: '#1E1E1E',
-    borderRadius: 20,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  } as ViewStyle,
+  quickActionIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
-    marginBottom: '4%' as any, // Using any for percentage value
+    marginBottom: 10,
   } as ViewStyle,
-  navGridLabel: {
-    color: theme.text,
-    textAlign: 'center',
-    marginTop: 10,
+  quickActionLabel: {
     fontSize: 14,
-    fontWeight: '600'
+    fontWeight: '600',
+    textAlign: 'center',
+    color: theme.text,
   } as TextStyle,
-  centerButtonContainer: {
-    position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 10,
-  } as ViewStyle,
-  centerButton: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 75,
-    justifyContent: 'center',
-    alignItems: 'center',
-  } as ViewStyle,
-  centerButtonText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 5,
-  } as TextStyle,
-  centerButtonSubText: {
-    color: '#fff',
-    fontSize: 12,
-    textTransform: 'lowercase',
-  } as TextStyle,
+  // AI Assistant Card
   aiAssistantCard: {
     marginHorizontal: 20,
     borderRadius: 20,
-    padding: 20,
+    padding: 24,
     alignItems: 'center',
     marginBottom: 20,
   } as ViewStyle,
   aiIconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 50,
-    padding: 15,
-    marginBottom: 10,
+    padding: 16,
+    marginBottom: 12,
   } as ViewStyle,
   aiTitle: {
     fontSize: 24,
@@ -700,128 +521,28 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<S
     color: '#fff',
   } as TextStyle,
   aiSubtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 20,
+    marginBottom: 16,
+    textAlign: 'center',
   } as TextStyle,
   aiButton: {
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 10,
+    paddingHorizontal: 32,
+    borderRadius: 12,
   } as ViewStyle,
   aiButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    fontWeight: '600',
+    fontSize: 15,
   } as TextStyle,
-  studyGroupsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginHorizontal: 20,
-  } as ViewStyle,
-  studyGroupCard: {
-    width: '48%',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 20,
-    padding: 15,
-    marginBottom: 15,
-  } as ViewStyle,
-  studyGroupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  } as ViewStyle,
-  studyGroupIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  } as ViewStyle,
-  studyGroupTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.text,
-  } as TextStyle,
-  studyGroupInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-  } as ViewStyle,
-  studyGroupMeta: {
-    color: theme.secondary,
-    marginLeft: 5,
-  } as TextStyle,
-  studyGroupDescription: {
-    color: theme.secondary,
-    fontSize: 14,
-    marginBottom: 15,
-    height: 40, // for consistent card height
-  } as TextStyle,
-  studyGroupButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  } as ViewStyle,
-  studyGroupButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  } as TextStyle,
-  noClassesContainer: {
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    marginHorizontal: 20,
-  } as ViewStyle,
-  noClassesText: {
-    color: theme.text,
-    marginBottom: 15,
-    fontSize: 16,
-  } as TextStyle,
-  addSubjectsButton: {
-    backgroundColor: '#4D96FF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  } as ViewStyle,
-  addSubjectsButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  } as TextStyle,
-  addClassCard: {
-    width: 250,
-    height: 120,
-    borderRadius: 20,
-    backgroundColor: '#1E1E1E',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  } as ViewStyle,
-  addClassText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  } as TextStyle,
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    backgroundColor: theme.background,
-  } as ViewStyle,
+  // Campus Map Banner
   campusMapCard: {
     marginHorizontal: 20,
-    marginBottom: 20,
     borderRadius: 16,
     overflow: 'hidden',
+    marginBottom: 20,
   } as ViewStyle,
   campusMapGradient: {
     padding: 16,
@@ -831,25 +552,25 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create<S
     alignItems: 'center',
   } as ViewStyle,
   campusMapIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 14,
   } as ViewStyle,
   campusMapInfo: {
     flex: 1,
-    marginLeft: 16,
   } as ViewStyle,
   campusMapTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '600',
     color: '#fff',
+    marginBottom: 4,
   } as TextStyle,
   campusMapSubtitle: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
+    color: 'rgba(255, 255, 255, 0.8)',
   } as TextStyle,
 });

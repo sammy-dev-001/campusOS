@@ -5,7 +5,7 @@ import { ResizeMode, Video } from 'expo-av';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActionSheetIOS, ActivityIndicator, Alert, Animated, FlatList, Image, Modal, PanResponder, PanResponderInstance, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, Animated, FlatList, Image, Modal, PanResponder, PanResponderInstance, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -82,6 +82,7 @@ export default function PostScreen() {
   // Mute state per post
   const [mutedMap, setMutedMap] = useState<{ [key: number]: boolean }>({});
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [expandedPosts, setExpandedPosts] = useState<{ [key: number]: boolean }>({});
   const [visibleItems, setVisibleItems] = useState<{ id: number, isVideo: boolean }[]>([]);
   const isFocused = useIsFocused();
 
@@ -389,7 +390,11 @@ export default function PostScreen() {
   };
 
   const handleComment = async (postId: number, comment: string) => {
+    console.log('[handleComment] user object:', user);
+    console.log('[handleComment] user.id:', user?.id);
+
     if (!user?.id) {
+      console.log('[handleComment] Auth check failed - user:', user, 'user.id:', user?.id);
       Alert.alert('Error', 'Please log in to comment on posts.');
       return false;
     }
@@ -575,15 +580,6 @@ export default function PostScreen() {
 
   const fetchComments = async (postId: number) => {
     try {
-      // Check if user is authenticated
-      const token = await AsyncStorage.getItem('userToken');
-      if (!token) {
-        console.warn('No authentication token found. User may need to log in again.');
-        // You might want to trigger a re-authentication flow here
-        Alert.alert('Authentication Required', 'Please log in to view comments');
-        return;
-      }
-
       console.log(`[API] Fetching comments for post ${postId}`);
       const response = await api.posts.getComments(postId);
       const commentsData = Array.isArray(response) ? response : response?.data?.comments || [];
@@ -772,32 +768,75 @@ export default function PostScreen() {
     };
     // Use the first available date field
     const postTimestamp = item.timestamp || item.createdAt || item.publishedAt || '';
+    const displayName = (item.author?.display_name || item.author?.username || item.username || '').trim();
+    const username = (item.author?.username || item.username || '').trim();
+    // Show @username handle only when display_name is genuinely different from username
+    const shouldShowHandle = displayName !== '' && username !== '' && displayName.toLowerCase() !== username.toLowerCase();
+
     return (
-      <View style={[styles.postCard, { backgroundColor: '#1E1E1E' }]}>
-        <View style={styles.postHeaderRow}>
+      <Pressable style={styles.postContainer} onPress={() => {
+        // TODO: Navigate to post detail screen
+        console.log('Post tapped:', item.id);
+      }}>
+        {/* Thread-style header: avatar + inline name + handle + time */}
+        <View style={styles.threadHeader}>
           {item.author?.profile_picture ? (
-            <Image source={{ uri: item.author.profile_picture }} style={styles.postAvatar} />
+            <Image source={{ uri: item.author.profile_picture }} style={styles.threadAvatar} />
           ) : (
-            <View style={[styles.postAvatar, { backgroundColor: avatarColor }]}>
-              <Text style={styles.postAvatarText}>{initials}</Text>
+            <View style={[styles.threadAvatar, { backgroundColor: avatarColor }]}>
+              <Text style={styles.threadAvatarText}>{initials}</Text>
             </View>
           )}
-          <View style={{ flex: 1 }}>
-            <Text style={styles.postName}>{item.author?.display_name || item.author?.username || item.username}</Text>
-            <Text style={styles.postTime}>{formatTimestamp(postTimestamp)}</Text>
+
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+              <Text style={styles.threadName}>{displayName || username}</Text>
+              {shouldShowHandle && <Text style={styles.threadHandle}> @{username}</Text>}
+              <Text style={styles.threadTime}> · {formatTimestamp(postTimestamp)}</Text>
+            </View>
           </View>
-          <TouchableOpacity onPress={() => {
-            if (user?.id === item.userId) {
+
+          {user?.id === item.userId && (
+            <TouchableOpacity onPress={(e) => {
+              e.stopPropagation();
               showPostActionSheet(item);
-            }
-          }}>
-            <MaterialCommunityIcons name="dots-horizontal" size={22} color="#888" />
-          </TouchableOpacity>
+            }}>
+              <MaterialCommunityIcons name="dots-horizontal" size={18} color="#888" />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* If image, show image first, then content below */}
+        {/* Content FIRST - with truncation */}
+        {contentWithoutTags.length > 0 && (
+          <View style={{ marginTop: 4 }}>
+            <Text
+              style={styles.threadContent}
+              numberOfLines={expandedPosts[item.id] ? undefined : 5}
+            >
+              {contentWithoutTags}
+            </Text>
+            {contentWithoutTags.split('\n').length > 5 && !expandedPosts[item.id] && (
+              <TouchableOpacity onPress={() => setExpandedPosts(prev => ({ ...prev, [item.id]: true }))}>
+                <Text style={styles.readMore}>Read more</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Show hashtags if any */}
+        {hashtags.length > 0 && (
+          <View style={styles.hashtagRow}>
+            {hashtags.map((tag, idx) => (
+              <View key={tag + idx} style={[styles.hashtagChip, { backgroundColor: idx % 2 === 0 ? '#232323' : '#222D44' }]}>
+                <Text style={styles.hashtagText}>#{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Media AFTER content (ONLY if exists) */}
         {item.media_url && (
-          <>
+          <View style={{ marginTop: 8 }}>
             {item.media_url?.match(/\.(mp4|mov|avi|mkv)$/i) ? (
               <View style={{ position: 'relative' }}>
                 <TouchableWithoutFeedback
@@ -820,8 +859,8 @@ export default function PostScreen() {
                   <Video
                     ref={ref => { videoRefs.current[item.id] = ref; }}
                     source={{ uri: item.media_url! }}
-                    style={[styles.postImage, { backgroundColor: 'transparent' }]}
-                    resizeMode={ResizeMode.CONTAIN}
+                    style={styles.threadMedia}
+                    resizeMode={ResizeMode.COVER}
                     isLooping
                     shouldPlay={playingVideoId === item.id}
                     useNativeControls={USE_NATIVE_FEED_CONTROLS}
@@ -925,45 +964,58 @@ export default function PostScreen() {
                 )}
               </View>
             ) : (
-              <TouchableOpacity activeOpacity={0.9} onPress={() => openFullscreen(item)}>
-                <Image source={{ uri: item.media_url! }} style={styles.postImage} resizeMode="contain" />
+              <TouchableOpacity activeOpacity={0.9} onPress={(e) => {
+                e.stopPropagation();
+                openFullscreen(item);
+              }}>
+                <Image source={{ uri: item.media_url! }} style={styles.threadMedia} resizeMode="cover" />
               </TouchableOpacity>
             )}
-          </>
-        )}
-
-        {/* Show post content if it exists */}
-        {contentWithoutTags.length > 0 && (
-          <Text style={styles.postContent}>{contentWithoutTags}</Text>
-        )}
-
-        {/* Show hashtags if any */}
-        {hashtags.length > 0 && (
-          <View style={styles.hashtagRow}>
-            {hashtags.map((tag, idx) => (
-              <View key={tag + idx} style={[styles.hashtagChip, { backgroundColor: idx % 2 === 0 ? '#232323' : '#222D44' }]}>
-                <Text style={styles.hashtagText}>#{tag}</Text>
-              </View>
-            ))}
           </View>
         )}
 
-        {/* Post actions */}
-        <View style={styles.postActionsRow}>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => handleLike(item.id)}>
-            <Ionicons name={item.is_liked ? 'heart' : 'heart-outline'} size={20} color={item.is_liked ? '#FF6B6B' : '#888'} />
-            <Text style={styles.actionCount}>{item.likes_count}</Text>
+        {/* Thread-style action row */}
+        <View style={styles.threadActions}>
+          {/* Like */}
+          <TouchableOpacity style={styles.threadActionBtn} onPress={(e) => {
+            e.stopPropagation();
+            handleLike(item.id);
+          }}>
+            <Ionicons
+              name={item.is_liked ? 'heart' : 'heart-outline'}
+              size={18}
+              color={item.is_liked ? '#FF6B6B' : '#71767B'}
+            />
+            <Text style={[styles.threadActionText, item.is_liked && { color: '#FF6B6B' }]}>
+              {item.likes_count}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => showCommentsModal(item)}>
-            <Ionicons name="chatbubble-outline" size={20} color="#888" />
-            <Text style={styles.actionCount}>{item.comments_count}</Text>
+
+          {/* Comment */}
+          <TouchableOpacity style={styles.threadActionBtn} onPress={(e) => {
+            e.stopPropagation();
+            showCommentsModal(item);
+          }}>
+            <Ionicons name="chatbubble-outline" size={18} color="#71767B" />
+            <Text style={styles.threadActionText}>{item.comments_count}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Ionicons name="share-outline" size={20} color="#888" />
-            <Text style={styles.actionCount}>12</Text>
+
+          {/* Repost */}
+          <TouchableOpacity style={styles.threadActionBtn} onPress={(e) => {
+            e.stopPropagation();
+          }}>
+            <Ionicons name="repeat-outline" size={18} color="#71767B" />
+            <Text style={styles.threadActionText}>0</Text>
+          </TouchableOpacity>
+
+          {/* Share */}
+          <TouchableOpacity style={styles.threadActionBtn} onPress={(e) => {
+            e.stopPropagation();
+          }}>
+            <Ionicons name="share-outline" size={18} color="#71767B" />
           </TouchableOpacity>
         </View>
-      </View>
+      </Pressable>
     );
   };
 
@@ -1399,6 +1451,76 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.10,
     shadowRadius: 6,
     elevation: 2,
+  },
+
+  // Thread layout styles (Twitter/X-style)
+  postContainer: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    backgroundColor: '#1E1E1E',
+  },
+  threadHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  threadAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#232323',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  threadAvatarText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  threadName: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  threadHandle: {
+    color: '#888',
+    fontSize: 14,
+  },
+  threadTime: {
+    color: '#888',
+    fontSize: 14,
+  },
+  threadContent: {
+    color: '#fff',
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  readMore: {
+    color: '#4D96FF',
+    fontSize: 14,
+    marginTop: 2,
+  },
+  threadMedia: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    backgroundColor: '#000',
+  },
+  threadActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    maxWidth: '80%',
+  },
+  threadActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  threadActionText: {
+    color: '#71767B',
+    fontSize: 13,
   },
   postHeaderRow: {
     flexDirection: 'row',

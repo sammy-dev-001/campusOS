@@ -16,10 +16,7 @@ export default function SettingsScreen() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const [appNotif, setAppNotif] = useState(true);
-  const [emailNotif, setEmailNotif] = useState(false);
-  const [smsNotif, setSmsNotif] = useState(false);
-  const [lastResponse, setLastResponse] = useState<any>(null);
+  const [classReminders, setClassReminders] = useState(true);
 
   const handlePickImage = async () => {
     try {
@@ -31,28 +28,22 @@ export default function SettingsScreen() {
       });
 
       if (result.canceled || !result.assets?.[0]?.uri) {
-        return; // User cancelled the image picker
+        return;
       }
 
       setUploading(true);
       setError('');
 
       try {
-        // Compress and resize the image
         const manipulated = await ImageManipulator.manipulateAsync(
           result.assets[0].uri,
           [{ resize: { width: 400, height: 400 } }],
           { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
         );
 
-        // Update the avatar preview
         setAvatar(manipulated.uri);
-
-        // Use the updateProfilePicture function from AuthContext
         await updateProfilePicture(manipulated.uri);
-
-        // If we reach here, the upload was successful
-        setAvatar(null); // Clear the temporary avatar state
+        setAvatar(null);
       } catch (e: any) {
         console.error('Error processing image:', e);
         setError(e.message || 'Failed to process the image.');
@@ -70,8 +61,8 @@ export default function SettingsScreen() {
       {/* Header */}
       <View style={styles.headerBlack}>
         <Text style={styles.headerText}>Settings</Text>
-        <Ionicons name="notifications-outline" size={26} color="#fff" style={styles.headerBell} />
       </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Profile Card */}
         <View style={styles.profileCard}>
@@ -87,61 +78,27 @@ export default function SettingsScreen() {
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Ionicons name="person" size={64} color="#555" />
-                <TouchableOpacity style={styles.cameraButton} onPress={handlePickImage}>
-                  <Ionicons name="camera" size={24} color="#fff" />
-                </TouchableOpacity>
               </View>
             )}
-            {(user && user.profile_picture) || avatar ? (
-              <TouchableOpacity style={styles.cameraButton} onPress={handlePickImage}>
-                <Ionicons name="camera" size={24} color="#fff" />
-              </TouchableOpacity>
-            ) : null}
+            <TouchableOpacity style={styles.cameraButton} onPress={handlePickImage}>
+              <Ionicons name="camera" size={24} color="#fff" />
+            </TouchableOpacity>
           </View>
           <Text style={styles.profileName}>{user?.display_name || user?.username || 'User'}</Text>
           <TouchableOpacity>
             <Text style={styles.editProfile}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
-        {error ? <Text style={{ color: 'red', marginBottom: 8, fontSize: 16 }}>{error}</Text> : null}
+        {error ? <Text style={{ color: 'red', marginBottom: 8, marginHorizontal: 16, fontSize: 14 }}>{error}</Text> : null}
 
-        {/* Notifications Card */}
-        <View style={styles.cardGroup}>
-          <View style={styles.settingRowTop}>
-            <Ionicons name="notifications-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>App Notifications</Text>
-              <Text style={styles.settingSubLabel}>Control alerts from EduFi</Text>
-            </View>
-            <Switch value={appNotif} onValueChange={setAppNotif} thumbColor={appNotif ? '#4D96FF' : '#222'} trackColor={{ false: '#333', true: '#4D96FF' }} />
-          </View>
-          <View style={styles.settingDivider} />
-          <View style={styles.settingRow}>
-            <MaterialCommunityIcons name="email-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Email Notifications</Text>
-              <Text style={styles.settingSubLabel}>Receive updates via email</Text>
-            </View>
-            <Switch value={emailNotif} onValueChange={setEmailNotif} thumbColor={emailNotif ? '#4D96FF' : '#222'} trackColor={{ false: '#333', true: '#4D96FF' }} />
-          </View>
-          <View style={styles.settingDivider} />
-          <View style={styles.settingRowBottom}>
-            <MaterialCommunityIcons name="cellphone-message" size={24} color="#4D96FF" style={styles.settingIcon} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>SMS Notifications</Text>
-              <Text style={styles.settingSubLabel}>Get important alerts via text</Text>
-            </View>
-            <Switch value={smsNotif} onValueChange={setSmsNotif} thumbColor={smsNotif ? '#4D96FF' : '#222'} trackColor={{ false: '#333', true: '#4D96FF' }} />
-          </View>
-        </View>
-
-        {/* General Settings Card */}
+        {/* Section 1: App Preferences */}
+        <Text style={styles.sectionTitle}>App Preferences</Text>
         <View style={styles.cardGroup}>
           <View style={styles.settingRowTop}>
             <Ionicons name="moon" size={24} color="#4D96FF" style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Dark Mode</Text>
-              <Text style={styles.settingSubLabel}>Adjust the app's visual theme</Text>
+              <Text style={styles.settingLabel}>Appearance</Text>
+              <Text style={styles.settingSubLabel}>Toggle Dark / Light mode</Text>
             </View>
             <Switch
               value={isDark}
@@ -151,16 +108,28 @@ export default function SettingsScreen() {
             />
           </View>
           <View style={styles.settingDivider} />
-          <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="help-circle-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
+          <TouchableOpacity
+            style={styles.settingRowBottom}
+            activeOpacity={0.7}
+            onPress={() => router.push('/notification-settings')}
+          >
+            <Ionicons name="notifications-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Help & Support</Text>
-              <Text style={styles.settingSubLabel}>Get assistance or report an issue</Text>
+              <Text style={styles.settingLabel}>Notifications</Text>
+              <Text style={styles.settingSubLabel}>Class reminders (15 mins before)</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
           </TouchableOpacity>
-          <View style={styles.settingDivider} />
-          <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+        </View>
+
+        {/* Section 2: Support & Info */}
+        <Text style={styles.sectionTitle}>Support & Info</Text>
+        <View style={styles.cardGroup}>
+          <TouchableOpacity
+            style={styles.settingRowTop}
+            activeOpacity={0.7}
+            onPress={() => router.push('/about')}
+          >
             <MaterialCommunityIcons name="information-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
               <Text style={styles.settingLabel}>About EduFi</Text>
@@ -169,49 +138,19 @@ export default function SettingsScreen() {
             <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
           </TouchableOpacity>
           <View style={styles.settingDivider} />
-          <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="file-document-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Terms & Conditions</Text>
-              <Text style={styles.settingSubLabel}>Review app usage policies</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
-          </TouchableOpacity>
-          <View style={styles.settingDivider} />
           <TouchableOpacity style={styles.settingRowBottom} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="history" size={24} color="#4D96FF" style={styles.settingIcon} />
+            <MaterialCommunityIcons name="help-circle-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Activity Log</Text>
-              <Text style={styles.settingSubLabel}>View your recent app activities</Text>
+              <Text style={styles.settingLabel}>Help & Support</Text>
+              <Text style={styles.settingSubLabel}>Get assistance or report an issue</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
           </TouchableOpacity>
         </View>
 
-        {/* Account Settings Card */}
-        <View style={styles.cardGroup}>
-          <TouchableOpacity style={styles.settingRowTop} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="account-circle-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Personal Details</Text>
-              <Text style={styles.settingSubLabel}>Update your name, email, and contact info</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
-          </TouchableOpacity>
-          <View style={styles.settingDivider} />
-          <TouchableOpacity style={styles.settingRowBottom} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="lock-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Change Password</Text>
-              <Text style={styles.settingSubLabel}>Update your account password</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Log Out Button */}
-        <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8} onPress={logout}>
-          <MaterialCommunityIcons name="logout" size={22} color="#fff" style={{ marginRight: 8 }} />
+        {/* Section 3: Account */}
+        <Text style={styles.sectionTitle}>Account</Text>
+        <TouchableOpacity style={styles.logoutContainer} activeOpacity={0.8} onPress={logout}>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
 
@@ -232,19 +171,12 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
     paddingHorizontal: 16,
     marginBottom: 8,
-    position: 'relative',
   },
   headerText: {
     fontSize: 26,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
-    flex: 1,
-  },
-  headerBell: {
-    position: 'absolute',
-    right: 24,
-    top: 56,
   },
   profileCard: {
     backgroundColor: '#181818',
@@ -252,7 +184,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 28,
     marginHorizontal: 16,
-    marginBottom: 22,
+    marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -260,25 +192,25 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   avatarContainer: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: '#232323',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
     position: 'relative',
   },
   avatarImage: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     resizeMode: 'cover',
   },
   avatarPlaceholder: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: '#232323',
     justifyContent: 'center',
     alignItems: 'center',
@@ -286,64 +218,62 @@ const styles = StyleSheet.create({
   cameraButton: {
     position: 'absolute',
     bottom: 0,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 16,
-    padding: 4,
+    right: 0,
+    backgroundColor: '#4D96FF',
+    borderRadius: 18,
+    padding: 8,
   },
   profileName: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#fff',
     marginTop: 8,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   editProfile: {
     color: '#4D96FF',
     fontSize: 15,
-    marginTop: 2,
     fontWeight: '500',
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    marginTop: 8,
   },
   cardGroup: {
     backgroundColor: '#1E1E1E',
     borderRadius: 18,
     marginHorizontal: 16,
-    marginBottom: 22,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    backgroundColor: 'transparent',
-  },
   settingRowTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
-    backgroundColor: 'transparent',
   },
   settingRowBottom: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 18,
-    backgroundColor: 'transparent',
   },
   settingIcon: {
-    marginRight: 16,
+    marginRight: 14,
   },
   settingLabel: {
     color: '#fff',
@@ -357,24 +287,17 @@ const styles = StyleSheet.create({
   },
   settingDivider: {
     height: 1,
-    backgroundColor: '#232323',
-    marginLeft: 58,
-    marginRight: 0,
+    backgroundColor: '#2A2A2A',
+    marginLeft: 54,
   },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF5630',
-    borderRadius: 12,
+  logoutContainer: {
     marginHorizontal: 16,
-    marginTop: 10,
     paddingVertical: 16,
-    marginBottom: 32,
+    alignItems: 'center',
   },
   logoutText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#FF5630',
+    fontWeight: '600',
     fontSize: 17,
   },
-}); 
+});

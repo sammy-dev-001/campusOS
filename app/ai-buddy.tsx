@@ -33,12 +33,12 @@ interface Message {
     timestamp: Date;
 }
 
-// Suggested prompts for quick access - Academic focused
+// Suggested prompts for quick access - Multi-modal (Academic + Finance + Life)
 const SUGGESTED_PROMPTS = [
-    "Help me create a study schedule",
-    "Explain this topic simply: [topic]",
-    "Tips for exam preparation",
-    "How to take better notes?",
+    "Summarize this PDF",
+    "How much did I spend this week?",
+    "Quiz me on BIO 101",
+    "Create a budget for ₦5k",
 ];
 
 export default function AIBuddyScreen() {
@@ -50,7 +50,7 @@ export default function AIBuddyScreen() {
         {
             id: '1',
             role: 'assistant',
-            content: "Hi! I'm Eddy, your personal academic AI assistant. 📚\n\nI can help you with:\n• Study tips and techniques\n• Explaining complex topics\n• Exam preparation strategies\n• Time management for students\n• Course advice and planning\n\nWhat would you like to learn about today?",
+            content: "Hi! I'm Eddy, your personal student companion. 🎓\n\nI can help you with:\n• 📚 Explaining complex topics & PDFs\n• 💰 Tracking expenses & budgets\n• 🗓️ Planning study schedules\n• 🧠 Mental health & motivation\n\nWhat would you like help with today?",
             timestamp: new Date(),
         },
     ]);
@@ -78,24 +78,25 @@ export default function AIBuddyScreen() {
                 throw new Error('AI is not configured. Please add your Gemini API key in Settings.');
             }
 
-            // Academic-focused system prompt
-            const systemPrompt = `You are Eddy, a friendly and knowledgeable AI academic assistant for Nigerian university students using the EduFi app. 
+            // Multi-modal system prompt (Academic + Finance + Life)
+            const systemPrompt = `You are Eddy, a friendly and knowledgeable AI student companion for Nigerian university students using the EduFi app. 
 
 Your role:
-- Help students with study tips and learning strategies
-- Explain complex academic topics in simple terms
-- Provide exam preparation advice
-- Help with time management and study schedules
+- Help students with study tips, learning strategies, and explaining complex topics
+- Assist with financial tracking, budgeting, and money management advice
+- Provide mental health support, motivation, and wellness tips
+- Help with time management, schedules, and productivity
 - Offer course selection and career guidance
 
 Your personality:
-- Warm, encouraging, and patient like a friendly tutor
+- Warm, encouraging, and patient like a friendly peer mentor
 - Break down complex topics into digestible parts
 - Use examples relevant to Nigerian students when possible
 - Keep responses concise (2-3 paragraphs max)
-- Use emojis sparingly for friendliness 📚
+- Use **bold text** for key terms and bullet points for lists
+- Use emojis sparingly for friendliness 📚💰🧠
 
-Important: You are focused on ACADEMICS and LEARNING. For financial questions, direct users to the Finance tab.`;
+Important: You handle ACADEMICS, FINANCE, and WELLNESS. Be helpful across all these domains.`;
 
             const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
                 method: 'POST',
@@ -187,7 +188,7 @@ Important: You are focused on ACADEMICS and LEARNING. For financial questions, d
                     </TouchableOpacity>
                     <View style={styles.headerCenter}>
                         <Text style={[styles.headerTitle, { color: theme.text }]}>Eddy</Text>
-                        <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>AI Academic Assistant</Text>
+                        <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>Your Student Companion</Text>
                     </View>
                     <View style={[styles.onlineIndicator, { backgroundColor: '#4CAF50' }]} />
                 </View>
@@ -239,9 +240,15 @@ Important: You are focused on ACADEMICS and LEARNING. For financial questions, d
 
                 {/* Input Area */}
                 <View style={[styles.inputContainer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
+                    <TouchableOpacity
+                        style={styles.attachButton}
+                        onPress={() => Alert.alert('Attach File', 'File attachment coming soon!')}
+                    >
+                        <Ionicons name="attach" size={24} color={theme.textSecondary} />
+                    </TouchableOpacity>
                     <TextInput
                         style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
-                        placeholder="Ask me anything about academics..."
+                        placeholder="Ask about studies, money, or life..."
                         placeholderTextColor={theme.textSecondary}
                         value={inputText}
                         onChangeText={setInputText}
@@ -367,6 +374,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderTopWidth: 1,
+    },
+    attachButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 4,
     },
     input: {
         flex: 1,

@@ -502,10 +502,7 @@ export default function MessageScreen() {
             </View>
             <View style={styles.chatInfo}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <ThemedText style={[styles.chatName, { color: '#FFF' }]}>Eddy (AI Assistant)</ThemedText>
-                <View style={styles.eddyBadge}>
-                  <ThemedText style={styles.eddyBadgeText}>AI</ThemedText>
-                </View>
+                <ThemedText style={[styles.chatName, { color: '#FFF' }]}>Eddy</ThemedText>
               </View>
               <ThemedText style={[styles.lastMessage, { color: '#AAA', marginTop: 2 }]} numberOfLines={1}>
                 I'm here to help with studies & finance!

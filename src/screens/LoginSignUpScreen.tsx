@@ -1,8 +1,9 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, FlatList, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Dimensions, FlatList, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, Text } from 'react-native';
 import KeyboardSafeWrapper from '../../components/KeyboardSafeWrapper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '../../components/ThemedText';
@@ -14,6 +15,7 @@ import { useUser } from '../../src/contexts/UserContext';
 import { useThemeColor } from '../../src/hooks/useThemeColor';
 import { API_BASE_URL } from '../config/api';
 import { Picker } from '@react-native-picker/picker';
+import { BrandColors } from '../theme/edufi';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,7 +27,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 50,
-    color: '#fff',
     marginLeft: 10,
     backgroundColor: 'transparent',
   },
@@ -34,7 +35,7 @@ const styles = StyleSheet.create({
     width: width,
     height: height,
     pointerEvents: 'none',
-    zIndex: 0,
+    zIndex: -1,
   },
   scrollView: {
     flex: 1,
@@ -43,28 +44,23 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+    justifyContent: 'flex-start',
+    paddingTop: 0,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
   },
   header: {
     width: '100%',
-    height: 250,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 50,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    paddingTop: 0,
     backgroundColor: 'transparent',
   },
   logo: {
-    marginBottom: 10,
-    color: '#0B3C5D', // EduFi blue logo
-    transform: [{ rotate: '-10deg' }], // Slightly tilt the logo
+    marginBottom: -30,
+    width: 250,
+    height: 250,
+    resizeMode: 'contain',
   },
   appTitle: {
     fontSize: 36,
@@ -81,17 +77,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   formContainer: {
-    width: '100%', // full width
-    borderRadius: 20,
-    padding: 20,
-    marginTop: -50,
+    width: '100%',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
     backgroundColor: 'transparent',
+  },
+  formCard: {
+    width: '90%',
+    borderRadius: 24,
+    padding: 24,
   },
   errorContainer: {
     width: '100%',
@@ -107,19 +100,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    width: width * 0.85,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 10,
+    height: 50,
+    marginBottom: 16,
     paddingHorizontal: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#333',
-    backgroundColor: 'transparent',
+    borderRadius: 12,
+    borderWidth: 0,
   },
   inputIcon: {
     marginRight: 10,
-    opacity: 0.6,
   },
   passwordToggle: {
     padding: 5,
@@ -144,13 +135,28 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginTop: 10,
-    backgroundColor: '#0B3C5D', // EduFi blue for Login
+    backgroundColor: BrandColors.brandGreen, // Brand Green
+    elevation: 3,
   },
   createAccountButton: {
     height: 50,
     borderRadius: 25,
     marginTop: 10,
-    backgroundColor: '#3fd6ff', // bright cyan for Create Account
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: BrandColors.brandGreen,
+  },
+  secondaryButtonText: {
+    color: BrandColors.brandGreen,
+    fontWeight: 'bold',
+  },
+  backButton: {
+    height: 50,
+    borderRadius: 25,
+    marginTop: 10,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#666',
   },
   orTextContainer: {
     flexDirection: 'row',
@@ -326,7 +332,7 @@ const MovingDoodle: React.FC<MovingDoodleProps> = ({ icon, size, initialX, initi
         name={icon}
         size={size}
         color="#0B3C5D"
-        style={{ opacity: 0.3 }}
+        style={{ opacity: 0.05 }}
       />
     </Animated.View>
   );
@@ -390,13 +396,16 @@ const LoginSignUpScreen = () => {
   const { updateUser } = useUser();
   const { theme } = useTheme();
 
+  // Signup Step State (1: Identity, 2: Academic)
+  const [signupStep, setSignupStep] = useState(1);
+
   const primaryColor = useThemeColor({ light: Colors.light.primary, dark: Colors.dark.primary }, 'primary');
   const backgroundColor = theme.background;
   const textColor = theme.text;
   const textSecondaryColor = theme.secondary;
   const cardColor = theme.card;
   const borderColor = theme.border;
-  const logoColor = theme.primary;
+  // const logoColor = theme.primary; // Unused now
 
   // List of common universities for autocomplete
   const UNIVERSITIES = [
@@ -469,42 +478,24 @@ const LoginSignUpScreen = () => {
 
     if (!isLogin) {
       // Signup validation
-      if (!username.trim()) {
-        newErrors.username = 'Username is required';
-      }
-      if (!fullName.trim()) {
-        newErrors.fullName = 'Full name is required';
-      }
-      if (!university.trim()) {
-        newErrors.university = 'University is required';
-      }
-      if (!level) {
-        newErrors.level = 'Academic level is required';
-      }
-      if (!course.trim()) {
-        newErrors.course = 'Course/Major is required';
-      }
-      if (!email.trim()) {
-        newErrors.email = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(email)) {
-        newErrors.email = 'Please enter a valid email';
-      }
-      if (!password) {
-        newErrors.password = 'Password is required';
-      } else if (password.length < 3) {
-        newErrors.password = 'Password must be at least 3 characters';
-      }
-      if (password !== confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
+      if (signupStep === 1) {
+        if (!username.trim()) newErrors.username = 'Username is required';
+        if (!fullName.trim()) newErrors.fullName = 'Full name is required';
+        if (!email.trim()) newErrors.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Please enter a valid email';
+        if (!password) newErrors.password = 'Password is required';
+        else if (password.length < 3) newErrors.password = 'Password must be at least 3 characters';
+        if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+      } else {
+        // Step 2
+        if (!university.trim()) newErrors.university = 'University is required';
+        if (!level) newErrors.level = 'Academic level is required';
+        if (!course.trim()) newErrors.course = 'Course/Major is required';
       }
     } else {
       // Login validation
-      if (!email.trim()) {
-        newErrors.email = 'Email is required';
-      }
-      if (!password) {
-        newErrors.password = 'Password is required';
-      }
+      if (!email.trim()) newErrors.email = 'Email is required';
+      if (!password) newErrors.password = 'Password is required';
     }
 
     console.log("Validation errors:", newErrors);
@@ -516,6 +507,12 @@ const LoginSignUpScreen = () => {
     // Validate form first
     const isValid = validateForm();
     if (!isValid) {
+      setLoading(false);
+      return;
+    }
+
+    if (!isLogin && signupStep === 1) {
+      setSignupStep(2);
       setLoading(false);
       return;
     }
@@ -701,366 +698,385 @@ const LoginSignUpScreen = () => {
 
   return (
     <KeyboardSafeWrapper
-      style={[styles.container, { backgroundColor }]}
+      style={styles.container}
     >
-      <DoodleBackground />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        style={styles.scrollView}
+      <LinearGradient
+        colors={['#E6F0FA', '#FFFFFF']}
+        style={{ flex: 1 }}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
       >
-        <View style={styles.header}>
-          <MaterialIcons
-            name="account-balance-wallet"
-            size={80} // Increased size
-            color={logoColor}
-            style={styles.logo}
-          />
-          <ThemedText style={styles.appTitle} type="title">EDUFI</ThemedText>
-        </View>
+        <DoodleBackground />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <Image
+              source={require('../../assets/images/edufi-logo.png')}
+              style={styles.logo}
+            />
+            {/* <ThemedText style={styles.appTitle} type="title">EDUFI</ThemedText> */}
+          </View>
 
-        <View style={[styles.formContainer, { backgroundColor: 'transparent' }]}>
-          <ThemedText style={styles.welcomeText} type="subtitle">
-            {isLogin ? 'Welcome Back!' : 'Create an Account'}
-          </ThemedText>
+          <View style={styles.formContainer}>
+            <View style={[styles.formCard, { backgroundColor: theme.card }]}>
+              <ThemedText style={[styles.welcomeText, { color: theme.text }]} type="subtitle">
+                {isLogin ? 'Welcome Back!' : signupStep === 1 ? 'Create Account' : 'Academic Info'}
+              </ThemedText>
 
-          {errors.auth && (
-            <View style={styles.errorContainer}>
-              <ThemedText style={styles.errorText}>{errors.auth}</ThemedText>
-            </View>
-          )}
-
-          {!isLogin && (
-            <>
-              <View style={[styles.inputContainer, { borderColor: errors.username ? '#ff4444' : borderColor }]}>
-                <Ionicons name="person-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-                <TextInput
-                  style={[styles.input, { color: textColor }]}
-                  placeholder="Username"
-                  placeholderTextColor={textSecondaryColor}
-                  value={username} onChangeText={(text) => {
-                    setUsername(text.trim());
-                    setErrors(prev => ({ ...prev, username: '' }));
-                  }}
-                  autoCapitalize="none"
-                />
-              </View>
-              {errors.username && <ThemedText style={styles.fieldError}>{errors.username}</ThemedText>}
-
-              <View style={[styles.inputContainer, { borderColor: errors.fullName ? '#ff4444' : borderColor }]}>
-                <Ionicons name="text-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-                <TextInput
-                  style={[styles.input, { color: textColor }]}
-                  placeholder="Full Name"
-                  placeholderTextColor={textSecondaryColor}
-                  value={fullName}
-                  onChangeText={(text) => {
-                    setFullName(text);
-                    setErrors(prev => ({ ...prev, fullName: '' }));
-                  }}
-                />
-              </View>
-              {errors.fullName && <ThemedText style={styles.fieldError}>{errors.fullName}</ThemedText>}
-
-              {/* University Field with Autocomplete */}
-              <View>
-                <View style={[styles.inputContainer, { borderColor: errors.university ? '#ff4444' : borderColor }]}>
-                  <Ionicons name="school-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    placeholder="University"
-                    placeholderTextColor={textSecondaryColor}
-                    value={university}
-                    onChangeText={handleUniversityChange}
-                    onFocus={() => university.length > 0 && setShowUniversitySuggestions(universitySuggestions.length > 0)}
-                  />
+              {errors.auth && (
+                <View style={styles.errorContainer}>
+                  <ThemedText style={styles.errorText}>{errors.auth}</ThemedText>
                 </View>
-                {errors.university && <ThemedText style={styles.fieldError}>{errors.university}</ThemedText>}
+              )}
 
-                {/* University Suggestions Dropdown */}
-                {showUniversitySuggestions && universitySuggestions.length > 0 && (
-                  <View style={[styles.suggestionsContainer, { backgroundColor: cardColor, borderColor }]}>
-                    {universitySuggestions.map((uni, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={[styles.suggestionItem, { borderBottomColor: borderColor }]}
-                        onPress={() => selectUniversity(uni)}
-                      >
-                        <ThemedText style={{ color: textColor }}>{uni}</ThemedText>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Level Picker */}
-              {Platform.OS === 'ios' ? (
-                // iOS: Use TouchableOpacity to open modal picker
+              {/* --- LOGIN or SIGNUP STEP 1 --- */}
+              {(isLogin || (!isLogin && signupStep === 1)) && (
                 <>
-                  <TouchableOpacity
-                    style={[styles.inputContainer, { borderColor: errors.level ? '#ff4444' : borderColor }]}
-                    onPress={() => setShowLevelPicker(true)}
-                  >
-                    <Ionicons name="bar-chart-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-                    <ThemedText style={[styles.input, { color: level ? textColor : textSecondaryColor }]}>
-                      {level || 'Select Level'}
-                    </ThemedText>
-                    <Ionicons name="chevron-down" size={20} color={textSecondaryColor} />
+                  {/* Signup Fields: Username & Full Name */}
+                  {!isLogin && (
+                    <>
+                      <View style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.username ? '#ff4444' : 'transparent' }]}>
+                        <Ionicons name="person-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="Username"
+                          placeholderTextColor={textSecondaryColor}
+                          value={username} onChangeText={(text) => {
+                            setUsername(text.trim());
+                            setErrors(prev => ({ ...prev, username: '' }));
+                          }}
+                          autoCapitalize="none"
+                        />
+                      </View>
+                      {errors.username && <ThemedText style={styles.fieldError}>{errors.username}</ThemedText>}
+
+                      <View style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.fullName ? '#ff4444' : 'transparent' }]}>
+                        <Ionicons name="text-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="Full Name"
+                          placeholderTextColor={textSecondaryColor}
+                          value={fullName}
+                          onChangeText={(text) => {
+                            setFullName(text);
+                            setErrors(prev => ({ ...prev, fullName: '' }));
+                          }}
+                        />
+                      </View>
+                      {errors.fullName && <ThemedText style={styles.fieldError}>{errors.fullName}</ThemedText>}
+                    </>
+                  )}
+
+                  {/* Common Fields: Email & Password */}
+                  <View style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.email ? '#ff4444' : 'transparent' }]}>
+                    <Ionicons name="mail-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      placeholder="Email or Username"
+                      placeholderTextColor={textSecondaryColor}
+                      value={email}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        setErrors(prev => ({ ...prev, email: '' }));
+                      }}
+                      autoCapitalize="none"
+                    />
+                  </View>
+                  {errors.email && <ThemedText style={styles.fieldError}>{errors.email}</ThemedText>}
+
+                  <View style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.password ? '#ff4444' : 'transparent' }]}>
+                    <Ionicons name="lock-closed-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      placeholder="Password"
+                      placeholderTextColor={textSecondaryColor}
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        setErrors(prev => ({ ...prev, password: '' }));
+                      }}
+                      secureTextEntry={!showPassword}
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
+                      <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={textSecondaryColor} />
+                    </TouchableOpacity>
+                  </View>
+                  {errors.password && <ThemedText style={styles.fieldError}>{errors.password}</ThemedText>}
+
+                  {/* Signup Confirm Password */}
+                  {!isLogin && (
+                    <>
+                      <View style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.confirmPassword ? '#ff4444' : 'transparent' }]}>
+                        <Ionicons name="lock-closed-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="Confirm Password"
+                          placeholderTextColor={textSecondaryColor}
+                          value={confirmPassword}
+                          onChangeText={(text) => {
+                            setConfirmPassword(text);
+                            setErrors(prev => ({ ...prev, confirmPassword: '' }));
+                          }}
+                          secureTextEntry={!showConfirmPassword}
+                        />
+                        <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.passwordToggle}>
+                          <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={textSecondaryColor} />
+                        </TouchableOpacity>
+                      </View>
+                      {errors.confirmPassword && <ThemedText style={styles.fieldError}>{errors.confirmPassword}</ThemedText>}
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* --- SIGNUP STEP 2 (Academic) --- */}
+              {!isLogin && signupStep === 2 && (
+                <View style={{ width: '100%' }}>
+                  <TouchableOpacity onPress={() => setSignupStep(1)} style={{ marginBottom: 15, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons name="arrow-back" size={20} color={BrandColors.brandGreen} />
+                    <ThemedText style={{ color: BrandColors.brandGreen, marginLeft: 5, fontWeight: 'bold' }}>Back to Identity</ThemedText>
                   </TouchableOpacity>
 
-                  {/* iOS Level Picker Modal */}
-                  <Modal
-                    visible={showLevelPicker}
-                    transparent={true}
-                    animationType="slide"
-                  >
-                    <View style={styles.pickerModalOverlay}>
-                      <View style={[styles.pickerModalContent, { backgroundColor: cardColor }]}>
-                        <View style={styles.pickerModalHeader}>
-                          <TouchableOpacity onPress={() => setShowLevelPicker(false)}>
-                            <ThemedText style={{ color: theme.primary, fontSize: 16 }}>Cancel</ThemedText>
+                  {/* University Field */}
+                  <View style={{ zIndex: 2000 }}>
+                    <View style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.university ? '#ff4444' : 'transparent' }]}>
+                      <Ionicons name="school-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="University"
+                        placeholderTextColor={textSecondaryColor}
+                        value={university}
+                        onChangeText={handleUniversityChange}
+                        onFocus={() => university.length > 0 && setShowUniversitySuggestions(universitySuggestions.length > 0)}
+                      />
+                    </View>
+                    {errors.university && <ThemedText style={styles.fieldError}>{errors.university}</ThemedText>}
+
+                    {showUniversitySuggestions && universitySuggestions.length > 0 && (
+                      <View style={[styles.suggestionsContainer, { backgroundColor: cardColor, borderColor }]}>
+                        {universitySuggestions.map((uni, index) => (
+                          <TouchableOpacity
+                            key={index}
+                            style={[styles.suggestionItem, { borderBottomColor: borderColor }]}
+                            onPress={() => selectUniversity(uni)}
+                          >
+                            <ThemedText style={{ color: textColor }}>{uni}</ThemedText>
                           </TouchableOpacity>
-                          <ThemedText style={{ fontWeight: 'bold', fontSize: 16 }}>Select Level</ThemedText>
-                          <TouchableOpacity onPress={() => setShowLevelPicker(false)}>
-                            <ThemedText style={{ color: theme.primary, fontSize: 16, fontWeight: 'bold' }}>Done</ThemedText>
-                          </TouchableOpacity>
-                        </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Level Picker */}
+                  <View style={{ marginTop: 10 }}>
+                    {Platform.OS === 'ios' ? (
+                      <>
+                        <TouchableOpacity
+                          style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.level ? '#ff4444' : 'transparent' }]}
+                          onPress={() => setShowLevelPicker(true)}
+                        >
+                          <Ionicons name="bar-chart-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                          <ThemedText style={[styles.input, { color: level ? textColor : textSecondaryColor }]}>
+                            {level || 'Select Level'}
+                          </ThemedText>
+                          <Ionicons name="chevron-down" size={20} color={textSecondaryColor} />
+                        </TouchableOpacity>
+
+                        <Modal visible={showLevelPicker} transparent={true} animationType="slide">
+                          <View style={styles.pickerModalOverlay}>
+                            <View style={[styles.pickerModalContent, { backgroundColor: cardColor }]}>
+                              <View style={styles.pickerModalHeader}>
+                                <TouchableOpacity onPress={() => setShowLevelPicker(false)}>
+                                  <ThemedText style={{ color: theme.primary, fontSize: 16 }}>Cancel</ThemedText>
+                                </TouchableOpacity>
+                                <ThemedText style={{ fontWeight: 'bold', fontSize: 16 }}>Select Level</ThemedText>
+                                <TouchableOpacity onPress={() => setShowLevelPicker(false)}>
+                                  <ThemedText style={{ color: theme.primary, fontSize: 16, fontWeight: 'bold' }}>Done</ThemedText>
+                                </TouchableOpacity>
+                              </View>
+                              <Picker
+                                selectedValue={level}
+                                onValueChange={(itemValue) => {
+                                  setLevel(itemValue);
+                                  setErrors(prev => ({ ...prev, level: '' }));
+                                }}
+                                itemStyle={{ color: textColor, fontSize: 18 }}
+                              >
+                                <Picker.Item label="Select Level" value="" />
+                                {LEVELS.map((lvl) => <Picker.Item key={lvl} label={lvl} value={lvl} />)}
+                              </Picker>
+                            </View>
+                          </View>
+                        </Modal>
+                      </>
+                    ) : (
+                      <View style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.level ? '#ff4444' : 'transparent', paddingHorizontal: 5 }]}>
+                        <Ionicons name="bar-chart-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
                         <Picker
                           selectedValue={level}
                           onValueChange={(itemValue) => {
                             setLevel(itemValue);
                             setErrors(prev => ({ ...prev, level: '' }));
                           }}
-                          itemStyle={{ color: textColor, fontSize: 18 }}
+                          style={[styles.picker, { color: textColor }]}
+                          dropdownIconColor={textSecondaryColor}
                         >
                           <Picker.Item label="Select Level" value="" />
-                          {LEVELS.map((lvl) => (
-                            <Picker.Item key={lvl} label={lvl} value={lvl} />
-                          ))}
+                          {LEVELS.map((lvl) => <Picker.Item key={lvl} label={lvl} value={lvl} />)}
                         </Picker>
                       </View>
-                    </View>
-                  </Modal>
-                </>
-              ) : (
-                // Android: Use inline picker
-                <View style={[styles.inputContainer, { borderColor: errors.level ? '#ff4444' : borderColor, paddingHorizontal: 5 }]}>
-                  <Ionicons name="bar-chart-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-                  <Picker
-                    selectedValue={level}
-                    onValueChange={(itemValue) => {
-                      setLevel(itemValue);
-                      setErrors(prev => ({ ...prev, level: '' }));
-                    }}
-                    style={[styles.picker, { color: textColor }]}
-                    dropdownIconColor={textSecondaryColor}
-                  >
-                    <Picker.Item label="Select Level" value="" />
-                    {LEVELS.map((lvl) => (
-                      <Picker.Item key={lvl} label={lvl} value={lvl} />
-                    ))}
-                  </Picker>
+                    )}
+                    {errors.level && <ThemedText style={styles.fieldError}>{errors.level}</ThemedText>}
+                  </View>
+
+                  <View style={[styles.inputContainer, { backgroundColor: theme.cardAlt, borderColor: errors.course ? '#ff4444' : 'transparent' }]}>
+                    <Ionicons name="book-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      placeholder="Course/Major"
+                      placeholderTextColor={textSecondaryColor}
+                      value={course}
+                      onChangeText={(text) => {
+                        setCourse(text);
+                        setErrors(prev => ({ ...prev, course: '' }));
+                      }}
+                    />
+                  </View>
+                  {errors.course && <ThemedText style={styles.fieldError}>{errors.course}</ThemedText>}
                 </View>
               )}
-              {errors.level && <ThemedText style={styles.fieldError}>{errors.level}</ThemedText>}
 
-              {/* Course/Major Field */}
-              <View style={[styles.inputContainer, { borderColor: errors.course ? '#ff4444' : borderColor }]}>
-                <Ionicons name="book-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-                <TextInput
-                  style={[styles.input, { color: textColor }]}
-                  placeholder="Course/Major"
-                  placeholderTextColor={textSecondaryColor}
-                  value={course}
-                  onChangeText={(text) => {
-                    setCourse(text);
-                    setErrors(prev => ({ ...prev, course: '' }));
-                  }}
-                />
-              </View>
-              {errors.course && <ThemedText style={styles.fieldError}>{errors.course}</ThemedText>}
-            </>
-          )}
-
-          <View style={[styles.inputContainer, { borderColor: errors.email ? '#ff4444' : borderColor }]}>
-            <Ionicons name="mail-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-            <TextInput
-              style={[styles.input, { color: textColor }]}
-              placeholder="Email or Username"
-              placeholderTextColor={textSecondaryColor}
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                setErrors(prev => ({ ...prev, email: '' }));
-              }}
-              autoCapitalize="none"
-            />
-          </View>
-          {errors.email && <ThemedText style={styles.fieldError}>{errors.email}</ThemedText>}
-
-          <View style={[styles.inputContainer, { borderColor: errors.password ? '#ff4444' : borderColor }]}>
-            <Ionicons name="lock-closed-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-            <TextInput
-              style={[styles.input, { color: textColor }]}
-              placeholder="Password"
-              placeholderTextColor={textSecondaryColor}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                setErrors(prev => ({ ...prev, password: '' }));
-              }}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
-              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={textSecondaryColor} />
-            </TouchableOpacity>
-          </View>
-          {errors.password && <ThemedText style={styles.fieldError}>{errors.password}</ThemedText>}
-
-          {!isLogin && (
-            <>
-              <View style={[styles.inputContainer, { borderColor: errors.confirmPassword ? '#ff4444' : borderColor }]}>
-                <Ionicons name="lock-closed-outline" size={20} color={textSecondaryColor} style={styles.inputIcon} />
-                <TextInput
-                  style={[styles.input, { color: textColor }]}
-                  placeholder="Confirm Password"
-                  placeholderTextColor={textSecondaryColor}
-                  value={confirmPassword}
-                  onChangeText={(text) => {
-                    setConfirmPassword(text);
-                    setErrors(prev => ({ ...prev, confirmPassword: '' }));
-                  }}
-                  secureTextEntry={!showConfirmPassword}
-                />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.passwordToggle}>
-                  <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={textSecondaryColor} />
-                </TouchableOpacity>
-              </View>
-              {errors.confirmPassword && <ThemedText style={styles.fieldError}>{errors.confirmPassword}</ThemedText>}
-            </>
-          )}
-
-          {isLogin && (
-            <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPasswordButton}>
-              <ThemedText style={styles.forgotPasswordText} type="defaultSemiBold">
-                Forgot Password?
-              </ThemedText>
-            </TouchableOpacity>
-          )}
-
-          <Button
-            onPress={handleAuthentication}
-            loading={loading}
-            fullWidth={true}
-            variant="primary"
-            style={styles.authButton}
-          >
-            {isLogin ? 'Login' : 'Create Account'}
-          </Button>
-
-          <View style={styles.orTextContainer}>
-            <View style={[styles.orLine, { backgroundColor: textSecondaryColor }]} />
-            <ThemedText style={styles.orText} type="default">
-              or
-            </ThemedText>
-            <View style={[styles.orLine, { backgroundColor: textSecondaryColor }]} />
-          </View>
-
-          <View style={styles.socialButtonsContainer}>
-            <TouchableOpacity onPress={() => handleSocialLogin('google')} style={styles.socialButton}>
-              <Ionicons name="logo-google" size={30} color={textSecondaryColor} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleSocialLogin('facebook')} style={styles.socialButton}>
-              <Ionicons name="logo-facebook" size={30} color={textSecondaryColor} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleSocialLogin('apple')} style={styles.socialButton}>
-              <Ionicons name="logo-apple" size={30} color={textSecondaryColor} />
-            </TouchableOpacity>
-          </View>
-
-          <Button
-            onPress={() => setIsLogin(prev => !prev)}
-            fullWidth={true}
-            variant="secondary"
-            style={styles.createAccountButton}
-          >
-            {isLogin ? 'Create Account' : 'Login'}
-          </Button>
-        </View>
-      </ScrollView>
-      {showProfilePicModal && (
-        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
-          <View style={[styles.modalContent, { backgroundColor: backgroundColor, borderColor: borderColor }]}>
-            <ThemedText style={[styles.modalTitle, { color: textColor }]}>Upload a Profile Picture (Optional)</ThemedText>
-            <View style={styles.imageContainer}>
-              {profilePic ? (
-                <Image
-                  source={{ uri: profilePic }}
-                  style={[
-                    styles.profileImage,
-                    {
-                      borderColor: borderColor,
-                      borderWidth: 1,
-                      backgroundColor: cardColor
-                    }
-                  ]}
-                  resizeMode="cover"
-                />
-              ) : (
-                <TouchableOpacity
-                  onPress={handleProfilePicPick}
-                  style={[
-                    styles.profileImagePlaceholder,
-                    {
-                      backgroundColor: cardColor,
-                      borderColor: borderColor,
-                      borderWidth: 1
-                    }
-                  ]}
-                >
-                  <Ionicons name="camera" size={36} color={textSecondaryColor} />
+              {isLogin && (
+                <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPasswordButton}>
+                  <ThemedText style={styles.forgotPasswordText} type="defaultSemiBold">
+                    Forgot Password?
+                  </ThemedText>
                 </TouchableOpacity>
               )}
-            </View>
-            <View style={styles.modalButtons}>
+
               <Button
-                onPress={handleProfilePicPick}
-                style={{
-                  ...styles.modalButton,
-                  backgroundColor: cardColor,
-                  borderColor: borderColor,
-                }}
-                variant="secondary"
-                textStyle={{ color: textColor }}
-              >
-                Choose Photo
-              </Button>
-              <Button
-                onPress={handleProfilePicUpload}
-                loading={uploadingPic}
-                disabled={!profilePic}
-                style={styles.modalButton}
+                onPress={handleAuthentication}
+                loading={loading}
+                fullWidth={true}
                 variant="primary"
+                style={styles.authButton}
               >
-                Upload & Continue
+                {isLogin ? 'Login' : signupStep === 1 ? 'Next' : 'Create Account'}
               </Button>
+
+              <View style={styles.orTextContainer}>
+                <View style={[styles.orLine, { backgroundColor: textSecondaryColor }]} />
+                <ThemedText style={styles.orText} type="default">
+                  or
+                </ThemedText>
+                <View style={[styles.orLine, { backgroundColor: textSecondaryColor }]} />
+              </View>
+
+              <View style={styles.socialButtonsContainer}>
+                <TouchableOpacity onPress={() => handleSocialLogin('google')} style={styles.socialButton}>
+                  <Ionicons name="logo-google" size={30} color={textSecondaryColor} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleSocialLogin('facebook')} style={styles.socialButton}>
+                  <Ionicons name="logo-facebook" size={30} color={textSecondaryColor} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleSocialLogin('apple')} style={styles.socialButton}>
+                  <Ionicons name="logo-apple" size={30} color={textSecondaryColor} />
+                </TouchableOpacity>
+              </View>
+
               <Button
                 onPress={() => {
-                  setShowProfilePicModal(false);
-                  router.replace('/(tabs)');
+                  setIsLogin(prev => !prev);
+                  setSignupStep(1);
                 }}
+                fullWidth={true}
                 variant="secondary"
-                style={{
-                  ...styles.modalButton,
-                  backgroundColor: 'transparent',
-                }}
-                textStyle={{ color: textColor }}
+                style={styles.createAccountButton}
+                textStyle={styles.secondaryButtonText}
               >
-                Skip
+                {isLogin ? 'Create Account' : 'Login'}
               </Button>
             </View>
           </View>
-        </View>
-      )}
+        </ScrollView>
+        {showProfilePicModal && (
+          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
+            <View style={[styles.modalContent, { backgroundColor: backgroundColor, borderColor: borderColor }]}>
+              <ThemedText style={[styles.modalTitle, { color: textColor }]}>Upload a Profile Picture (Optional)</ThemedText>
+              <View style={styles.imageContainer}>
+                {profilePic ? (
+                  <Image
+                    source={{ uri: profilePic }}
+                    style={[
+                      styles.profileImage,
+                      {
+                        borderColor: borderColor,
+                        borderWidth: 1,
+                        backgroundColor: cardColor
+                      }
+                    ]}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <TouchableOpacity
+                    onPress={handleProfilePicPick}
+                    style={[
+                      styles.profileImagePlaceholder,
+                      {
+                        backgroundColor: cardColor,
+                        borderColor: borderColor,
+                        borderWidth: 1
+                      }
+                    ]}
+                  >
+                    <Ionicons name="camera" size={36} color={textSecondaryColor} />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <View style={styles.modalButtons}>
+                <Button
+                  onPress={handleProfilePicPick}
+                  style={{
+                    ...styles.modalButton,
+                    backgroundColor: cardColor,
+                    borderColor: borderColor,
+                  }}
+                  variant="secondary"
+                  textStyle={{ color: textColor }}
+                >
+                  Choose Photo
+                </Button>
+                <Button
+                  onPress={handleProfilePicUpload}
+                  loading={uploadingPic}
+                  disabled={!profilePic}
+                  style={styles.modalButton}
+                  variant="primary"
+                >
+                  Upload & Continue
+                </Button>
+                <Button
+                  onPress={() => {
+                    setShowProfilePicModal(false);
+                    router.replace('/(tabs)');
+                  }}
+                  variant="secondary"
+                  style={{
+                    ...styles.modalButton,
+                    backgroundColor: 'transparent',
+                  }}
+                  textStyle={{ color: textColor }}
+                >
+                  Skip
+                </Button>
+              </View>
+            </View>
+          </View>
+        )}
+      </LinearGradient>
     </KeyboardSafeWrapper>
   );
 };

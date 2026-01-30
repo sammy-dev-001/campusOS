@@ -10,6 +10,7 @@ import { API_BASE_URL } from '../../src/constants/Config';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { Chat, Message, useChat } from '../../src/contexts/ChatContext';
 import { useTheme } from '../../src/contexts/NewThemeContext';
+import { BrandColors } from '../../src/theme/edufi';
 
 // Filter type for segmented tabs
 type FilterType = 'all' | 'groups' | 'dms';
@@ -54,6 +55,7 @@ function getAvatarColor(id: string | number) {
 
 export default function MessageScreen() {
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { chats, userStatus, fetchChats, deleteChat } = useChat();
@@ -393,7 +395,7 @@ export default function MessageScreen() {
   if (loading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.primary} />
+        <ActivityIndicator size="large" color={BrandColors.brandGreen} />
       </View>
     );
   }
@@ -404,7 +406,7 @@ export default function MessageScreen() {
           {error instanceof Error ? error.message : String(error)}
         </ThemedText>
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: theme.primary }]}
+          style={[styles.actionButton, { backgroundColor: BrandColors.brandGreen }]}
           onPress={() => {
             setLoading(true);
             setError(null);
@@ -502,9 +504,9 @@ export default function MessageScreen() {
             </View>
             <View style={styles.chatInfo}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <ThemedText style={[styles.chatName, { color: '#FFF' }]}>Eddy</ThemedText>
+                <ThemedText style={styles.chatName}>Eddy</ThemedText>
               </View>
-              <ThemedText style={[styles.lastMessage, { color: '#AAA', marginTop: 2 }]} numberOfLines={1}>
+              <ThemedText style={[styles.lastMessage, { color: theme.textSecondary, marginTop: 2 }]} numberOfLines={1}>
                 I'm here to help with studies & finance!
               </ThemedText>
             </View>
@@ -550,7 +552,7 @@ export default function MessageScreen() {
                 handleNewChat();
               }}
             >
-              <View style={[styles.fabModalIcon, { backgroundColor: '#2196F3' }]}>
+              <View style={[styles.fabModalIcon, { backgroundColor: BrandColors.brandGreen }]}>
                 <Ionicons name="chatbubble-ellipses-outline" size={22} color="#FFF" />
               </View>
               <ThemedText style={styles.fabModalText}>Start Chat</ThemedText>
@@ -562,7 +564,7 @@ export default function MessageScreen() {
                 handleNewGroup();
               }}
             >
-              <View style={[styles.fabModalIcon, { backgroundColor: '#4CAF50' }]}>
+              <View style={[styles.fabModalIcon, { backgroundColor: BrandColors.brandGreen }]}>
                 <Ionicons name="people-outline" size={22} color="#FFF" />
               </View>
               <ThemedText style={styles.fabModalText}>Create Group</ThemedText>
@@ -574,7 +576,7 @@ export default function MessageScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -601,7 +603,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#fff',
+    color: theme.text,
     textAlign: 'left',
   },
   chatName: {
@@ -622,7 +624,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#222',
+    backgroundColor: theme.cardAlt,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -634,19 +636,19 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#23242A',
+    backgroundColor: theme.cardAlt,
     borderRadius: 10,
     marginHorizontal: 16,
     height: 44,
     marginBottom: 16,
   },
   searchBarText: {
-    color: '#888',
+    color: theme.textSecondary,
     fontSize: 15,
   },
   searchInput: {
     flex: 1,
-    color: '#FFF',
+    color: theme.text,
     fontSize: 15,
     paddingVertical: 8,
   },
@@ -687,7 +689,7 @@ const styles = StyleSheet.create({
   chatItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#23242A',
+    backgroundColor: theme.card,
     borderRadius: 14,
     marginHorizontal: 12,
     marginBottom: 18,
@@ -720,7 +722,7 @@ const styles = StyleSheet.create({
   },
   avatarBorder: {
     borderWidth: 2,
-    borderColor: '#23242A',
+    borderColor: theme.card,
   },
   groupAvatar: {
     borderRadius: 10,
@@ -733,7 +735,7 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     borderWidth: 2,
-    borderColor: '#23242A',
+    borderColor: theme.card,
   },
   chatInfo: {
     flex: 1,
@@ -802,7 +804,7 @@ const styles = StyleSheet.create({
   // Segmented Control Tabs
   segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: '#23242A',
+    backgroundColor: theme.cardAlt,
     borderRadius: 10,
     marginHorizontal: 16,
     marginBottom: 16,
@@ -815,10 +817,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentTabActive: {
-    backgroundColor: '#2196F3',
+    backgroundColor: BrandColors.brandGreen,
   },
   segmentTabText: {
-    color: '#888',
+    color: theme.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -827,20 +829,20 @@ const styles = StyleSheet.create({
   },
   // Eddy AI Assistant Pin
   eddyPinItem: {
-    backgroundColor: '#001F3F',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#0A3D62',
+    borderColor: BrandColors.brandGreen,
   },
   eddyAvatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#2196F3',
+    backgroundColor: BrandColors.brandGreen,
     justifyContent: 'center',
     alignItems: 'center',
   },
   eddyBadge: {
-    backgroundColor: '#2196F3',
+    backgroundColor: BrandColors.brandGreen,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -858,7 +860,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#2196F3',
+    backgroundColor: BrandColors.brandGreen,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -878,7 +880,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   fabModalContent: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: theme.card,
     borderRadius: 16,
     padding: 8,
     minWidth: 180,
@@ -899,7 +901,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   fabModalText: {
-    color: '#FFF',
+    color: theme.text,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -8,12 +8,13 @@ import { ThemedView } from '../components/ThemedView';
 import { useTheme } from '../src/contexts/NewThemeContext';
 import { ClassData, useTimetable } from '../src/contexts/TimetableContext';
 import { Colors } from '../src/constants/Colors';
+import { BrandColors } from '../src/theme/edufi';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const formatTimeRangeToAMPM = (timeRange: string) => {
   if (!timeRange || !timeRange.includes(' - ')) {
-    return timeRange; 
+    return timeRange;
   }
 
   const [start, end] = timeRange.split(' - ');
@@ -23,15 +24,15 @@ const formatTimeRangeToAMPM = (timeRange: string) => {
     const [hoursStr, minutesStr] = time24.split(':');
     let hours = parseInt(hoursStr, 10);
     const minutes = parseInt(minutesStr, 10);
-    
+
     if (isNaN(hours) || isNaN(minutes)) return time24;
 
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; 
+    hours = hours ? hours : 12;
 
     const minutesPadded = minutes < 10 ? '0' + minutes : minutes;
-    
+
     return `${hours}:${minutesPadded} ${ampm}`;
   };
 
@@ -41,7 +42,7 @@ const formatTimeRangeToAMPM = (timeRange: string) => {
 export default function TimeTableScreen() {
   const { theme, isDark } = useTheme();
   const { classes, deleteClass, isLoading } = useTimetable();
-  
+
   // Memoize styles to prevent unnecessary recalculations
   const styles = useMemo(() => getStyles(theme), [theme]);
   const router = useRouter();
@@ -56,8 +57,8 @@ export default function TimeTableScreen() {
       `Are you sure you want to delete "${subjectName}"? This action cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: () => deleteClass(classId)
         },
@@ -81,7 +82,7 @@ export default function TimeTableScreen() {
   const renderClassCard = (cls: ClassData) => {
     const iconColor = isDark ? Colors.dark.textSecondary : Colors.light.textSecondary;
     const textColor = isDark ? Colors.dark.text : Colors.light.text;
-    
+
     return (
       <View key={cls.id} style={styles.classCard}>
         <View style={styles.classCardHeader}>
@@ -128,18 +129,18 @@ export default function TimeTableScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading your schedule...</Text>
-                </View>
+        </View>
       ) : classes.length === 0 ? (
         renderEmptyState()
-            ) : (
-        <ScrollView 
-          showsVerticalScrollIndicator={false} 
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContainer}
         >
           {days.map(day => {
             const dayClasses = getClassesForDay(day);
             if (dayClasses.length === 0) return null;
-            
+
             return (
               <View key={day} style={styles.daySection}>
                 <Text style={styles.dayHeader}>{day} Classes</Text>
@@ -147,11 +148,11 @@ export default function TimeTableScreen() {
               </View>
             );
           })}
-      </ScrollView>
+        </ScrollView>
       )}
 
       {/* Add Subject Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.fab}
         onPress={() => router.push('/add-class')}
       >
@@ -165,7 +166,7 @@ export default function TimeTableScreen() {
 const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: 'row',
@@ -184,7 +185,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     color: theme.text,
   },
   headerAddButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: BrandColors.brandGreen,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -205,7 +206,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     marginBottom: 15,
   },
   classCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: theme.card,
     borderRadius: 16,
     padding: 20,
     marginBottom: 15,
@@ -213,7 +214,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 2,
   },
   classCardHeader: {
     flexDirection: 'row',
@@ -223,7 +224,7 @@ const getStyles = (theme: any) => StyleSheet.create({
   classTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#007AFF', // Using a vibrant blue for the title
+    color: theme.text,
     flex: 1,
   },
   deleteButton: {
@@ -282,13 +283,13 @@ const getStyles = (theme: any) => StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     alignSelf: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: BrandColors.brandGreen,
     borderRadius: 28,
     paddingVertical: 14,
     paddingHorizontal: 25,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#007AFF',
+    shadowColor: BrandColors.brandGreen,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -9,7 +9,7 @@ import { ActionSheetIOS, ActivityIndicator, Alert, Animated, FlatList, Image, Mo
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { useThemeColor } from '../../src/hooks/useThemeColor';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 import {
   Post,
   Comment,
@@ -28,17 +28,19 @@ import { OfflineBanner } from '../../components/OfflineBanner';
 import offlineManager from '../../src/services/OfflineManager';
 
 import { api } from '../../services/api';
+import { BrandColors } from '../../src/theme/edufi';
 
 // Feature flag: use native player controls in feed (same as fullscreen)
 // Set to false to use our custom minimal transparent overlay controls
 const USE_NATIVE_FEED_CONTROLS = false;
 
 export default function PostScreen() {
-  const primaryColor = useThemeColor({}, 'primary');
-  const cardColor = useThemeColor({}, 'card');
-  const textColor = useThemeColor({}, 'text');
-  const textSecondaryColor = useThemeColor({}, 'textSecondary');
-  const backgroundColor = useThemeColor({}, 'background');
+  const { theme } = useTheme();
+  const primaryColor = theme.primary;
+  const cardColor = theme.card;
+  const textColor = theme.text;
+  const textSecondaryColor = theme.textSecondary;
+  const backgroundColor = theme.background;
   const { user } = useAuth();
   const router = useRouter();
 
@@ -774,7 +776,7 @@ export default function PostScreen() {
     const shouldShowHandle = displayName !== '' && username !== '' && displayName.toLowerCase() !== username.toLowerCase();
 
     return (
-      <Pressable style={styles.postContainer} onPress={() => {
+      <Pressable style={[styles.postContainer, { backgroundColor: cardColor, borderBottomColor: textSecondaryColor + '20' }]} onPress={() => {
         // TODO: Navigate to post detail screen
         console.log('Post tapped:', item.id);
       }}>
@@ -790,9 +792,9 @@ export default function PostScreen() {
 
           <View style={{ flex: 1, marginLeft: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
-              <Text style={styles.threadName}>{displayName || username}</Text>
-              {shouldShowHandle && <Text style={styles.threadHandle}> @{username}</Text>}
-              <Text style={styles.threadTime}> · {formatTimestamp(postTimestamp)}</Text>
+              <Text style={[styles.threadName, { color: textColor }]}>{displayName || username}</Text>
+              {shouldShowHandle && <Text style={[styles.threadHandle, { color: textSecondaryColor }]}> @{username}</Text>}
+              <Text style={[styles.threadTime, { color: textSecondaryColor }]}> · {formatTimestamp(postTimestamp)}</Text>
             </View>
           </View>
 
@@ -801,7 +803,7 @@ export default function PostScreen() {
               e.stopPropagation();
               showPostActionSheet(item);
             }}>
-              <MaterialCommunityIcons name="dots-horizontal" size={18} color="#888" />
+              <MaterialCommunityIcons name="dots-horizontal" size={18} color={textSecondaryColor} />
             </TouchableOpacity>
           )}
         </View>
@@ -810,14 +812,14 @@ export default function PostScreen() {
         {contentWithoutTags.length > 0 && (
           <View style={{ marginTop: 4 }}>
             <Text
-              style={styles.threadContent}
+              style={[styles.threadContent, { color: textColor }]}
               numberOfLines={expandedPosts[item.id] ? undefined : 5}
             >
               {contentWithoutTags}
             </Text>
             {contentWithoutTags.split('\n').length > 5 && !expandedPosts[item.id] && (
               <TouchableOpacity onPress={() => setExpandedPosts(prev => ({ ...prev, [item.id]: true }))}>
-                <Text style={styles.readMore}>Read more</Text>
+                <Text style={[styles.readMore, { color: primaryColor }]}>Read more</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -827,8 +829,8 @@ export default function PostScreen() {
         {hashtags.length > 0 && (
           <View style={styles.hashtagRow}>
             {hashtags.map((tag, idx) => (
-              <View key={tag + idx} style={[styles.hashtagChip, { backgroundColor: idx % 2 === 0 ? '#232323' : '#222D44' }]}>
-                <Text style={styles.hashtagText}>#{tag}</Text>
+              <View key={tag + idx} style={[styles.hashtagChip, { backgroundColor: idx % 2 === 0 ? textSecondaryColor + '15' : primaryColor + '15' }]}>
+                <Text style={[styles.hashtagText, { color: primaryColor }]}>#{tag}</Text>
               </View>
             ))}
           </View>
@@ -949,10 +951,10 @@ export default function PostScreen() {
                             </TouchableWithoutFeedback>
                             {/* Timestamp row */}
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-                              <Text style={{ color: '#fff', fontSize: 12 }}>
+                              <Text style={{ color: textSecondaryColor, fontSize: 12 }}>
                                 {formatMillis(videoProgress[item.id]?.position || 0)}
                               </Text>
-                              <Text style={{ color: '#fff', fontSize: 12 }}>
+                              <Text style={{ color: textSecondaryColor, fontSize: 12 }}>
                                 {formatMillis(videoProgress[item.id]?.duration || 0)}
                               </Text>
                             </View>
@@ -996,23 +998,23 @@ export default function PostScreen() {
             e.stopPropagation();
             showCommentsModal(item);
           }}>
-            <Ionicons name="chatbubble-outline" size={18} color="#71767B" />
-            <Text style={styles.threadActionText}>{item.comments_count}</Text>
+            <Ionicons name="chatbubble-outline" size={18} color={textSecondaryColor} />
+            <Text style={[styles.threadActionText, { color: textSecondaryColor }]}>{item.comments_count}</Text>
           </TouchableOpacity>
 
           {/* Repost */}
           <TouchableOpacity style={styles.threadActionBtn} onPress={(e) => {
             e.stopPropagation();
           }}>
-            <Ionicons name="repeat-outline" size={18} color="#71767B" />
-            <Text style={styles.threadActionText}>0</Text>
+            <Ionicons name="repeat-outline" size={18} color={textSecondaryColor} />
+            <Text style={[styles.threadActionText, { color: textSecondaryColor }]}>0</Text>
           </TouchableOpacity>
 
           {/* Share */}
           <TouchableOpacity style={styles.threadActionBtn} onPress={(e) => {
             e.stopPropagation();
           }}>
-            <Ionicons name="share-outline" size={18} color="#71767B" />
+            <Ionicons name="share-outline" size={18} color={textSecondaryColor} />
           </TouchableOpacity>
         </View>
       </Pressable>
@@ -1414,9 +1416,9 @@ export default function PostScreen() {
           onRequestClose={() => setShowPostOptions({ visible: false, post: null })}
         >
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
-            <View style={{ backgroundColor: '#222', borderRadius: 12, padding: 24, width: 280 }}>
-              <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Delete Post?</Text>
-              <Text style={{ color: '#ccc', marginBottom: 24 }}>Are you sure you want to delete this post?</Text>
+            <View style={{ backgroundColor: cardColor, borderRadius: 12, padding: 24, width: 280 }}>
+              <Text style={{ color: textColor, fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Delete Post?</Text>
+              <Text style={{ color: textSecondaryColor, marginBottom: 24 }}>Are you sure you want to delete this post?</Text>
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
                 <TouchableOpacity onPress={() => setShowPostOptions({ visible: false, post: null })} style={{ marginRight: 16 }}>
                   <Text style={{ color: '#4D96FF', fontWeight: 'bold' }}>Cancel</Text>
@@ -1817,7 +1819,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#2196F3',
+    backgroundColor: BrandColors.brandGreen,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,

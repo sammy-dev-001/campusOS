@@ -8,6 +8,7 @@ import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getInitials } from './postUtils';
+import { useTheme } from '../../src/contexts/NewThemeContext';
 
 interface User {
     profile_picture?: string;
@@ -24,20 +25,24 @@ interface PostHeaderProps {
 
 export default function PostHeader({
     user,
-    backgroundColor = '#121212',
+    backgroundColor,
     onNotificationPress,
     onAvatarPress,
 }: PostHeaderProps) {
+    const { theme } = useTheme();
     const insets = useSafeAreaInsets();
     const initials = getInitials(user?.display_name || user?.username || '');
 
+    // Use prop background if provided, otherwise theme background
+    const finalBackgroundColor = backgroundColor || theme.background;
+
     return (
-        <View style={{ backgroundColor, paddingTop: insets.top }}>
-            <View style={styles.feedHeader}>
-                <Text style={styles.feedHeaderTitle}>EduFi Feed</Text>
+        <View style={{ backgroundColor: finalBackgroundColor, paddingTop: insets.top }}>
+            <View style={[styles.feedHeader, { backgroundColor: finalBackgroundColor }]}>
+                <Text style={[styles.feedHeaderTitle, { color: theme.text }]}>EduFi Feed</Text>
                 <View style={styles.feedHeaderRight}>
                     <TouchableOpacity style={{ marginRight: 12 }} onPress={onNotificationPress}>
-                        <Ionicons name="notifications-outline" size={24} color="#fff" />
+                        <Ionicons name="notifications-outline" size={24} color={theme.text} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={onAvatarPress}>
                         <View style={styles.feedHeaderAvatar}>
@@ -62,17 +67,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#121212',
+        // Background color handled dynamically
         paddingHorizontal: 20,
         paddingTop: 8,
         paddingBottom: 4,
     },
     feedHeaderTitle: {
-        color: '#fff',
         fontSize: 22,
         fontWeight: 'bold',
         flex: 1,
-        textAlign: 'center',
+        textAlign: 'left',
+        marginLeft: 8,
     },
     feedHeaderRight: {
         flexDirection: 'row',

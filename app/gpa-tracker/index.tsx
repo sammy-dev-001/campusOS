@@ -14,10 +14,14 @@ import {
 import { LineChart } from 'react-native-chart-kit';
 
 import CourseFormModal from '../components/CourseFormModal';
+import { useTheme } from '../../src/contexts/NewThemeContext';
+import { BrandColors } from '../../src/theme/edufi';
 import { useAuth } from 'src/contexts/AuthContext';
 import { Course, getGradeColor, useGpa } from 'src/contexts/GpaContext';
 
 export default function GpaTrackerScreen() {
+  const { theme, isDark } = useTheme();
+  const styles = React.useMemo(() => getStyles(theme, isDark), [theme, isDark]);
   const { user } = useAuth();
   const {
     courses,
@@ -38,6 +42,20 @@ export default function GpaTrackerScreen() {
   const currentSemesterCourses = getCurrentSemesterCourses();
   const gpaStats = getGpaStats();
   const chartData = getChartData();
+
+  const chartConfig = {
+    backgroundGradientFrom: isDark ? theme.card : '#ffffff',
+    backgroundGradientTo: isDark ? theme.card : '#ffffff',
+    color: (opacity = 1) => isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
+    labelColor: (opacity = 1) => isDark ? `rgba(150, 150, 150, ${opacity})` : `rgba(100, 100, 100, ${opacity})`,
+    strokeWidth: 2,
+    useShadowColorFromDataset: false,
+    propsForDots: {
+      r: "6",
+      strokeWidth: "2",
+      stroke: BrandColors.brandGreen
+    }
+  };
 
   // Get current semester for summary
   const currentSemester = currentSemesterCourses.length > 0
@@ -104,7 +122,7 @@ export default function GpaTrackerScreen() {
     }
   };
 
-  const styles = getStyles();
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -137,7 +155,7 @@ export default function GpaTrackerScreen() {
             />
           ) : (
             <View style={styles.emptyChart}>
-              <Ionicons name="analytics-outline" size={48} color="#666" />
+              <Ionicons name="analytics-outline" size={48} color={theme.secondary} />
               <Text style={styles.emptyChartText}>Add courses to see your progress</Text>
             </View>
           )}
@@ -147,7 +165,7 @@ export default function GpaTrackerScreen() {
         <Text style={styles.sectionTitle}>Current Semester Courses</Text>
         {currentSemesterCourses.length === 0 ? (
           <View style={styles.emptyCourses}>
-            <Ionicons name="book-outline" size={48} color="#666" />
+            <Ionicons name="book-outline" size={48} color={theme.secondary} />
             <Text style={styles.emptyCoursesText}>No courses added yet</Text>
             <Text style={styles.emptyCoursesSubtext}>Tap "Add New Course" to get started</Text>
           </View>
@@ -243,19 +261,12 @@ export default function GpaTrackerScreen() {
   );
 }
 
-const chartConfig = {
-  backgroundGradientFrom: '#1E1E1E',
-  backgroundGradientTo: '#1E1E1E',
-  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(150, 150, 150, ${opacity})`,
-  strokeWidth: 2,
-  useShadowColorFromDataset: false,
-};
 
-const getStyles = () => StyleSheet.create({
+
+const getStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: theme.background,
   },
   scrollContainer: {
     padding: 20,
@@ -267,7 +278,7 @@ const getStyles = () => StyleSheet.create({
     marginBottom: 20,
   },
   headerTitle: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 22,
     fontWeight: 'bold',
   },
@@ -277,7 +288,7 @@ const getStyles = () => StyleSheet.create({
     borderRadius: 20,
   },
   card: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: theme.card,
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
@@ -289,23 +300,23 @@ const getStyles = () => StyleSheet.create({
     alignItems: 'flex-start',
   },
   cardTitle: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 18,
     fontWeight: 'bold',
   },
   cardSubtitle: {
-    color: '#888',
+    color: theme.secondary,
     fontSize: 14,
     marginBottom: 5,
   },
   gpaText: {
-    color: '#007AFF',
+    color: BrandColors.brandGreen,
     fontSize: 48,
     fontWeight: 'bold',
     marginBottom: 15,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: BrandColors.brandGreen,
     borderRadius: 10,
     paddingVertical: 15,
     flexDirection: 'row',
@@ -329,12 +340,12 @@ const getStyles = () => StyleSheet.create({
     marginTop: 10,
   },
   emptyChartText: {
-    color: '#666',
+    color: theme.secondary,
     fontSize: 14,
     marginTop: 10,
   },
   sectionTitle: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 15,
@@ -344,7 +355,7 @@ const getStyles = () => StyleSheet.create({
     paddingVertical: 40,
   },
   emptyCoursesText: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 16,
@@ -355,7 +366,7 @@ const getStyles = () => StyleSheet.create({
     marginTop: 8,
   },
   courseCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: theme.card,
     borderRadius: 15,
     padding: 15,
     flexDirection: 'row',
@@ -379,14 +390,14 @@ const getStyles = () => StyleSheet.create({
     flex: 1,
   },
   courseCode: {
-    color: '#fff',
+    color: theme.text,
     fontWeight: 'bold',
   },
   courseTitle: {
-    color: '#888',
+    color: theme.secondary,
   },
   courseCredits: {
-    color: '#555',
+    color: theme.textSecondary,
     fontSize: 12,
   },
   courseActions: {
@@ -403,31 +414,41 @@ const getStyles = () => StyleSheet.create({
     marginVertical: 10,
   },
   summaryItem: {
-    backgroundColor: '#2C2C2E',
+    backgroundColor: isDark ? theme.cardAlt : theme.card,
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
     width: '48%',
+    elevation: isDark ? 0 : 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0 : 0.05,
+    shadowRadius: 4,
   },
   summaryCoursesItem: {
-    backgroundColor: '#2C2C2E',
+    backgroundColor: isDark ? theme.cardAlt : theme.card,
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
     width: '100%',
     marginBottom: 10,
+    elevation: isDark ? 0 : 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0 : 0.05,
+    shadowRadius: 4,
   },
   summaryValue: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 24,
     fontWeight: 'bold',
   },
   summaryLabel: {
-    color: '#888',
+    color: theme.secondary,
     fontSize: 12,
   },
   statusPill: {
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    backgroundColor: `${BrandColors.brandGreen}20`,
     borderRadius: 20,
     paddingVertical: 5,
     paddingHorizontal: 15,
@@ -435,7 +456,7 @@ const getStyles = () => StyleSheet.create({
     marginTop: 10,
   },
   statusText: {
-    color: '#4CAF50',
+    color: BrandColors.brandGreen,
     fontWeight: 'bold',
   },
   breakdownGrid: {
@@ -463,7 +484,7 @@ const getStyles = () => StyleSheet.create({
     fontWeight: 'bold',
   },
   breakdownCount: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 14,
     fontWeight: 'bold',
   },

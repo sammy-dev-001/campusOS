@@ -129,7 +129,7 @@ export default function FinanceScreen() {
                                 card: cardBackground,
                                 text: textColor,
                                 textSecondary: textSecondary,
-                                primary: EduFiColors.primary,
+                                primary: theme.action,
                                 border: theme?.border || '#333',
                             }}
                         />
@@ -155,7 +155,7 @@ export default function FinanceScreen() {
                             </View>
 
                             <TouchableOpacity
-                                style={[styles.askAiButton, { backgroundColor: EduFiColors.primary }]}
+                                style={[styles.askAiButton, { backgroundColor: theme.action }]}
                                 onPress={() => router.push('/ai-chat')}
                             >
                                 <Ionicons name="chatbubble-ellipses-outline" size={20} color="#FFF" style={{ marginRight: 8 }} />
@@ -164,24 +164,24 @@ export default function FinanceScreen() {
                         </View>
                     </View>
 
-                    {/* 6. Action Buttons (Above Transactions) */}
+                    {/* 6. Action Buttons (Also using brandGreen for actions) */}
                     <View style={styles.actionButtonsContainer}>
                         <TouchableOpacity
-                            style={[styles.outlinedButton, { borderColor: EduFiColors.primary }]}
+                            style={[styles.outlinedButton, { borderColor: theme.action }]}
                             onPress={() => router.push('/finance/budget')}
                         >
-                            <Text style={[styles.outlinedButtonText, { color: EduFiColors.primary }]}>Set Budgets</Text>
+                            <Text style={[styles.outlinedButtonText, { color: theme.action }]}>Set Budgets</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.outlinedButton, { borderColor: EduFiColors.primary }]}
+                            style={[styles.outlinedButton, { borderColor: theme.action }]}
                             onPress={() => {
                                 if (Platform.OS === 'android') {
                                     router.push('/finance/sms-permission');
                                 }
                             }}
                         >
-                            <Text style={[styles.outlinedButtonText, { color: EduFiColors.primary }]}>Auto-Detect</Text>
+                            <Text style={[styles.outlinedButtonText, { color: theme.action }]}>Auto-Detect</Text>
                         </TouchableOpacity>
                     </View>
 

@@ -1,11 +1,18 @@
 // EduFi Theme Configuration
-// Brand Colors: Deep Blue (#0B3C5D), Soft Green (#4CAF50), White (#FFFFFF), Dark Gray (#333333)
+// Official Brand Colors: Brand Blue (#002E5D), Brand Green (#30B37E)
+
+// Brand Palette Constants
+export const BrandColors = {
+  brandBlue: '#002E5D',      // From mortarboard/text - Headers, titles, finance card
+  brandGreen: '#30B37E',     // From coin/arrow/Fi - Action buttons, success, income
+};
 
 export const EduFiColors = {
-  // Primary Brand Colors
-  primary: '#0B3C5D',        // Deep Blue - Main actions, headers, primary buttons
-  accent: '#4CAF50',         // Soft Green - Success states, positive money, accents
-  background: '#FFFFFF',     // White - Main background
+  // Primary Brand Colors (Updated to official palette)
+  primary: BrandColors.brandBlue,   // Brand Blue - Headers, titles, primary elements
+  accent: BrandColors.brandGreen,   // Brand Green - Action buttons, success states
+  action: BrandColors.brandGreen,   // Brand Green - CTAs, floating buttons
+  background: '#FFFFFF',            // White - Main background
   text: {
     primary: '#333333',      // Dark Gray - Main text
     secondary: '#666666',    // Medium Gray - Secondary text
@@ -14,15 +21,15 @@ export const EduFiColors = {
   },
 
   // Semantic Colors (using brand palette)
-  success: '#4CAF50',        // Accent green
-  warning: '#FF9800',        // Orange for warnings
-  error: '#F44336',          // Red for errors
-  info: '#0B3C5D',          // Primary blue
+  success: BrandColors.brandGreen,  // Brand green for success
+  warning: '#FF9800',               // Orange for warnings
+  error: '#F44336',                 // Red for errors
+  info: BrandColors.brandBlue,      // Brand blue for info
 
   // Finance-Specific Colors
-  income: '#4CAF50',         // Green for income
+  income: BrandColors.brandGreen,    // Brand green for income
   expense: '#F44336',        // Red for expenses
-  budgetOn: '#4CAF50',       // On track budget
+  budgetOn: BrandColors.brandGreen,  // On track budget
   budgetWarning: '#FF9800',  // Close to limit
   budgetOver: '#F44336',     // Over budget
 
@@ -30,9 +37,10 @@ export const EduFiColors = {
   border: '#E0E0E0',         // Light borders
   divider: '#F5F5F5',        // Subtle dividers
   card: '#FFFFFF',           // Card backgrounds
+  cardAlt: '#F5F5F5',        // Alt card bg (inputs in light mode)
   cardHover: '#F8F9FA',      // Card hover state
   disabled: '#BDBDBD',       // Disabled elements
-  shadow: 'rgba(11, 60, 93, 0.1)', // Primary color shadow
+  shadow: 'rgba(0, 46, 93, 0.1)', // Brand blue shadow
 
   // Category Colors (for expense categorization)
   categories: {

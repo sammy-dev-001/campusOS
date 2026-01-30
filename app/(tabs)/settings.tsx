@@ -7,6 +7,7 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Switch, Text, Touchab
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useTheme } from '../../src/contexts/NewThemeContext';
 import { useUser } from '../../src/contexts/UserContext';
+import { BrandColors } from '../../src/theme/edufi';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -60,96 +61,96 @@ export default function SettingsScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={styles.headerBlack}>
-        <Text style={styles.headerText}>Settings</Text>
+        <Text style={[styles.headerText, { color: theme.headerTitle }]}>Settings</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
+        <View style={[styles.profileCard, { backgroundColor: theme.card }]}>
+          <View style={[styles.avatarContainer, { backgroundColor: isDark ? '#232323' : '#F5F5F5' }]}>
             {uploading ? (
-              <View style={[styles.avatarImage, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#222' }]}>
-                <ActivityIndicator size="large" color="#4D96FF" />
+              <View style={[styles.avatarImage, { justifyContent: 'center', alignItems: 'center', backgroundColor: isDark ? '#222' : '#E0E0E0' }]}>
+                <ActivityIndicator size="large" color={theme.action} />
               </View>
             ) : user && user.profile_picture ? (
               <Image source={{ uri: user.profile_picture }} style={styles.avatarImage} />
             ) : avatar ? (
               <Image source={{ uri: avatar }} style={styles.avatarImage} />
             ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={64} color="#555" />
+              <View style={[styles.avatarPlaceholder, { backgroundColor: isDark ? '#232323' : '#F5F5F5' }]}>
+                <Ionicons name="person" size={64} color={theme.textSecondary} />
               </View>
             )}
-            <TouchableOpacity style={styles.cameraButton} onPress={handlePickImage}>
+            <TouchableOpacity style={[styles.cameraButton, { backgroundColor: theme.action }]} onPress={handlePickImage}>
               <Ionicons name="camera" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.profileName}>{user?.display_name || user?.username || 'User'}</Text>
+          <Text style={[styles.profileName, { color: theme.text }]}>{user?.display_name || user?.username || 'User'}</Text>
           <TouchableOpacity>
-            <Text style={styles.editProfile}>Edit Profile</Text>
+            <Text style={[styles.editProfile, { color: theme.action }]}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
         {error ? <Text style={{ color: 'red', marginBottom: 8, marginHorizontal: 16, fontSize: 14 }}>{error}</Text> : null}
 
         {/* Section 1: App Preferences */}
-        <Text style={styles.sectionTitle}>App Preferences</Text>
-        <View style={styles.cardGroup}>
+        <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : theme.headerTitle }]}>App Preferences</Text>
+        <View style={[styles.cardGroup, { backgroundColor: theme.card }]}>
           <View style={styles.settingRowTop}>
-            <Ionicons name="moon" size={24} color="#4D96FF" style={styles.settingIcon} />
+            <Ionicons name="moon" size={24} color={theme.action} style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Appearance</Text>
-              <Text style={styles.settingSubLabel}>Toggle Dark / Light mode</Text>
+              <Text style={[styles.settingLabel, { color: theme.text }]}>Appearance</Text>
+              <Text style={[styles.settingSubLabel, { color: theme.textSecondary }]}>Toggle Dark / Light mode</Text>
             </View>
             <Switch
               value={isDark}
               onValueChange={toggleTheme}
-              thumbColor={isDark ? '#4D96FF' : '#222'}
-              trackColor={{ false: '#333', true: '#4D96FF' }}
+              thumbColor={isDark ? BrandColors.brandGreen : '#222'}
+              trackColor={{ false: '#333', true: BrandColors.brandGreen }}
             />
           </View>
-          <View style={styles.settingDivider} />
+          <View style={[styles.settingDivider, { backgroundColor: theme.border }]} />
           <TouchableOpacity
             style={styles.settingRowBottom}
             activeOpacity={0.7}
             onPress={() => router.push('/notification-settings')}
           >
-            <Ionicons name="notifications-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
+            <Ionicons name="notifications-outline" size={24} color={theme.action} style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Notifications</Text>
-              <Text style={styles.settingSubLabel}>Class reminders (15 mins before)</Text>
+              <Text style={[styles.settingLabel, { color: theme.text }]}>Notifications</Text>
+              <Text style={[styles.settingSubLabel, { color: theme.textSecondary }]}>Class reminders (15 mins before)</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
+            <MaterialCommunityIcons name="chevron-right" size={24} color={theme.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Section 2: Support & Info */}
-        <Text style={styles.sectionTitle}>Support & Info</Text>
-        <View style={styles.cardGroup}>
+        <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : theme.headerTitle }]}>Support & Info</Text>
+        <View style={[styles.cardGroup, { backgroundColor: theme.card }]}>
           <TouchableOpacity
             style={styles.settingRowTop}
             activeOpacity={0.7}
             onPress={() => router.push('/about')}
           >
-            <MaterialCommunityIcons name="information-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
+            <MaterialCommunityIcons name="information-outline" size={24} color={theme.action} style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>About EduFi</Text>
-              <Text style={styles.settingSubLabel}>Version, terms, and privacy policy</Text>
+              <Text style={[styles.settingLabel, { color: theme.text }]}>About EduFi</Text>
+              <Text style={[styles.settingSubLabel, { color: theme.textSecondary }]}>Version, terms, and privacy policy</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
+            <MaterialCommunityIcons name="chevron-right" size={24} color={theme.textSecondary} />
           </TouchableOpacity>
-          <View style={styles.settingDivider} />
+          <View style={[styles.settingDivider, { backgroundColor: theme.border }]} />
           <TouchableOpacity style={styles.settingRowBottom} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="help-circle-outline" size={24} color="#4D96FF" style={styles.settingIcon} />
+            <MaterialCommunityIcons name="help-circle-outline" size={24} color={theme.action} style={styles.settingIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Help & Support</Text>
-              <Text style={styles.settingSubLabel}>Get assistance or report an issue</Text>
+              <Text style={[styles.settingLabel, { color: theme.text }]}>Help & Support</Text>
+              <Text style={[styles.settingSubLabel, { color: theme.textSecondary }]}>Get assistance or report an issue</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
+            <MaterialCommunityIcons name="chevron-right" size={24} color={theme.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Section 3: Account */}
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : theme.headerTitle }]}>Account</Text>
         <TouchableOpacity style={styles.logoutContainer} activeOpacity={0.8} onPress={logout}>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>

@@ -3,28 +3,32 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Image,
-    Modal,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useAuth } from '../src/contexts/AuthContext';
+import { useTheme } from '../src/contexts/NewThemeContext';
 import { Announcement, AnnouncementCategory, useAnnouncements } from '../src/contexts/AnnouncementContext';
 import { API_BASE_URL } from '../src/constants/Config';
+import { BrandColors } from '../src/theme/edufi';
 
 const CATEGORY_OPTIONS: AnnouncementCategory[] = ['General', 'Academic', 'Social', 'Emergency'];
 const CURRENT_USER_ID = 'user1'; // Replace with actual user ID from context if available
 
 function AnnouncementCard({ item, onPress, onLike, onBookmark }: { item: Announcement, onPress: () => void, onLike: () => void, onBookmark: () => void }) {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const isLiked = item.likedBy && item.likedBy.includes(CURRENT_USER_ID);
   const isBookmarked = item.bookmarkedBy && item.bookmarkedBy.includes(CURRENT_USER_ID);
   return (
@@ -35,7 +39,7 @@ function AnnouncementCard({ item, onPress, onLike, onBookmark }: { item: Announc
         ) : item.attachmentUrl ? (
           <Image source={{ uri: item.attachmentUrl }} style={styles.cardAvatar} />
         ) : (
-          <View style={[styles.cardAvatar, { backgroundColor: '#333', alignItems: 'center', justifyContent: 'center' }]}> 
+          <View style={[styles.cardAvatar, { backgroundColor: '#333', alignItems: 'center', justifyContent: 'center' }]}>
             <Ionicons name="notifications" size={24} color="#fff" />
           </View>
         )}
@@ -59,7 +63,7 @@ function AnnouncementCard({ item, onPress, onLike, onBookmark }: { item: Announc
           </TouchableOpacity>
           <Text style={{ color: '#888', marginLeft: 4 }}>{item.likedBy ? item.likedBy.length : 0}</Text>
           <TouchableOpacity style={{ marginLeft: 20 }} onPress={onBookmark}>
-            <Feather name="bookmark" size={20} color={isBookmarked ? '#007AFF' : '#888'} />
+            <Feather name="bookmark" size={20} color={isBookmarked ? BrandColors.brandGreen : '#888'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -68,6 +72,8 @@ function AnnouncementCard({ item, onPress, onLike, onBookmark }: { item: Announc
 }
 
 function AnnouncementFormModal({ visible, onClose, onSubmit }: { visible: boolean, onClose: () => void, onSubmit: (data: any) => void }) {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [author, setAuthor] = useState('');
@@ -107,7 +113,7 @@ function AnnouncementFormModal({ visible, onClose, onSubmit }: { visible: boolea
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#121212' }}>
+      <SafeAreaView style={styles.container}>
         <View style={{ padding: 20 }}>
           <Text style={styles.formHeader}>Post New Announcement</Text>
           <TextInput style={styles.input} placeholder="Title*" placeholderTextColor="#AAA" value={title} onChangeText={setTitle} />
@@ -126,7 +132,7 @@ function AnnouncementFormModal({ visible, onClose, onSubmit }: { visible: boolea
             </View>
           </View>
           <TouchableOpacity style={styles.filePickerButton} onPress={handlePickAttachment}>
-            <Ionicons name="cloud-upload-outline" size={24} color="#007AFF" />
+            <Ionicons name="cloud-upload-outline" size={24} color={BrandColors.brandGreen} />
             <Text style={styles.filePickerText}>{attachment ? attachment.name : 'Select an attachment (optional)'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]} onPress={handleSubmit} disabled={isSubmitting}>
@@ -141,12 +147,14 @@ function AnnouncementFormModal({ visible, onClose, onSubmit }: { visible: boolea
 function AnnouncementDetailModal({ visible, onClose, announcement, onEdit, onDelete, onLike, onBookmark }: {
   visible: boolean, onClose: () => void, announcement: Announcement | null, onEdit: () => void, onDelete: () => void, onLike: () => void, onBookmark: () => void
 }) {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   if (!announcement) return null;
   const isLiked = announcement.likedBy && announcement.likedBy.includes(CURRENT_USER_ID);
   const isBookmarked = announcement.bookmarkedBy && announcement.bookmarkedBy.includes(CURRENT_USER_ID);
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#121212' }}>
+      <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={{ padding: 20 }}>
           <View style={styles.cardHeader}>
             {announcement.profile_picture ? (
@@ -154,7 +162,7 @@ function AnnouncementDetailModal({ visible, onClose, announcement, onEdit, onDel
             ) : announcement.attachmentUrl ? (
               <Image source={{ uri: announcement.attachmentUrl }} style={styles.cardAvatar} />
             ) : (
-              <View style={[styles.cardAvatar, { backgroundColor: '#333', alignItems: 'center', justifyContent: 'center' }]}> 
+              <View style={[styles.cardAvatar, { backgroundColor: '#333', alignItems: 'center', justifyContent: 'center' }]}>
                 <Ionicons name="notifications" size={24} color="#fff" />
               </View>
             )}
@@ -192,7 +200,7 @@ function AnnouncementDetailModal({ visible, onClose, announcement, onEdit, onDel
             </TouchableOpacity>
             <Text style={{ color: '#888', marginLeft: 4 }}>{announcement.likedBy ? announcement.likedBy.length : 0}</Text>
             <TouchableOpacity style={{ marginLeft: 20 }} onPress={onBookmark}>
-              <Feather name="bookmark" size={20} color={isBookmarked ? '#007AFF' : '#888'} />
+              <Feather name="bookmark" size={20} color={isBookmarked ? BrandColors.brandGreen : '#888'} />
             </TouchableOpacity>
             <TouchableOpacity style={{ marginLeft: 20 }} onPress={onEdit}>
               <Feather name="edit" size={20} color="#888" />
@@ -208,6 +216,8 @@ function AnnouncementDetailModal({ visible, onClose, announcement, onEdit, onDel
 }
 
 export default function AnnouncementsScreen() {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const { announcements, isLoading, addAnnouncement, deleteAnnouncement, likeAnnouncement, bookmarkAnnouncement } = useAnnouncements();
   const [formVisible, setFormVisible] = useState(false);
   const [detailVisible, setDetailVisible] = useState(false);
@@ -287,7 +297,7 @@ export default function AnnouncementsScreen() {
         visible={detailVisible}
         onClose={() => setDetailVisible(false)}
         announcement={selectedAnnouncement}
-        onEdit={() => {}}
+        onEdit={() => { }}
         onDelete={() => { selectedAnnouncement && deleteAnnouncement(selectedAnnouncement.id); setDetailVisible(false); }}
         onLike={() => selectedAnnouncement && handleLike(selectedAnnouncement.id)}
         onBookmark={() => selectedAnnouncement && handleBookmark(selectedAnnouncement.id)}
@@ -296,15 +306,15 @@ export default function AnnouncementsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: theme.background,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: theme.cardAlt,
     borderRadius: 10,
     marginHorizontal: 20,
     paddingHorizontal: 15,
@@ -313,7 +323,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#fff',
+    color: theme.text,
     fontSize: 16,
   },
   filterContainer: {
@@ -344,7 +354,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // Space for the FAB
   },
   card: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: theme.card,
     borderRadius: 15,
     padding: 15,
     marginBottom: 15,
@@ -364,35 +374,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardAuthor: {
-    color: '#fff',
+    color: theme.text,
     fontWeight: 'bold',
   },
   cardDate: {
-    color: '#888',
+    color: theme.secondary,
     fontSize: 12,
   },
   cardTag: {
-    backgroundColor: '#333',
+    backgroundColor: theme.cardAlt,
     borderRadius: 5,
     paddingVertical: 3,
     paddingHorizontal: 8,
   },
   facultyTag: {
-      backgroundColor: '#F3B62D'
+    backgroundColor: '#F3B62D'
   },
   cardTagText: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 12,
     fontWeight: 'bold',
   },
   cardTitle: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 5,
   },
   cardContent: {
-    color: '#B0B0B0',
+    color: theme.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -402,11 +412,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 15,
     borderTopWidth: 1,
-    borderTopColor: '#282828',
+    borderTopColor: theme.border,
     paddingTop: 15,
   },
   readMore: {
-    color: '#007AFF',
+    color: BrandColors.brandGreen,
     fontWeight: 'bold',
   },
   cardActions: {
@@ -420,7 +430,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#007AFF',
+    backgroundColor: BrandColors.brandGreen,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -439,29 +449,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   formHeader: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
   },
   input: {
-    backgroundColor: '#282828',
+    backgroundColor: theme.cardAlt,
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
-    color: '#fff',
+    color: theme.text,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
   },
   pickerContainer: {
-    backgroundColor: '#282828',
+    backgroundColor: theme.cardAlt,
     borderRadius: 5,
     padding: 5,
   },
@@ -471,17 +481,17 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   pickerOptionActive: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.background,
   },
   pickerOptionText: {
-    color: '#fff',
+    color: theme.text,
   },
   pickerOptionTextActive: {
-    color: '#000',
+    color: theme.text,
     fontWeight: 'bold',
   },
   filePickerButton: {
-    backgroundColor: '#282828',
+    backgroundColor: theme.cardAlt,
     borderRadius: 5,
     padding: 10,
     marginBottom: 20,
@@ -489,12 +499,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filePickerText: {
-    color: '#fff',
+    color: theme.text,
     fontSize: 16,
     marginLeft: 10,
   },
   submitButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: BrandColors.brandGreen,
     borderRadius: 5,
     padding: 10,
   },

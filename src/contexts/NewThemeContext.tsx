@@ -1,38 +1,81 @@
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BrandColors } from '../theme/edufi';
 
-// Define theme types
+// Define expanded theme types for EduFi branding
 type Theme = {
+  // Core colors
   background: string;
   text: string;
   textSecondary: string;
   primary: string;
   secondary: string;
   card: string;
+  cardAlt: string;
   border: string;
   error: string;
+  // Action/CTA colors (brandGreen)
+  action: string;
+  actionText: string;
+  // Navigation colors
+  navActive: string;
+  navInactive: string;
+  // Finance specific
+  income: string;
+  expense: string;
+  // Special elements
+  headerTitle: string;
+  balanceCardBg: string;
 };
 
-// Default theme values - don't rely on Colors to prevent any potential circular dependencies
-const defaultLightTheme: Theme = {
-  background: '#ffffff',
-  primary: '#2563eb',
-  text: '#000000',
-  textSecondary: '#6b7280',
-  secondary: '#64748b',
-  card: '#ffffff',
-  border: '#e0e0e0',
-  error: '#ef4444'
+// EduFi Light Theme - Primary Theme (White bg, brandBlue headers, brandGreen buttons)
+const eduFiLightTheme: Theme = {
+  background: '#FFFFFF',
+  primary: BrandColors.brandBlue,
+  text: '#333333',
+  textSecondary: '#666666',
+  secondary: '#999999',
+  card: '#FFFFFF',
+  cardAlt: '#F5F5F5',
+  border: '#E0E0E0',
+  error: '#F44336',
+  // Actions use brandGreen
+  action: BrandColors.brandGreen,
+  actionText: '#FFFFFF',
+  // Navigation
+  navActive: BrandColors.brandGreen,
+  navInactive: '#999999',
+  // Finance
+  income: BrandColors.brandGreen,
+  expense: '#F44336',
+  // Special elements
+  headerTitle: BrandColors.brandBlue,
+  balanceCardBg: BrandColors.brandBlue,
 };
 
-const defaultDarkTheme: Theme = {
+// EduFi Dark Theme - Secondary Theme (Dark bg, white text, brandGreen buttons)
+const eduFiDarkTheme: Theme = {
   background: '#000000',
-  primary: '#2563eb',
-  text: '#f4f4f5',
-  textSecondary: '#a1a1aa',
-  secondary: '#64748b',
+  primary: BrandColors.brandBlue,
+  text: '#F4F4F5',
+  textSecondary: '#A1A1AA',
+  secondary: '#71717A',
   card: '#111112',
-  border: '#222222',
-  error: '#ef4444'
+  cardAlt: '#1E1E1E',
+  border: '#27272A',
+  error: '#EF4444',
+  // Actions use brandGreen
+  action: BrandColors.brandGreen,
+  actionText: '#FFFFFF',
+  // Navigation
+  navActive: BrandColors.brandGreen,
+  navInactive: '#71717A',
+  // Finance
+  income: BrandColors.brandGreen,
+  expense: '#EF4444',
+  // Special elements
+  headerTitle: '#FFFFFF',
+  balanceCardBg: BrandColors.brandBlue,
 };
 
 type ThemeContextType = {
@@ -43,21 +86,51 @@ type ThemeContextType = {
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
-  theme: defaultDarkTheme,
-  isDark: true,
-  toggleTheme: () => {}
+  theme: eduFiLightTheme,
+  isDark: false,
+  toggleTheme: () => { }
 });
 
 // Create a provider component
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(true); // Default to dark theme
+  const [isDark, setIsDark] = useState(false); // Default to light theme
+  const [isLoading, setIsLoading] = useState(true);
 
-  const toggleTheme = () => {
-    setIsDark(prev => !prev);
+  // Load theme preference on mount
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem('theme_preference');
+        if (savedTheme !== null) {
+          setIsDark(savedTheme === 'dark');
+        }
+      } catch (error) {
+        console.error('Failed to load theme preference:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadThemePreference();
+  }, []);
+
+  const toggleTheme = async () => {
+    try {
+      const newTheme = !isDark;
+      setIsDark(newTheme);
+      await AsyncStorage.setItem('theme_preference', newTheme ? 'dark' : 'light');
+    } catch (error) {
+      console.error('Failed to save theme preference:', error);
+    }
   };
 
   // Use the appropriate theme based on dark/light mode
-  const theme = isDark ? defaultDarkTheme : defaultLightTheme;
+  const theme = isDark ? eduFiDarkTheme : eduFiLightTheme;
+
+  // Don't render children until theme is loaded to prevent flash
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, isDark, toggleTheme }}>
@@ -73,3 +146,6 @@ export function useTheme() {
 
 // Export the context for direct usage if needed
 export const ThemeConsumer = ThemeContext.Consumer;
+
+// Export theme objects for direct access
+export { eduFiLightTheme, eduFiDarkTheme };

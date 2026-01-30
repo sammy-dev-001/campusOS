@@ -4,7 +4,8 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useColorScheme } from '../src/hooks/useColorScheme';
+import { useTheme } from '../src/contexts/NewThemeContext';
+import { BrandColors } from '../src/theme/edufi';
 import { ThemedText } from './ThemedText';
 
 type IconName = 'home' | 'home-outline' | 'chatbubble' | 'chatbubble-outline' |
@@ -21,8 +22,7 @@ const routeLabels: Record<string, string> = {
 };
 
 export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -45,7 +45,7 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           }}
           onPress={() => router.push('/create')}
         >
-          <View style={styles.createButton}>
+          <View style={[styles.createButton, { backgroundColor: theme.action }]}>
             <Ionicons name="add" size={32} color="#fff" />
           </View>
         </TouchableOpacity>
@@ -55,8 +55,8 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       <View style={[
         styles.container,
         {
-          backgroundColor: '#111',
-          borderTopColor: '#222',
+          backgroundColor: isDark ? '#111' : '#FFFFFF',
+          borderTopColor: isDark ? '#222' : '#E0E0E0',
           paddingBottom: insets.bottom,
           height: tabBarHeight,
           paddingTop: 8,
@@ -70,9 +70,8 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             const isFinanceTab = route.name === 'finance';
 
             const icon = getIconForRoute(route.name, isFocused);
-            const color = isFocused
-              ? '#0B3C5D'
-              : '#888';
+            // Use theme navActive (brandGreen) for active, navInactive for inactive
+            const color = isFocused ? theme.navActive : theme.navInactive;
             const label = routeLabels[route.name] || route.name;
 
             if (isFinanceTab) {
@@ -82,13 +81,13 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                   style={styles.tabButton}
                   onPress={() => navigation.navigate(route.name)}
                 >
-                  <View style={styles.financeIconContainer}>
+                  <View style={[styles.financeIconContainer, { backgroundColor: BrandColors.brandGreen }]}>
                     <Ionicons name="wallet" size={22} color="#fff" />
                   </View>
                   <ThemedText
                     style={[
                       styles.tabLabel,
-                      { color: isFocused ? '#2196F3' : '#888' }
+                      { color: isFocused ? theme.navActive : theme.navInactive }
                     ]}
                   >
                     {label}
@@ -147,10 +146,8 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#111',
     borderTopWidth: 1,
-    borderTopColor: '#222',
-    height: 60, // Base height
+    height: 60,
     paddingBottom: 0,
     // Shadow for iOS
     shadowColor: '#000',
@@ -168,10 +165,10 @@ const styles = StyleSheet.create({
   },
   createButtonContainer: {
     position: 'absolute',
-    bottom: Platform.OS === 'android' ? 70 : 60, // Higher above tab bar
+    bottom: Platform.OS === 'android' ? 70 : 60,
     left: '50%',
     marginLeft: -28,
-    zIndex: 10, // Higher z-index
+    zIndex: 10,
   },
   createButton: {
     width: 56,
@@ -179,7 +176,6 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0B3C5D', // EduFi Primary Blue
     // Shadow for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -200,8 +196,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#2196F3',
-    shadowColor: '#2196F3',
+    shadowColor: BrandColors.brandGreen,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 6,

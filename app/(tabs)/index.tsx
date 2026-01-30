@@ -23,6 +23,7 @@ import { useTimetable } from '../../src/contexts/TimetableContext';
 import { ThemedText } from '../../components/ThemedText';
 import { useTheme } from '../../src/contexts/NewThemeContext';
 import { useUser } from '../../src/contexts/UserContext';
+import { BrandColors } from '../../src/theme/edufi';
 
 interface ClassItem {
   id: string;
@@ -61,7 +62,7 @@ const quickActions = [
 ];
 
 export default function HomeScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { user } = useUser();
   const { width } = useWindowDimensions();
   const router = useRouter();
@@ -96,7 +97,7 @@ export default function HomeScreen() {
     }
   }, [refresh, searchParams, router]);
 
-  const styles = stylesFn(themeColors, isDesktop);
+  const styles = stylesFn(themeColors, isDesktop, isDark);
 
   const { getTodaysClasses: getTodaysClassesFn } = useTimetable();
   const todayClasses = useMemo(() => getTodaysClassesFn(), [getTodaysClassesFn]);
@@ -154,13 +155,15 @@ export default function HomeScreen() {
           {/* Today's Classes - Live Data */}
           <View style={styles.sectionHeader}>
             <ThemedText style={styles.sectionTitle}>Today's Classes</ThemedText>
-            <TouchableOpacity
-              style={styles.sectionEditButton}
-              onPress={() => router.push('/add-class')}
-            >
-              <Ionicons name="add" size={20} color="#4D96FF" />
-              <Text style={styles.sectionEditText}>Add</Text>
-            </TouchableOpacity>
+            {todayClasses.length > 0 && (
+              <TouchableOpacity
+                style={styles.sectionEditButton}
+                onPress={() => router.push('/add-class')}
+              >
+                <Ionicons name="add" size={20} color={BrandColors.brandGreen} />
+                <Text style={styles.sectionEditText}>Add</Text>
+              </TouchableOpacity>
+            )}
           </View>
           {todayClasses.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.classesScroll}>
@@ -218,7 +221,7 @@ export default function HomeScreen() {
           {/* Campus AI Assistant - Eddy */}
           <ThemedText style={[styles.sectionTitle, styles.sectionTitleStandalone]}>EduFi AI Assistant</ThemedText>
           <LinearGradient
-            colors={["#0B3C5D", "#4CAF50"]}
+            colors={[BrandColors.brandBlue, BrandColors.brandGreen]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.aiAssistantCard}
@@ -243,7 +246,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/campus-map')}
           >
             <LinearGradient
-              colors={['#0B3C5D', '#1A5A8C']}
+              colors={[BrandColors.brandBlue, '#1A5A8C']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.campusMapGradient}
@@ -275,10 +278,10 @@ interface ThemeColors {
   secondary: string;
 }
 
-const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
+const stylesFn = (theme: ThemeColors, isDesktop: boolean, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.background,
+    backgroundColor: isDark ? theme.background : '#F9F9F9',
     paddingTop: Platform.OS === 'android' ? 25 : 0,
   } as ViewStyle,
   contentContainer: {
@@ -326,7 +329,7 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: isDark ? theme.card : '#F0F2F5',
     borderRadius: 12,
     marginHorizontal: 20,
     paddingHorizontal: 15,
@@ -365,7 +368,7 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
     paddingHorizontal: 8,
   } as ViewStyle,
   sectionEditText: {
-    color: '#4D96FF',
+    color: BrandColors.brandGreen,
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 4,
@@ -376,16 +379,21 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
     paddingRight: 10,
   } as ViewStyle,
   classCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: isDark ? theme.card : '#FFFFFF',
     borderRadius: 16,
     padding: 15,
     width: 220,
     marginRight: 12,
+    elevation: isDark ? 0 : 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0 : 0.05,
+    shadowRadius: 8,
   } as ViewStyle,
   classTimeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(77, 150, 255, 0.2)',
+    backgroundColor: 'rgba(48, 179, 126, 0.2)', // brandGreen tint
     borderRadius: 20,
     paddingVertical: 5,
     paddingHorizontal: 10,
@@ -393,7 +401,7 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
     marginBottom: 12,
   } as ViewStyle,
   classTime: {
-    color: '#A7C7E7',
+    color: BrandColors.brandGreen,
     marginLeft: 5,
     fontWeight: 'bold',
     fontSize: 15,
@@ -420,7 +428,7 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
     marginLeft: 5,
   } as TextStyle,
   classButton: {
-    backgroundColor: '#4D96FF',
+    backgroundColor: BrandColors.brandGreen,
     borderRadius: 10,
     paddingVertical: 10,
     alignItems: 'center',
@@ -433,16 +441,21 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
   addClassCard: {
     width: 140,
     borderRadius: 16,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: isDark ? theme.card : '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
+    elevation: isDark ? 0 : 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0 : 0.05,
+    shadowRadius: 8,
     borderWidth: 1,
     borderColor: '#333',
     borderStyle: 'dashed',
   } as ViewStyle,
   addClassText: {
-    color: '#2196F3',
+    color: BrandColors.brandGreen,
     marginTop: 8,
     fontWeight: '500',
     fontSize: 14,
@@ -450,9 +463,14 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
   noClassesContainer: {
     alignItems: 'center',
     padding: 24,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: isDark ? theme.card : '#FFFFFF',
     borderRadius: 16,
     marginHorizontal: 20,
+    elevation: isDark ? 0 : 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0 : 0.05,
+    shadowRadius: 8,
   } as ViewStyle,
   noClassesText: {
     color: theme.text,
@@ -460,7 +478,7 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
     fontSize: 16,
   } as TextStyle,
   addSubjectsButton: {
-    backgroundColor: '#4D96FF',
+    backgroundColor: BrandColors.brandGreen,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10,
@@ -481,11 +499,16 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean) => StyleSheet.create({
   } as ViewStyle,
   quickActionCard: {
     width: '48%',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: isDark ? theme.card : '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     marginBottom: 12,
+    elevation: isDark ? 0 : 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0 : 0.05,
+    shadowRadius: 8,
   } as ViewStyle,
   quickActionIconContainer: {
     width: 56,

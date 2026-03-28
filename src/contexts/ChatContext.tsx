@@ -185,6 +185,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
       content,
       createdAt: new Date().toISOString(),
       status: 'sending',
+      ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+      ...(message.type ? { type: message.type } : {}),
+      ...(message.mediaUrl ? { mediaUrl: message.mediaUrl } : {}),
     };
 
     // Optimistically add the message to state
@@ -196,7 +199,17 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
     try {
       // Send to server
       const url = `${API_BASE_URL}/chats/${chatId}/messages`;
-      const body = JSON.stringify({ content, media: (message as any).media || [] });
+      const bodyObj: Record<string, any> = { content, media: (message as any).media || [] };
+      if (message.replyTo) {
+        bodyObj.replyTo = message.replyTo;
+      }
+      if (message.mediaUrl) {
+        bodyObj.mediaUrl = message.mediaUrl;
+      }
+      if (message.type) {
+        bodyObj.type = message.type;
+      }
+      const body = JSON.stringify(bodyObj);
 
       const makeReq = makeAuthenticatedRequestRef.current;
       if (!makeReq) throw new Error('Auth request helper not available');
@@ -396,7 +409,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }): JSX.Ele
   const isFetchingRef = useRef(false);
   const fetchCountRef = useRef(0);
   const typingTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
-  const MAX_FETCH_ATTEMPTS = 3;
+  const MAX_FETCH_ATTEMPTS = 10;
   const initializationAttempted = useRef(false);
 
   // Hooks

@@ -39,7 +39,7 @@ export default function PostHeader({
     return (
         <View style={{ backgroundColor: finalBackgroundColor, paddingTop: insets.top }}>
             <View style={[styles.feedHeader, { backgroundColor: finalBackgroundColor }]}>
-                <Text style={[styles.feedHeaderTitle, { color: theme.text }]}>EduFi Feed</Text>
+                <Text style={[styles.feedHeaderTitle, { color: theme.text }]}>EduFeed</Text>
                 <View style={styles.feedHeaderRight}>
                     <TouchableOpacity style={{ marginRight: 12 }} onPress={onNotificationPress}>
                         <Ionicons name="notifications-outline" size={24} color={theme.text} />

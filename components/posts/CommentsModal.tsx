@@ -1,18 +1,22 @@
 /**
  * Comments Modal Component
  * Displays comments for a post with reply functionality
+ * Themed to match EduFi brand and handles keyboard avoidance
  */
 
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
+    KeyboardAvoidingView,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '../ThemedText';
 import { Comment } from './types';
 
@@ -38,11 +42,13 @@ export default function CommentsModal({
     onChangeText,
     onSubmit,
     renderComment,
-    cardColor = '#1E1E1E',
-    textColor = '#FFFFFF',
-    textSecondaryColor = '#A0A0A0',
-    primaryColor = '#FFD600',
+    cardColor = '#FFFFFF',
+    textColor = '#333333',
+    textSecondaryColor = '#666666',
+    primaryColor = '#002E5D',
 }: CommentsModalProps) {
+    const insets = useSafeAreaInsets();
+
     return (
         <Modal
             visible={visible}
@@ -50,55 +56,87 @@ export default function CommentsModal({
             transparent={true}
             onRequestClose={onClose}
         >
-            <View style={[styles.modalContainer, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-                <View style={[styles.modalContent, { backgroundColor: cardColor }]}>
-                    {/* Header */}
-                    <View style={styles.modalHeader}>
-                        <ThemedText style={styles.modalTitle} type="subtitle">
-                            Comments
-                        </ThemedText>
-                        <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={24} color={textColor} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Comments List */}
-                    <ScrollView style={styles.commentsList}>
-                        {comments.length === 0 ? (
-                            <ThemedText style={styles.emptyText} type="default">
-                                No comments yet. Be the first to comment!
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+            >
+                <View style={[styles.modalContainer, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                    <View style={[styles.modalContent, { backgroundColor: cardColor, paddingBottom: insets.bottom || 16 }]}>
+                        {/* Header */}
+                        <View style={[styles.modalHeader, { borderBottomColor: textSecondaryColor + '20' }]}>
+                            <ThemedText style={[styles.modalTitle, { color: primaryColor }]} type="subtitle">
+                                Comments
                             </ThemedText>
-                        ) : (
-                            comments.map((comment) => (
-                                <React.Fragment key={comment.id}>
-                                    {renderComment(comment)}
-                                </React.Fragment>
-                            ))
-                        )}
-                    </ScrollView>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                style={[styles.closeBtn, { backgroundColor: textSecondaryColor + '15' }]}
+                            >
+                                <Ionicons name="close" size={20} color={textColor} />
+                            </TouchableOpacity>
+                        </View>
 
-                    {/* Input */}
-                    <View style={styles.commentInputContainer}>
-                        <TextInput
-                            style={[
-                                styles.commentInput,
-                                { color: textColor, borderColor: primaryColor },
-                            ]}
-                            placeholder="Add a comment..."
-                            placeholderTextColor={textSecondaryColor}
-                            value={commentText}
-                            onChangeText={onChangeText}
-                            multiline
-                        />
-                        <TouchableOpacity
-                            style={[styles.commentButton, { backgroundColor: primaryColor }]}
-                            onPress={onSubmit}
+                        {/* Comments List */}
+                        <ScrollView
+                            style={styles.commentsList}
+                            keyboardShouldPersistTaps="handled"
+                            showsVerticalScrollIndicator={false}
                         >
-                            <Ionicons name="send" size={24} color="#FFFFFF" />
-                        </TouchableOpacity>
+                            {comments.length === 0 ? (
+                                <View style={styles.emptyContainer}>
+                                    <Ionicons name="chatbubble-outline" size={48} color={textSecondaryColor + '40'} />
+                                    <ThemedText style={[styles.emptyText, { color: textSecondaryColor }]} type="default">
+                                        No comments yet. Be the first to comment!
+                                    </ThemedText>
+                                </View>
+                            ) : (
+                                comments.map((comment) => (
+                                    <React.Fragment key={comment.id}>
+                                        {renderComment(comment)}
+                                    </React.Fragment>
+                                ))
+                            )}
+                        </ScrollView>
+
+                        {/* Input */}
+                        <View style={[styles.commentInputContainer, { borderTopColor: textSecondaryColor + '20' }]}>
+                            <TextInput
+                                style={[
+                                    styles.commentInput,
+                                    {
+                                        color: textColor,
+                                        borderColor: textSecondaryColor + '30',
+                                        backgroundColor: textSecondaryColor + '10',
+                                    },
+                                ]}
+                                placeholder="Add a comment..."
+                                placeholderTextColor={textSecondaryColor}
+                                value={commentText}
+                                onChangeText={onChangeText}
+                                multiline
+                            />
+                            <TouchableOpacity
+                                style={[
+                                    styles.commentButton,
+                                    {
+                                        backgroundColor: commentText.trim()
+                                            ? '#30B37E'
+                                            : textSecondaryColor + '30',
+                                    },
+                                ]}
+                                onPress={onSubmit}
+                                disabled={!commentText.trim()}
+                            >
+                                <Ionicons
+                                    name="send"
+                                    size={20}
+                                    color={commentText.trim() ? '#FFFFFF' : textSecondaryColor}
+                                />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
@@ -110,40 +148,48 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         height: '80%',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
         padding: 16,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 12,
         paddingBottom: 12,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.1)',
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#FFFFFF',
+    },
+    closeBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     commentsList: {
         flex: 1,
     },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 60,
+        gap: 12,
+    },
     emptyText: {
-        color: '#A0A0A0',
         textAlign: 'center',
-        marginTop: 40,
         fontSize: 14,
     },
     commentInputContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 12,
+        alignItems: 'flex-end',
+        marginTop: 8,
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.1)',
     },
     commentInput: {
         flex: 1,
@@ -154,11 +200,12 @@ const styles = StyleSheet.create({
         marginRight: 8,
         fontSize: 14,
         maxHeight: 100,
+        minHeight: 40,
     },
     commentButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },

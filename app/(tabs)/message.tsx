@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, Modal, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,24 +68,41 @@ export default function MessageScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load chats when the screen is focused
-  React.useEffect(() => {
-    const loadChats = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        await fetchChats();
-      } catch (err) {
-        console.error('Failed to load chats:', err);
-        setError(err as Error);
-        setErrorMessage('Failed to load chats. Please pull down to refresh.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Refresh chats every time the screen gains focus AND poll every 15s while visible
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+      let intervalId: ReturnType<typeof setInterval>;
 
-    loadChats();
-  }, []);
+      const refresh = async () => {
+        try {
+          await fetchChats();
+          if (isMounted) {
+            setLoading(false);
+            setError(null);
+          }
+        } catch (err) {
+          console.error('Failed to load chats:', err);
+          if (isMounted) {
+            setLoading(false);
+            setError(err as Error);
+            setErrorMessage('Failed to load chats. Please pull down to refresh.');
+          }
+        }
+      };
+
+      // Fetch immediately on focus
+      refresh();
+
+      // Poll every 15 seconds while screen is focused
+      intervalId = setInterval(refresh, 15_000);
+
+      return () => {
+        isMounted = false;
+        clearInterval(intervalId);
+      };
+    }, [fetchChats])
+  );
 
   // Sort and filter chats by most recent activity
   const sortedChats = useMemo(() => {
@@ -178,13 +195,7 @@ export default function MessageScreen() {
     }
   }, [fetchChats]);
 
-  // Temporarily disabled to prevent infinite loop
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     setLoading(true);
-  //     fetchChats().finally(() => setLoading(false));
-  //   }, []) // Removed fetchChats from dependencies to prevent infinite loop
-  // );
+
 
   const renderRightActions = (item: Chat) => (
     <TouchableOpacity

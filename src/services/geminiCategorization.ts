@@ -6,14 +6,10 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Gemini API endpoint
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+import { API_BASE_URL } from '../constants/Config';
 
-// Cache key for API key
-const API_KEY_STORAGE = 'edufi_gemini_api_key';
-
-// Environment variable key (from .env)
-const ENV_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+// Gemini API endpoint (now points to our own backend)
+const CATEGORIZE_API_URL = `${API_BASE_URL}/ai/categorize`;
 
 // Valid categories
 export const TRANSACTION_CATEGORIES = [
@@ -36,35 +32,12 @@ export type TransactionCategory = typeof TRANSACTION_CATEGORIES[number];
 const categoryCache = new Map<string, TransactionCategory>();
 
 /**
- * Set the Gemini API key
- */
-export async function setGeminiApiKey(apiKey: string): Promise<void> {
-    await AsyncStorage.setItem(API_KEY_STORAGE, apiKey);
-}
-
-/**
- * Get the stored Gemini API key (checks env first, then AsyncStorage)
- */
-export async function getGeminiApiKey(): Promise<string | null> {
-    // Check environment variable first
-    if (ENV_API_KEY) {
-        return ENV_API_KEY;
-    }
-    // Fall back to AsyncStorage
-    return await AsyncStorage.getItem(API_KEY_STORAGE);
-}
-
-/**
- * Check if Gemini API is configured
+ * Check if Gemini API is configured (Always true now as it uses backend)
  */
 export async function isGeminiConfigured(): Promise<boolean> {
-    const key = await getGeminiApiKey();
-    return !!key;
+    return true;
 }
 
-/**
- * Categorize a transaction using Gemini AI
- */
 export async function categorizeWithGemini(
     smsText: string,
     transactionType: 'income' | 'expense',
@@ -76,93 +49,42 @@ export async function categorizeWithGemini(
         return categoryCache.get(cacheKey)!;
     }
 
-    const apiKey = await getGeminiApiKey();
-    if (!apiKey) {
-        console.log('Gemini API key not configured, using rule-based categorization');
-        return ruleBasedCategorization(smsText, transactionType);
-    }
-
     try {
-        const prompt = buildCategorizationPrompt(smsText, transactionType, amount);
+        const authData = await AsyncStorage.getItem('authData');
+        const token = authData ? JSON.parse(authData).token : null;
 
-        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+        const response = await fetch(CATEGORIZE_API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.3,
-                    maxOutputTokens: 100,
-                },
+                smsText,
+                type: transactionType,
+                amount
             }),
         });
 
         if (!response.ok) {
-            console.error('Gemini API error:', response.status);
+            console.error('Categorization API error:', response.status);
             return ruleBasedCategorization(smsText, transactionType);
         }
 
-        const data = await response.json();
-        const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-        // Parse the category from response
-        const category = parseGeminiCategory(resultText);
+        const resData = await response.json();
+        const category = resData.data?.category as TransactionCategory || 'Other';
 
         // Cache the result
         categoryCache.set(cacheKey, category);
 
         return category;
     } catch (error) {
-        console.error('Gemini categorization failed:', error);
+        console.error('Categorization failed:', error);
         return ruleBasedCategorization(smsText, transactionType);
     }
 }
 
-/**
- * Build the categorization prompt for Gemini
- */
-function buildCategorizationPrompt(smsText: string, type: 'income' | 'expense', amount: number): string {
-    const categories = type === 'income'
-        ? ['Salary', 'Transfer', 'Other']
-        : ['Food', 'Transport', 'Data', 'Bills', 'Shopping', 'Health', 'Entertainment', 'Education', 'Other'];
 
-    return `You are a Nigerian bank transaction categorizer. Analyze this bank SMS and respond with ONLY the category name.
-
-SMS: "${smsText}"
-Transaction Type: ${type}
-Amount: ₦${amount.toLocaleString()}
-
-Valid categories: ${categories.join(', ')}
-
-Consider common Nigerian transaction patterns:
-- POS/ATM withdrawals → Shopping
-- MTN/Glo/Airtel → Data
-- Uber/Bolt → Transport
-- DStv/Netflix → Entertainment
-- NEPA/PHCN/electricity → Bills
-- School/tuition → Education
-- Pharmacy/hospital → Health
-- Restaurant/food vendors → Food
-- Salary/wages → Salary
-- Transfer from others → Transfer
-
-Respond with ONLY the category name, nothing else:`;
-}
-
-/**
- * Parse Gemini response to extract category
- */
-function parseGeminiCategory(response: string): TransactionCategory {
-    const cleaned = response.trim().toLowerCase();
-
-    for (const category of TRANSACTION_CATEGORIES) {
-        if (cleaned.includes(category.toLowerCase())) {
-            return category;
-        }
-    }
-
-    return 'Other';
-}
 
 /**
  * Rule-based categorization fallback
@@ -227,8 +149,6 @@ export function clearCategoryCache(): void {
 }
 
 export const GeminiCategorizationService = {
-    setGeminiApiKey,
-    getGeminiApiKey,
     isGeminiConfigured,
     categorizeWithGemini,
     ruleBasedCategorization,

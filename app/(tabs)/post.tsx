@@ -1056,6 +1056,10 @@ export default function PostScreen() {
     const isReply = level > 0;
     const hasReplies = Array.isArray(comment.replies) && comment.replies.length > 0;
     const showReplies = expandedComments[comment.id] || level > 0;
+    // Theme-aware bubble colors
+    const bubbleBg = isReply ? textSecondaryColor + '10' : textSecondaryColor + '08';
+    const bubbleBorder = textSecondaryColor + '15';
+    const actionColor = '#30B37E'; // BrandGreen for actions
     return (
       <View
         key={comment.id}
@@ -1076,7 +1080,7 @@ export default function PostScreen() {
               borderRadius: isReply ? 14 : 18,
               marginRight: 10,
               marginTop: 2,
-              backgroundColor: '#232323',
+              backgroundColor: textSecondaryColor + '20',
             }}
           />
         ) : (
@@ -1099,56 +1103,52 @@ export default function PostScreen() {
         <View style={{ flex: 1 }}>
           <View
             style={{
-              backgroundColor: isReply ? '#23242a' : '#181a20',
+              backgroundColor: bubbleBg,
               borderRadius: 14,
               padding: 12,
               paddingBottom: 8,
               shadowColor: '#000',
-              shadowOpacity: 0.08,
+              shadowOpacity: 0.05,
               shadowRadius: 4,
               borderWidth: 1,
-              borderColor: isReply ? '#23242a' : '#232323',
+              borderColor: bubbleBorder,
             }}
           >
             {/* Username row */}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-              <ThemedText style={{ fontWeight: 'bold', color: '#fff', fontSize: 15 }} type="defaultSemiBold">
+              <ThemedText style={{ fontWeight: 'bold', color: textColor, fontSize: 15 }} type="defaultSemiBold">
                 {comment.display_name || comment.username}
               </ThemedText>
-              {/* Verification badge example (optional): */}
-              {/* {comment.is_verified && (
-                <Ionicons name="checkmark-circle" size={14} color="#4D96FF" style={{ marginLeft: 4 }} />
-              )} */}
-              <ThemedText style={{ color: '#888', fontSize: 12, marginLeft: 8 }} type="default">
+              <ThemedText style={{ color: textSecondaryColor, fontSize: 12, marginLeft: 8 }} type="default">
                 {formatTimestamp(comment.timestamp || comment.createdAt || comment.publishedAt || '')}
               </ThemedText>
             </View>
             {/* Content */}
-            <ThemedText style={{ color: '#fff', fontSize: 14, marginBottom: 4 }} type="default">
+            <ThemedText style={{ color: textColor, fontSize: 14, marginBottom: 4 }} type="default">
               {comment.content}
             </ThemedText>
             {/* Actions row */}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginRight: 18 }} onPress={() => handleCommentLike(comment.id)}>
-                <Ionicons name={comment.is_liked ? "heart" : "heart-outline"} size={16} color={comment.is_liked ? "#FF6B6B" : '#888'} />
-                <ThemedText style={{ color: '#888', fontSize: 13, marginLeft: 4 }} type="default">
+                <Ionicons name={comment.is_liked ? "heart" : "heart-outline"} size={16} color={comment.is_liked ? "#FF6B6B" : textSecondaryColor} />
+                <ThemedText style={{ color: textSecondaryColor, fontSize: 13, marginLeft: 4 }} type="default">
                   {comment.likes_count || ''}
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginRight: 18 }} onPress={() => setReplyingTo(comment.id)}>
-                <Ionicons name="chatbubble-ellipses-outline" size={16} color={primaryColor} />
-                <ThemedText style={{ color: primaryColor, marginLeft: 4, fontSize: 13 }} type="default">Reply</ThemedText>
+                <Ionicons name="chatbubble-ellipses-outline" size={16} color={actionColor} />
+                <ThemedText style={{ color: actionColor, marginLeft: 4, fontSize: 13 }} type="default">Reply</ThemedText>
               </TouchableOpacity>
               {hasReplies && !showReplies && (
                 <TouchableOpacity onPress={() => toggleReplies(comment.id)}>
-                  <ThemedText style={{ color: '#4D96FF', fontSize: 13 }} type="default">
+                  <ThemedText style={{ color: actionColor, fontSize: 13 }} type="default">
                     View Replies ({comment.replies?.length || 0})
                   </ThemedText>
                 </TouchableOpacity>
               )}
               {hasReplies && showReplies && (
                 <TouchableOpacity onPress={() => toggleReplies(comment.id)}>
-                  <ThemedText style={{ color: '#4D96FF', fontSize: 13 }} type="default">
+                  <ThemedText style={{ color: actionColor, fontSize: 13 }} type="default">
                     Hide Replies
                   </ThemedText>
                 </TouchableOpacity>
@@ -1157,7 +1157,7 @@ export default function PostScreen() {
             {/* Reply input */}
             {replyingTo === comment.id && (
               <View style={{ marginTop: 10 }}>
-                <ThemedText style={{ color: '#4D96FF', marginBottom: 4, fontSize: 12 }} type="default">
+                <ThemedText style={{ color: actionColor, marginBottom: 4, fontSize: 12 }} type="default">
                   Replying to {comment.display_name || comment.username}
                 </ThemedText>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -1166,9 +1166,9 @@ export default function PostScreen() {
                       styles.commentInput,
                       {
                         color: textColor,
-                        borderColor: primaryColor,
+                        borderColor: actionColor,
                         flex: 1,
-                        backgroundColor: '#232323',
+                        backgroundColor: textSecondaryColor + '10',
                         borderRadius: 18,
                         fontSize: 14,
                         paddingVertical: 6,
@@ -1181,7 +1181,7 @@ export default function PostScreen() {
                     onChangeText={setReplyText}
                     multiline
                   />
-                  <TouchableOpacity style={[styles.commentButton, { backgroundColor: primaryColor, marginLeft: 8 }]} onPress={() => handleReply(comment.id)}>
+                  <TouchableOpacity style={[styles.commentButton, { backgroundColor: actionColor, marginLeft: 8 }]} onPress={() => handleReply(comment.id)}>
                     <Ionicons name="send" size={20} color="#fff" />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => { setReplyingTo(null); setReplyText(''); }} style={{ marginLeft: 8 }}>

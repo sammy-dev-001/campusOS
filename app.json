@@ -1,15 +1,19 @@
 {
   "expo": {
     "name": "EduFi",
-    "slug": "edufi",
+    "slug": "campusos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "edufi",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sammydev001.edufi",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +28,10 @@
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO",
         "READ_EXTERNAL_STORAGE",
-        "READ_SMS"
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -55,6 +62,10 @@
         "projectId": "4db3bf0f-f0fc-4892-b786-3ff8f17744b0"
       }
     },
-    "owner": "sammy-dev-001"
+    "owner": "sammy-dev-001",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/4db3bf0f-f0fc-4892-b786-3ff8f17744b0"
+    }
   }
 }

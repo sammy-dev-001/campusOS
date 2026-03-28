@@ -17,7 +17,24 @@ const checkAI = (req, res, next) => {
     next();
 };
 
-// Protect all routes
+/**
+ * @route   GET /api/v1/ai/debug-key
+ * @desc    Temporarily check what key Render is actually using - UNPROTECTED
+ */
+router.get('/debug-key', (req, res) => {
+    const key = process.env.GEMINI_API_KEY || '';
+    if (!key) {
+        return res.status(200).json({ debug: 'No key is set at all in process.env' });
+    }
+    const safeKey = key.substring(0, 6) + '...' + key.substring(key.length - 4);
+    res.status(200).json({ 
+        debug: 'Key currently loaded by Render', 
+        keyPreview: safeKey, 
+        length: key.length 
+    });
+});
+
+// Protect all other routes
 router.use(protect);
 router.use(checkAI);
 
@@ -114,17 +131,51 @@ router.post('/chat', async (req, res, next) => {
 });
 
 /**
- * @route   GET /api/v1/ai/status
- * @desc    Check AI service status
+ * @route   POST /api/v1/ai/eddy
+ * @desc    Chat with Eddy - EduFi's AI student companion
+ *          Proxies through backend so the Gemini key is never exposed to clients
  */
-router.get('/status', (req, res) => {
-    res.status(200).json({
-        status: 'success',
-        data: {
-            available: aiService.isAvailable(),
-            features: ['summarize', 'quiz', 'flashcards', 'chat'],
-        },
-    });
+router.post('/eddy', async (req, res, next) => {
+    try {
+        const { message, history } = req.body;
+
+        if (!message || message.trim().length === 0) {
+            return next(new AppError('Please provide a message', 400));
+        }
+
+        const response = await aiService.eddyChat(message, history || []);
+
+        res.status(200).json({
+            status: 'success',
+            data: { response },
+        });
+    } catch (error) {
+        next(new AppError(error.message || 'Failed to get response from Eddy', 500));
+    }
+});
+
+/**
+ * @route   POST /api/v1/ai/categorize
+ * @desc    Categorize a transaction based on SMS text
+ *          Used for intelligent financial tracking
+ */
+router.post('/categorize', async (req, res, next) => {
+    try {
+        const { smsText, type, amount } = req.body;
+
+        if (!smsText) {
+            return next(new AppError('Please provide SMS text', 400));
+        }
+
+        const category = await aiService.categorizeTransaction(smsText, type || 'expense', amount || 0);
+
+        res.status(200).json({
+            status: 'success',
+            data: { category },
+        });
+    } catch (error) {
+        next(new AppError(error.message || 'Failed to categorize transaction', 500));
+    }
 });
 
 export default router;

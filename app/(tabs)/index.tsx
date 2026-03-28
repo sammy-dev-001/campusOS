@@ -125,8 +125,13 @@ export default function HomeScreen() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <MaterialCommunityIcons name="school-outline" size={30} color={themeColors.text} />
-              <ThemedText style={styles.logoText}>EduFi</ThemedText>
+              <Image
+                source={isDark
+                  ? require('../../assets/images/edufi-logo-white small.png')
+                  : require('../../assets/images/edufi-logo small.png')
+                }
+                style={{ width: 97, height: 49, resizeMode: 'contain' }}
+              />
             </View>
             <View style={styles.avatar}>
               {user?.profile_picture ? (
@@ -175,16 +180,16 @@ export default function HomeScreen() {
                   onPress={() => console.log('Navigate to class details:', item.id)}
                 >
                   <View style={styles.classTimeContainer}>
-                    <Ionicons name="time-outline" size={16} color="#A7C7E7" />
+                    <Ionicons name="time-outline" size={14} color={BrandColors.brandGreen} />
                     <Text style={styles.classTime}>{item.time}</Text>
                   </View>
-                  <Text style={styles.classTitle}>{item.subjectName}</Text>
+                  <Text style={styles.classTitle} numberOfLines={2}>{item.subjectName}</Text>
                   {item.courseCode && (
-                    <Text style={styles.classCourse}>{item.courseCode}</Text>
+                    <Text style={styles.classCourse} numberOfLines={1}>{item.courseCode}</Text>
                   )}
                   <View style={styles.classLocationContainer}>
-                    <Ionicons name="location-outline" size={16} color={themeColors.secondary} />
-                    <Text style={styles.classLocation}>{item.venue}</Text>
+                    <Ionicons name="location-outline" size={14} color={themeColors.secondary} />
+                    <Text style={styles.classLocation} numberOfLines={1}>{item.venue || 'TBD'}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -202,7 +207,9 @@ export default function HomeScreen() {
           )}
 
           {/* Quick Actions - Unified 2x2 Grid */}
-          <ThemedText style={[styles.sectionTitle, styles.sectionTitleStandalone]}>Quick Actions</ThemedText>
+          <View style={styles.sectionTitleStandalone}>
+            <ThemedText style={styles.sectionTitle}>Quick Actions</ThemedText>
+          </View>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action) => (
               <TouchableOpacity
@@ -219,7 +226,9 @@ export default function HomeScreen() {
           </View>
 
           {/* Campus AI Assistant - Eddy */}
-          <ThemedText style={[styles.sectionTitle, styles.sectionTitleStandalone]}>EduFi AI Assistant</ThemedText>
+          <View style={styles.sectionTitleStandalone}>
+            <ThemedText style={styles.sectionTitle}>EduFi AI Assistant</ThemedText>
+          </View>
           <LinearGradient
             colors={[BrandColors.brandBlue, BrandColors.brandGreen]}
             start={{ x: 0, y: 0 }}
@@ -240,7 +249,9 @@ export default function HomeScreen() {
           </LinearGradient>
 
           {/* Campus Map Banner */}
-          <ThemedText style={[styles.sectionTitle, styles.sectionTitleStandalone]}>Explore Campus</ThemedText>
+          <View style={styles.sectionTitleStandalone}>
+            <ThemedText style={styles.sectionTitle}>Explore Campus</ThemedText>
+          </View>
           <TouchableOpacity
             style={styles.campusMapCard}
             onPress={() => router.push('/campus-map')}
@@ -292,7 +303,7 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean, isDark: boolean) => St
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     paddingTop: 10,
     paddingBottom: 5,
   } as ViewStyle,
@@ -381,51 +392,57 @@ const stylesFn = (theme: ThemeColors, isDesktop: boolean, isDark: boolean) => St
   classCard: {
     backgroundColor: isDark ? theme.card : '#FFFFFF',
     borderRadius: 16,
-    padding: 15,
-    width: 220,
+    padding: 16,
+    width: 200,
+    minHeight: 140,
     marginRight: 12,
     elevation: isDark ? 0 : 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: isDark ? 0 : 0.05,
     shadowRadius: 8,
+    borderWidth: isDark ? 1 : 0,
+    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'transparent',
+    justifyContent: 'space-between',
   } as ViewStyle,
   classTimeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(48, 179, 126, 0.2)', // brandGreen tint
+    backgroundColor: 'rgba(48, 179, 126, 0.15)',
     borderRadius: 20,
-    paddingVertical: 5,
+    paddingVertical: 4,
     paddingHorizontal: 10,
     alignSelf: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 10,
   } as ViewStyle,
   classTime: {
     color: BrandColors.brandGreen,
-    marginLeft: 5,
-    fontWeight: 'bold',
-    fontSize: 15,
+    marginLeft: 4,
+    fontWeight: '700',
+    fontSize: 13,
   } as TextStyle,
   classTitle: {
     color: theme.text,
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '700',
     marginBottom: 4,
+    lineHeight: 20,
   } as TextStyle,
   classCourse: {
     color: theme.secondary,
-    fontSize: 14,
+    fontSize: 13,
     marginBottom: 8,
   } as TextStyle,
   classLocationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginTop: 'auto' as any,
   } as ViewStyle,
   classLocation: {
     color: theme.secondary,
-    fontSize: 13,
-    marginLeft: 5,
+    fontSize: 12,
+    marginLeft: 4,
+    flex: 1,
   } as TextStyle,
   classButton: {
     backgroundColor: BrandColors.brandGreen,

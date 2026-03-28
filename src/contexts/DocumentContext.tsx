@@ -16,7 +16,7 @@ const getMimeType = (extension: string): string => {
     'txt': 'text/plain',
     'rtf': 'application/rtf',
     'csv': 'text/csv',
-    
+
     // Images
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
@@ -25,20 +25,20 @@ const getMimeType = (extension: string): string => {
     'bmp': 'image/bmp',
     'webp': 'image/webp',
     'svg': 'image/svg+xml',
-    
+
     // Archives
     'zip': 'application/zip',
     'rar': 'application/x-rar-compressed',
     '7z': 'application/x-7z-compressed',
     'tar': 'application/x-tar',
     'gz': 'application/gzip',
-    
+
     // Audio
     'mp3': 'audio/mpeg',
     'wav': 'audio/wav',
     'ogg': 'audio/ogg',
     'm4a': 'audio/mp4',
-    
+
     // Video
     'mp4': 'video/mp4',
     'webm': 'video/webm',
@@ -48,7 +48,7 @@ const getMimeType = (extension: string): string => {
     'flv': 'video/x-flv',
     'mkv': 'video/x-matroska'
   };
-  
+
   return mimeTypes[extension.toLowerCase()] || 'application/octet-stream';
 };
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
@@ -133,26 +133,36 @@ export const DocumentProvider = ({ children }: { children: ReactNode }) => {
   const addDocument = async (docData: Omit<Document, 'id' | 'createdAt' | 'rating' | 'ratingsCount' | 'fileUri'> & { file: any }) => {
     try {
       setIsLoading(true);
-      
+
       // Get file info
       const fileToUpload = docData.file;
       const fileExtension = fileToUpload.name.split('.').pop()?.toLowerCase() || '';
       const mimeType = fileToUpload.mimeType || getMimeType(fileExtension);
       const fileName = fileToUpload.name || `document-${Date.now()}.${fileExtension}`;
-      
+
       // Create form data
       const formData = new FormData();
-      
-      // Read the file as a blob first
-      const response = await fetch(fileToUpload.uri);
-      const blob = await response.blob();
-      
-      // Create a new file from the blob
-      const fileObj = new File([blob], fileName, { type: mimeType });
-      
-      // Append the file to form data
-      formData.append('file', fileObj);
-      
+
+
+      // Handle file appending based on platform
+      if (Platform.OS === 'web') {
+        // Read the file as a blob first
+        const response = await fetch(fileToUpload.uri);
+        const blob = await response.blob();
+
+        // Create a new file from the blob
+        const fileObj = new File([blob], fileName, { type: mimeType });
+        formData.append('file', fileObj);
+      } else {
+        // For React Native, append the file object directly
+        // The object must have uri, name, and type properties
+        formData.append('file', {
+          uri: fileToUpload.uri,
+          name: fileName,
+          type: mimeType,
+        } as any);
+      }
+
       // Prepare metadata
       const metadata = {
         title: docData.title,
@@ -162,10 +172,10 @@ export const DocumentProvider = ({ children }: { children: ReactNode }) => {
         docType: docData.docType || 'Notes',
         uploaderName: docData.uploaderName || ''
       };
-      
+
       // Append metadata as a JSON string
       formData.append('metadata', JSON.stringify(metadata));
-      
+
       // Log the upload details for debugging
       console.log('Preparing to upload file:', {
         name: fileName,
@@ -183,11 +193,11 @@ export const DocumentProvider = ({ children }: { children: ReactNode }) => {
       // Use XMLHttpRequest instead of fetch for better FormData handling
       return new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        
+
         xhr.open('POST', `${API_BASE_URL}/api/documents`, true);
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
         xhr.setRequestHeader('Accept', 'application/json');
-        
+
         xhr.onload = async () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
@@ -210,16 +220,16 @@ export const DocumentProvider = ({ children }: { children: ReactNode }) => {
             reject(new Error(errorMessage));
           }
         };
-        
+
         xhr.onerror = () => {
           reject(new Error('Network error occurred'));
         };
-        
+
         xhr.upload.onprogress = (event) => {
           // You can add progress tracking here if needed
           console.log(`Upload progress: ${(event.loaded / event.total) * 100}%`);
         };
-        
+
         // Send the form data
         xhr.send(formData as any);
       });
@@ -232,10 +242,10 @@ export const DocumentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateDocument = async (id: string, docData: Partial<Document>) => {};
-  const deleteDocument = async (id: string) => {};
+  const updateDocument = async (id: string, docData: Partial<Document>) => { };
+  const deleteDocument = async (id: string) => { };
   const downloadDocument = async (doc: Document) => null;
-  const rateDocument = async (id: string, newRating: number) => {};
+  const rateDocument = async (id: string, newRating: number) => { };
 
   const value = {
     documents,

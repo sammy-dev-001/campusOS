@@ -21,10 +21,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../src/contexts/NewThemeContext';
 import { EduFiColors } from '../src/theme/edufi';
-import { getGeminiApiKey } from '../src/services/geminiCategorization';
+import { API_BASE_URL } from '../src/constants/Config';
 
-// Gemini API endpoint - using 1.5-flash for better free tier availability
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// Eddy's backend endpoint - API key lives on the server
+const EDDY_ENDPOINT = `${API_BASE_URL}/ai/eddy`;
 
 interface Message {
     id: string;
@@ -73,58 +73,26 @@ export default function AIBuddyScreen() {
         setIsLoading(true);
 
         try {
-            const apiKey = await getGeminiApiKey();
-            if (!apiKey) {
-                throw new Error('AI is not configured. Please add your Gemini API key in Settings.');
-            }
-
-            // Multi-modal system prompt (Academic + Finance + Life)
-            const systemPrompt = `You are Eddy, a friendly and knowledgeable AI student companion for Nigerian university students using the EduFi app. 
-
-Your role:
-- Help students with study tips, learning strategies, and explaining complex topics
-- Assist with financial tracking, budgeting, and money management advice
-- Provide mental health support, motivation, and wellness tips
-- Help with time management, schedules, and productivity
-- Offer course selection and career guidance
-
-Your personality:
-- Warm, encouraging, and patient like a friendly peer mentor
-- Break down complex topics into digestible parts
-- Use examples relevant to Nigerian students when possible
-- Keep responses concise (2-3 paragraphs max)
-- Use **bold text** for key terms and bullet points for lists
-- Use emojis sparingly for friendliness 📚💰🧠
-
-Important: You handle ACADEMICS, FINANCE, and WELLNESS. Be helpful across all these domains.`;
-
-            const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+            // Send message + conversation history to backend — key stays on server
+            const response = await fetch(EDDY_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [
-                        { role: 'user', parts: [{ text: systemPrompt }] },
-                        { role: 'model', parts: [{ text: 'Understood! I am Eddy, ready to help with academic guidance.' }] },
-                        ...messages.slice(1).map(m => ({
-                            role: m.role === 'user' ? 'user' : 'model',
-                            parts: [{ text: m.content }],
-                        })),
-                        { role: 'user', parts: [{ text: text }] },
-                    ],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 500,
-                    },
+                    message: text,
+                    history: messages.slice(1).map(m => ({
+                        role: m.role,
+                        content: m.content,
+                    })),
                 }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error?.message || 'Failed to get AI response');
+                throw new Error(errorData.message || 'Failed to get AI response');
             }
 
             const data = await response.json();
-            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text ||
+            const aiResponse = data.data?.response ||
                 "I'm sorry, I couldn't process that. Please try again.";
 
             const assistantMessage: Message = {

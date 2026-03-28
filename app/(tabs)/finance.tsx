@@ -16,7 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useFinance } from '../../src/contexts/FinanceContext';
-import { EduFiColors, formatNaira, EduFiSpacing, EduFiFonts } from '../../src/theme/edufi';
+import { EduFiColors, BrandColors, formatNaira, EduFiSpacing, EduFiFonts } from '../../src/theme/edufi';
 import { useTheme } from '../../src/contexts/NewThemeContext';
 import BudgetAlerts from '../../components/BudgetAlerts';
 import QuickAddInput from '../../components/finance/QuickAddInput';
@@ -68,7 +68,7 @@ export default function FinanceScreen() {
                 >
                     {/* 1. Header */}
                     <View style={styles.header}>
-                        <Text style={[styles.title, { color: EduFiColors.primary }]}>Finance</Text>
+                        <Text style={[styles.title, { color: BrandColors.brandGreen }]}>Finance</Text>
                         <Text style={[styles.subtitle, { color: textSecondary }]}>Manage your student budget</Text>
                     </View>
 
@@ -177,7 +177,7 @@ export default function FinanceScreen() {
                             style={[styles.outlinedButton, { borderColor: theme.action }]}
                             onPress={() => {
                                 if (Platform.OS === 'android') {
-                                    router.push('/finance/sms-permission');
+                                    router.push('/finance/notification-permission');
                                 }
                             }}
                         >
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     primaryCard: {
-        backgroundColor: EduFiColors.primary,
+        backgroundColor: BrandColors.brandGreen,
     },
     balanceLabel: {
         fontSize: EduFiFonts.sizes.sm,

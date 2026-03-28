@@ -1,18 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import MediaViewer from '../../components/MediaViewer';
-import KeyboardSafeWrapper from '../../components/KeyboardSafeWrapper';
+import SwipeableMessage from '../../components/chat/SwipeableMessage';
 import { API_BASE_URL } from '../../config/api';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { Chat, Message, useChat } from '../../src/contexts/ChatContext';
+import { Chat, Message, MessageReply, useChat } from '../../src/contexts/ChatContext';
 import { uploadToCloudinary } from '../../utils/fileUpload';
 import { ChatWrapper } from './_chat-wrapper';
 
@@ -98,6 +99,8 @@ function ChatScreenContent() {
   const [composerType, setComposerType] = useState<'image' | 'video'>('image');
   const [composerCaption, setComposerCaption] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<{ message: Message; senderName: string } | null>(null);
+  const inputRef = useRef<TextInput>(null);
 
   // Find the chat from context or fetch it
   useEffect(() => {
@@ -218,15 +221,6 @@ function ChatScreenContent() {
     : null;
   const otherUser = otherParticipant ? otherParticipant.raw : null;
 
-  if (!currentChat || !participants.length) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#181A20' }}>
-        <ActivityIndicator size="large" color="#FFD600" />
-        <Text style={{ color: '#fff', marginTop: 10 }}>Loading chat...</Text>
-      </View>
-    );
-  }
-
   // Debug log for troubleshooting name issues
   console.log('Participants:', participants);
   console.log('OtherUser (resolved):', otherUser);
@@ -250,9 +244,48 @@ function ChatScreenContent() {
 
   const handleSend = () => {
     if (!input.trim()) return;
-    sendMessage(id as string, { content: input.trim(), type: 'text' });
+    const msgPayload: Partial<Message> = { content: input.trim(), type: 'text' };
+    if (replyingTo) {
+      msgPayload.replyTo = {
+        messageId: replyingTo.message.id,
+        content: replyingTo.message.content || '',
+        senderId: Number(replyingTo.message.senderId) || 0,
+        senderName: replyingTo.senderName,
+        isMedia: replyingTo.message.type === 'image' || replyingTo.message.type === 'video',
+        mediaUrl: replyingTo.message.mediaUrl,
+      };
+    }
+    sendMessage(id as string, msgPayload);
     setInput('');
+    setReplyingTo(null);
   };
+
+  // Handle swipe-to-reply gesture trigger
+  const handleSwipeReply = useCallback((item: Message) => {
+    // Resolve sender name
+    const participantMatch = normalizedParticipants.find((p: any) =>
+      p?.id && (String(p.id) === String(item?.senderId) ||
+        String(p.id) === String((item as any)?.sender?._id || (item as any)?.sender?.id))
+    );
+    const resolvedSender = participantMatch ? participantMatch.raw : null;
+    const isOwn = user != null && String(item.senderId) === String(user.id);
+    const sender = isOwn ? user : ((item as any)?.sender || resolvedSender || otherUser);
+    const senderName = isOwn ? 'You' : (sender?.displayName || sender?.username || 'Unknown');
+
+    setReplyingTo({ message: item, senderName });
+    // Focus the text input so user can type immediately
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, [normalizedParticipants, user, otherUser]);
+
+  // Loading state – must be placed AFTER all hooks to avoid hook-count mismatch
+  if (!currentChat || !participants.length) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#181A20' }}>
+        <ActivityIndicator size="large" color="#FFD600" />
+        <Text style={{ color: '#fff', marginTop: 10 }}>Loading chat...</Text>
+      </View>
+    );
+  }
 
   const handleFileUpload = async (fileUri: string, fileName?: string | null, mimeType?: string | null) => {
     const safeName = (fileName && fileName.trim().length > 0)
@@ -678,293 +711,357 @@ function ChatScreenContent() {
     const mediaUrl = item?.mediaUrl ? normalizeUrl(item.mediaUrl) : undefined;
 
     return (
-      <View style={[
-        styles.messageRow,
-        { flexDirection: isOwn ? 'row-reverse' : 'row' }
-      ]}>
-        {/* Avatar only for recipient (not for own messages) */}
-        {!isOwn && (
-          <View style={styles.avatarWrap}>
-            {avatar && !failedAvatarUrlsRef.current.has(avatar) ? (
-              <Image
-                source={{ uri: avatar }}
-                style={styles.avatar}
-                onError={() => {
-                  console.warn('[BubbleAvatar] failed to load', avatar);
-                  failedAvatarUrlsRef.current.add(avatar);
-                  forceRerender((n) => n + 1);
-                }}
-              />
-            ) : (
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{initials}</Text>
-              </View>
-            )}
-          </View>
-        )}
-        {/* Bubble */}
-        <View style={{ flex: 1, alignItems: isOwn ? 'flex-end' : 'flex-start' }}>
-          {showSenderName && (
-            <Text style={[
-              styles.senderName,
-              isOwn ? styles.senderNameOwn : styles.senderNameOther
-            ]}>
-              {senderName}
-            </Text>
+      <SwipeableMessage isOwn={isOwn} onReply={() => handleSwipeReply(item)}>
+        <View style={[
+          styles.messageRow,
+          { flexDirection: isOwn ? 'row-reverse' : 'row' }
+        ]}>
+          {/* Avatar only for recipient (not for own messages) */}
+          {!isOwn && (
+            <View style={styles.avatarWrap}>
+              {avatar && !failedAvatarUrlsRef.current.has(avatar) ? (
+                <Image
+                  source={{ uri: avatar }}
+                  style={styles.avatar}
+                  onError={() => {
+                    console.warn('[BubbleAvatar] failed to load', avatar);
+                    failedAvatarUrlsRef.current.add(avatar);
+                    forceRerender((n) => n + 1);
+                  }}
+                />
+              ) : (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{initials}</Text>
+                </View>
+              )}
+            </View>
           )}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onLongPress={() => {
-              // Contextual menu for message actions
-              const msgId = item?.tempId || item?.id;
-              const options: any[] = [];
-              if (item?.status === 'failed') {
+          {/* Bubble */}
+          <View style={{ flex: 1, alignItems: isOwn ? 'flex-end' : 'flex-start' }}>
+            {showSenderName && (
+              <Text style={[
+                styles.senderName,
+                isOwn ? styles.senderNameOwn : styles.senderNameOther
+              ]}>
+                {senderName}
+              </Text>
+            )}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onLongPress={() => {
+                // Contextual menu for message actions
+                const msgId = item?.tempId || item?.id;
+                const options: any[] = [];
+                // Reply option
                 options.push({
-                  text: 'Retry', onPress: () => {
+                  text: 'Reply', onPress: () => handleSwipeReply(item),
+                });
+                if (item?.status === 'failed') {
+                  options.push({
+                    text: 'Retry', onPress: () => {
+                      Alert.alert('Retry message?', 'Do you want to retry sending this message?', [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Retry', onPress: async () => {
+                            try {
+                              if (msgId) await deleteMessage(msgId, id as string);
+                            } catch (e) { console.warn('retry cleanup failed', e); }
+                            try { sendMessage(id as string, { content: item.content, type: item.type, mediaUrl: item.mediaUrl }); } catch (e) { console.error('retry send failed', e); }
+                          }
+                        }
+                      ]);
+                    }
+                  });
+                }
+                options.push({
+                  text: 'Delete', onPress: async () => {
+                    try { const msgId2 = item?.tempId || item?.id; if (msgId2) await deleteMessage(msgId2, id as string); } catch (e) { console.error('delete failed', e); }
+                  }
+                });
+                options.push({ text: 'Cancel', style: 'cancel' });
+                // Present as a simple Alert with options
+                Alert.alert('Message actions', '', options as any[]);
+              }}
+              style={[
+                styles.bubble,
+                isOwn ? styles.bubbleOwn : styles.bubbleOther,
+                showSenderName ? (isOwn ? styles.bubbleOwnWithName : styles.bubbleOtherWithName) : {}
+              ]}
+            >
+              {/* Quoted reply preview inside bubble */}
+              {item?.replyTo && (
+                <View style={[styles.quotedReply, isOwn ? styles.quotedReplyOwn : styles.quotedReplyOther]}>
+                  <Text style={styles.quotedReplyName} numberOfLines={1}>
+                    {item.replyTo.senderName || 'Unknown'}
+                  </Text>
+                  {item.replyTo.isMedia ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Ionicons name={item.replyTo.mediaUrl?.includes('video') ? 'videocam' : 'image'} size={14} color="rgba(255,255,255,0.6)" />
+                      <Text style={styles.quotedReplyText} numberOfLines={1}>
+                        {item.replyTo.content || (item.replyTo.mediaUrl?.includes('video') ? 'Video' : 'Photo')}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.quotedReplyText} numberOfLines={2}>
+                      {item.replyTo.content}
+                    </Text>
+                  )}
+                </View>
+              )}
+              {(item.type === 'image' || item.type === 'video') && mediaUrl ? (
+                <TouchableOpacity onPress={() => {
+                  if (item.type === 'image' || item.type === 'video') {
+                    openMediaViewer(mediaUrl!, item.type);
+                  }
+                }}>
+                  {item.type === 'image' ? (
+                    <View style={styles.bubbleImageContainer}>
+                      <Image
+                        source={{ uri: mediaUrl }}
+                        style={styles.bubbleImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  ) : (
+                    <View style={styles.bubbleVideo}>
+                      <Ionicons name="play" size={40} color="white" style={styles.playIcon} />
+                      <VideoThumb uri={mediaUrl} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ) : null}
+              {item?.content ? (
+                <Text style={styles.bubbleText}>{item.content}</Text>
+              ) : null}
+              {/* Sending indicator removed: no spinner shown for optimistic messages */}
+              {item?.status === 'failed' && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                  <Text style={[styles.bubbleMeta, { color: '#ff6b6b', marginRight: 8 }]}>Failed to send</Text>
+                  <TouchableOpacity onPress={() => {
                     Alert.alert('Retry message?', 'Do you want to retry sending this message?', [
                       { text: 'Cancel', style: 'cancel' },
                       {
                         text: 'Retry', onPress: async () => {
                           try {
+                            const msgId = item?.tempId || item?.id;
                             if (msgId) await deleteMessage(msgId, id as string);
                           } catch (e) { console.warn('retry cleanup failed', e); }
                           try { sendMessage(id as string, { content: item.content, type: item.type, mediaUrl: item.mediaUrl }); } catch (e) { console.error('retry send failed', e); }
                         }
                       }
                     ]);
-                  }
-                });
-              }
-              options.push({
-                text: 'Delete', onPress: async () => {
-                  try { const msgId2 = item?.tempId || item?.id; if (msgId2) await deleteMessage(msgId2, id as string); } catch (e) { console.error('delete failed', e); }
-                }
-              });
-              options.push({ text: 'Cancel', style: 'cancel' });
-              // Present as a simple Alert with options
-              Alert.alert('Message actions', '', options as any[]);
-            }}
-            style={[
-              styles.bubble,
-              isOwn ? styles.bubbleOwn : styles.bubbleOther,
-              showSenderName ? (isOwn ? styles.bubbleOwnWithName : styles.bubbleOtherWithName) : {}
-            ]}
-          >
-            {(item.type === 'image' || item.type === 'video') && mediaUrl ? (
-              <TouchableOpacity onPress={() => {
-                if (item.type === 'image' || item.type === 'video') {
-                  openMediaViewer(mediaUrl!, item.type);
-                }
-              }}>
-                {item.type === 'image' ? (
-                  <View style={styles.bubbleImageContainer}>
-                    <Image
-                      source={{ uri: mediaUrl }}
-                      style={styles.bubbleImage}
-                      resizeMode="cover"
-                    />
-                  </View>
-                ) : (
-                  <View style={styles.bubbleVideo}>
-                    <Ionicons name="play" size={40} color="white" style={styles.playIcon} />
-                    <VideoThumb uri={mediaUrl} />
-                  </View>
-                )}
-              </TouchableOpacity>
-            ) : null}
-            {item?.content ? (
-              <Text style={styles.bubbleText}>{item.content}</Text>
-            ) : null}
-            {/* Sending indicator removed: no spinner shown for optimistic messages */}
-            {item?.status === 'failed' && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                <Text style={[styles.bubbleMeta, { color: '#ff6b6b', marginRight: 8 }]}>Failed to send</Text>
-                <TouchableOpacity onPress={() => {
-                  Alert.alert('Retry message?', 'Do you want to retry sending this message?', [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Retry', onPress: async () => {
-                        try {
-                          const msgId = item?.tempId || item?.id;
-                          if (msgId) await deleteMessage(msgId, id as string);
-                        } catch (e) { console.warn('retry cleanup failed', e); }
-                        try { sendMessage(id as string, { content: item.content, type: item.type, mediaUrl: item.mediaUrl }); } catch (e) { console.error('retry send failed', e); }
-                      }
+                  }}>
+                    <Text style={[styles.bubbleMeta, { color: '#FFD600' }]}>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              <Text style={[
+                styles.bubbleTime,
+                isOwn ? styles.bubbleTimeOwn : styles.bubbleTimeOther
+              ]}>
+                {item?.createdAt
+                  ? (() => {
+                    try {
+                      const date = new Date(item.createdAt);
+                      return isNaN(date.getTime())
+                        ? '??'
+                        : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    } catch (e) {
+                      console.error('Error formatting date:', e, 'Value:', item.createdAt);
+                      return '??';
                     }
-                  ]);
-                }}>
-                  <Text style={[styles.bubbleMeta, { color: '#FFD600' }]}>Retry</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            <Text style={[
-              styles.bubbleTime,
-              isOwn ? styles.bubbleTimeOwn : styles.bubbleTimeOther
-            ]}>
-              {item?.createdAt
-                ? (() => {
-                  try {
-                    const date = new Date(item.createdAt);
-                    return isNaN(date.getTime())
-                      ? '??'
-                      : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                  } catch (e) {
-                    console.error('Error formatting date:', e, 'Value:', item.createdAt);
-                    return '??';
-                  }
-                })()
-                : ''}
-            </Text>
-          </TouchableOpacity>
+                  })()
+                  : ''}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {/* No avatar for own messages */}
+          {isOwn && <View style={styles.avatarWrap} />}
         </View>
-        {/* No avatar for own messages */}
-        {isOwn && <View style={styles.avatarWrap} />}
-      </View>
+      </SwipeableMessage>
     );
   };
 
   // Header
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View
-        style={[styles.header, { paddingTop: 8 }]}
-        onLayout={(e) => setHeaderHeight(Math.max(0, Math.round(e.nativeEvent.layout.height)))}
-      >
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        {chatAvatar && !failedAvatarUrlsRef.current.has(chatAvatar) ? (
-          <Image
-            source={{ uri: chatAvatar }}
-            style={styles.headerAvatar}
-            onError={() => {
-              console.warn('[HeaderAvatar] failed to load', chatAvatar);
-              failedAvatarUrlsRef.current.add(chatAvatar);
-              forceRerender((n) => n + 1);
-            }}
-          />
-        ) : (
-          <View style={styles.headerAvatar}>
-            <Text style={styles.headerAvatarText}>{getInitials(chatName)}</Text>
-          </View>
-        )}
-        <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{chatName}</Text>
-      </View>
-      <KeyboardSafeWrapper
-        keyboardVerticalOffset={headerHeight}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={displayedMessages}
-          renderItem={renderMessage}
-          keyExtractor={(item, idx) => {
-            // Prefer server id; otherwise compose a stable-ish key to avoid collisions
-            const idKey = item && (item as any).id != null ? String((item as any).id) : null;
-            if (idKey) return idKey;
-            const a = (item as any) || {};
-            const parts = [a.mediaUrl, a.content, a.createdAt].filter(Boolean);
-            return parts.length ? parts.join('|') : `msg-${idx}`;
-          }}
-          contentContainerStyle={styles.messages}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-        />
-        <View style={[
-          styles.inputBar,
-          { paddingBottom: keyboardVisible ? 8 : Math.max(8, insets.bottom) }
-        ]}>
-          <View style={styles.inputInner}>
-            <TouchableOpacity style={styles.inputIcon} onPress={handleAttachFile}>
-              <Ionicons name="attach" size={22} color="#888" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.inputIcon} onPress={() => showCameraOptions('Videos')}>
-              <Ionicons name="videocam" size={22} color="#888" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.inputIcon} onPress={() => showCameraOptions('Images')}>
-              <Ionicons name="camera" size={22} color="#888" />
-            </TouchableOpacity>
-            <TextInput
-              style={styles.input}
-              placeholder="Type a message..."
-              placeholderTextColor="#888"
-              value={input}
-              onChangeText={setInput}
-              multiline
-              underlineColorAndroid="transparent"
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View
+          style={[styles.header, { paddingTop: 8 }]}
+          onLayout={(e) => setHeaderHeight(Math.max(0, Math.round(e.nativeEvent.layout.height)))}
+        >
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          {chatAvatar && !failedAvatarUrlsRef.current.has(chatAvatar) ? (
+            <Image
+              source={{ uri: chatAvatar }}
+              style={styles.headerAvatar}
+              onError={() => {
+                console.warn('[HeaderAvatar] failed to load', chatAvatar);
+                failedAvatarUrlsRef.current.add(chatAvatar);
+                forceRerender((n) => n + 1);
+              }}
             />
-            <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-              <Ionicons name="send" size={22} color="#fff" />
-            </TouchableOpacity>
-          </View>
+          ) : (
+            <View style={styles.headerAvatar}>
+              <Text style={styles.headerAvatarText}>{getInitials(chatName)}</Text>
+            </View>
+          )}
+          <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{chatName}</Text>
         </View>
-      </KeyboardSafeWrapper>
-      {/* Media Composer Modal */}
-      <Modal
-        animationType="slide"
-        transparent
-        visible={composerVisible}
-        onRequestClose={() => setComposerVisible(false)}
-      >
-        <View style={styles.composerBackdrop}>
-          <View style={styles.composerCard}>
-            <Text style={styles.composerTitle}>{composerType === 'image' ? 'Edit Photo & Add Caption' : 'Add Caption to Video'}</Text>
-            {composerUri && composerType === 'image' ? (
-              <Image source={{ uri: composerUri }} style={styles.composerPreview} resizeMode="contain" />
-            ) : null}
-            {/* Basic edit actions for images */}
-            {composerType === 'image' && (
-              <View style={styles.composerActions}>
-                <TouchableOpacity style={styles.composerActionBtn} onPress={performRotate}>
-                  <Ionicons name="refresh" size={20} color="#fff" />
-                  <Text style={styles.composerActionText}>Rotate</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.composerActionBtn} onPress={performCropSquare}>
-                  <Ionicons name="crop" size={20} color="#fff" />
-                  <Text style={styles.composerActionText}>Crop</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            <TextInput
-              placeholder="Add a caption..."
-              placeholderTextColor="#888"
-              style={styles.composerInput}
-              value={composerCaption}
-              onChangeText={setComposerCaption}
-              multiline
-            />
-            <View style={styles.composerFooter}>
-              <TouchableOpacity
-                style={[styles.composerBtn, { backgroundColor: '#444', opacity: isSending ? 0.7 : 1 }]}
-                onPress={() => setComposerVisible(false)}
-                disabled={isSending}
-              >
-                <Text style={styles.composerBtnText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.composerBtn, { backgroundColor: '#FFD600', opacity: isSending ? 0.7 : 1 }]}
-                onPress={sendFromComposer}
-                disabled={isSending}
-              >
-                {isSending ? (
-                  <ActivityIndicator size="small" color="#000" />
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight + insets.top : 0}
+        >
+          <FlatList
+            ref={flatListRef}
+            data={displayedMessages}
+            renderItem={renderMessage}
+            keyExtractor={(item, idx) => {
+              // Prefer server id; otherwise compose a stable-ish key to avoid collisions
+              const idKey = item && (item as any).id != null ? String((item as any).id) : null;
+              if (idKey) return idKey;
+              const a = (item as any) || {};
+              const parts = [a.mediaUrl, a.content, a.createdAt].filter(Boolean);
+              return parts.length ? parts.join('|') : `msg-${idx}`;
+            }}
+            contentContainerStyle={styles.messages}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+          />
+          {/* Reply preview strip */}
+          {replyingTo && (
+            <View style={styles.replyPreview}>
+              <View style={styles.replyPreviewBar} />
+              <View style={styles.replyPreviewContent}>
+                <Text style={styles.replyPreviewName} numberOfLines={1}>
+                  {replyingTo.senderName}
+                </Text>
+                {replyingTo.message.type === 'image' || replyingTo.message.type === 'video' ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons
+                      name={replyingTo.message.type === 'video' ? 'videocam' : 'image'}
+                      size={14}
+                      color="#888"
+                    />
+                    <Text style={styles.replyPreviewText} numberOfLines={1}>
+                      {replyingTo.message.content || (replyingTo.message.type === 'video' ? 'Video' : 'Photo')}
+                    </Text>
+                  </View>
                 ) : (
-                  <Text style={[styles.composerBtnText, { color: '#000' }]}>Send</Text>
+                  <Text style={styles.replyPreviewText} numberOfLines={1}>
+                    {replyingTo.message.content}
+                  </Text>
                 )}
+              </View>
+              <TouchableOpacity
+                onPress={() => setReplyingTo(null)}
+                style={styles.replyPreviewClose}
+              >
+                <Ionicons name="close" size={20} color="#888" />
+              </TouchableOpacity>
+            </View>
+          )}
+          <View style={[
+            styles.inputBar,
+            { paddingBottom: keyboardVisible ? 8 : Math.max(8, insets.bottom) }
+          ]}>
+            <View style={styles.inputInner}>
+              <TouchableOpacity style={styles.inputIcon} onPress={handleAttachFile}>
+                <Ionicons name="attach" size={22} color="#888" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.inputIcon} onPress={() => showCameraOptions('Videos')}>
+                <Ionicons name="videocam" size={22} color="#888" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.inputIcon} onPress={() => showCameraOptions('Images')}>
+                <Ionicons name="camera" size={22} color="#888" />
+              </TouchableOpacity>
+              <TextInput
+                ref={inputRef}
+                style={styles.input}
+                placeholder="Type a message..."
+                placeholderTextColor="#888"
+                value={input}
+                onChangeText={setInput}
+                multiline
+                underlineColorAndroid="transparent"
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+                <Ionicons name="send" size={22} color="#fff" />
               </TouchableOpacity>
             </View>
           </View>
-        </View>
-      </Modal>
-      {selectedMedia && (
-        <MediaViewer
-          visible={mediaViewerVisible}
-          onClose={() => setMediaViewerVisible(false)}
-          mediaUri={selectedMedia.uri}
-          mediaType={selectedMedia.type}
-        />
-      )}
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+        {/* Media Composer Modal */}
+        <Modal
+          animationType="slide"
+          transparent
+          visible={composerVisible}
+          onRequestClose={() => setComposerVisible(false)}
+        >
+          <View style={styles.composerBackdrop}>
+            <View style={styles.composerCard}>
+              <Text style={styles.composerTitle}>{composerType === 'image' ? 'Edit Photo & Add Caption' : 'Add Caption to Video'}</Text>
+              {composerUri && composerType === 'image' ? (
+                <Image source={{ uri: composerUri }} style={styles.composerPreview} resizeMode="contain" />
+              ) : null}
+              {/* Basic edit actions for images */}
+              {composerType === 'image' && (
+                <View style={styles.composerActions}>
+                  <TouchableOpacity style={styles.composerActionBtn} onPress={performRotate}>
+                    <Ionicons name="refresh" size={20} color="#fff" />
+                    <Text style={styles.composerActionText}>Rotate</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.composerActionBtn} onPress={performCropSquare}>
+                    <Ionicons name="crop" size={20} color="#fff" />
+                    <Text style={styles.composerActionText}>Crop</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              <TextInput
+                placeholder="Add a caption..."
+                placeholderTextColor="#888"
+                style={styles.composerInput}
+                value={composerCaption}
+                onChangeText={setComposerCaption}
+                multiline
+              />
+              <View style={styles.composerFooter}>
+                <TouchableOpacity
+                  style={[styles.composerBtn, { backgroundColor: '#444', opacity: isSending ? 0.7 : 1 }]}
+                  onPress={() => setComposerVisible(false)}
+                  disabled={isSending}
+                >
+                  <Text style={styles.composerBtnText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.composerBtn, { backgroundColor: '#FFD600', opacity: isSending ? 0.7 : 1 }]}
+                  onPress={sendFromComposer}
+                  disabled={isSending}
+                >
+                  {isSending ? (
+                    <ActivityIndicator size="small" color="#000" />
+                  ) : (
+                    <Text style={[styles.composerBtnText, { color: '#000' }]}>Send</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        {selectedMedia && (
+          <MediaViewer
+            visible={mediaViewerVisible}
+            onClose={() => setMediaViewerVisible(false)}
+            mediaUri={selectedMedia.uri}
+            mediaType={selectedMedia.type}
+          />
+        )}
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
@@ -1214,5 +1311,66 @@ const styles = StyleSheet.create({
   composerBtnText: {
     color: '#fff',
     fontWeight: '600',
+  },
+  // Reply preview strip (above input bar)
+  replyPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E2026',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#23242A',
+  },
+  replyPreviewBar: {
+    width: 3,
+    height: '100%',
+    minHeight: 30,
+    backgroundColor: '#30B37E',
+    borderRadius: 2,
+    marginRight: 10,
+  },
+  replyPreviewContent: {
+    flex: 1,
+  },
+  replyPreviewName: {
+    color: '#30B37E',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  replyPreviewText: {
+    color: '#999',
+    fontSize: 13,
+    marginLeft: 4,
+  },
+  replyPreviewClose: {
+    padding: 6,
+    marginLeft: 8,
+  },
+  // Quoted reply inside bubble
+  quotedReply: {
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 6,
+    borderLeftWidth: 3,
+  },
+  quotedReplyOwn: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderLeftColor: '#30B37E',
+  },
+  quotedReplyOther: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderLeftColor: '#2196F3',
+  },
+  quotedReplyName: {
+    color: '#30B37E',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  quotedReplyText: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 12,
   },
 });

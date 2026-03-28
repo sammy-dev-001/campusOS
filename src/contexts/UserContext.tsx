@@ -10,6 +10,7 @@ interface UserProfile {
   profile_picture?: string;
   email?: string;
   bio?: string;
+  university?: string;
 }
 
 interface UserContextType {
@@ -20,8 +21,8 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType>({
   user: null,
-  updateUser: () => {},
-  setUser: () => {}
+  updateUser: () => { },
+  setUser: () => { }
 });
 
 export function UserProvider({ children }: { children: ReactNode }) {

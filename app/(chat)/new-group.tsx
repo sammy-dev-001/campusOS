@@ -55,14 +55,15 @@ export default function NewGroupScreen() {
         throw new Error(errorData.message || 'Failed to fetch users');
       }
       const data = await response.json();
-      const mappedUsers = data.map((user: any) => ({
+      const usersList = data.results || [];
+      const mappedUsers = usersList.map((user: any) => ({
         id: user.id,
         displayName: user.name || user.displayName || user.username,
         email: user.email || '',
-        profilePicture: user.profile_picture || undefined,
+        profilePicture: user.profilePicture || undefined,
       }));
-      setUsers(mappedUsers.filter((u: User) => 
-        u.id.toString() !== currentUser?.id?.toString() && 
+      setUsers(mappedUsers.filter((u: User) =>
+        u.id.toString() !== currentUser?.id?.toString() &&
         !selectedUsers.find(su => su.id.toString() === u.id.toString())
       ));
     } catch (error) {
@@ -106,7 +107,7 @@ export default function NewGroupScreen() {
 
     setCreating(true);
     setError(null);
-    
+
     try {
       console.log('Starting group creation with:', {
         groupName: groupName.trim(),
@@ -121,21 +122,21 @@ export default function NewGroupScreen() {
           Number(currentUser?.id)
         ].filter(Boolean))
       ];
-      
+
       // Create request body
       const requestBody = {
         name: groupName.trim(),
         participants: participantIds,
         type: 'group'  // Explicitly set type to 'group' for regular groups
       };
-      
+
       // Log the request data being sent
       console.log('Request body:', requestBody);
       console.log('Sending request to:', `${API_BASE_URL}/chat-groups`);
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
-      
+
       try {
         const token = await AsyncStorage.getItem('token');
         const response = await fetch(`${API_BASE_URL}/chats`, {
@@ -152,7 +153,7 @@ export default function NewGroupScreen() {
           }),
           signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
         console.log('Response status:', response.status);
 
@@ -177,7 +178,7 @@ export default function NewGroupScreen() {
 
         const result = await response.json();
         console.log('Group created successfully:', result);
-        
+
         if (result?.chat?.id) {
           router.push(`/(chat)/${result.chat.id}`);
         } else {
@@ -254,7 +255,7 @@ export default function NewGroupScreen() {
           value={groupName}
           onChangeText={setGroupName}
         />
-        
+
         {error && (
           <ThemedText style={[styles.errorText, { color: 'red' }]}>
             {error}

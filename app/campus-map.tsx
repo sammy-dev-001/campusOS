@@ -23,8 +23,28 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_DEFAULT, UrlTile } from 'react-native-maps';
-import * as Location from 'expo-location';
+
+let MapView: any = null;
+let Marker: any = null;
+let Location: any = null;
+let MAP_AVAILABLE = false;
+let LOCATION_AVAILABLE = false;
+
+try {
+    const Maps = require('react-native-maps');
+    MapView = Maps.default || Maps;
+    Marker = Maps.Marker;
+    MAP_AVAILABLE = !!MapView;
+} catch (e) {
+    console.warn('[CampusMap] react-native-maps not available:', e);
+}
+
+try {
+    Location = require('expo-location');
+    LOCATION_AVAILABLE = !!Location;
+} catch (e) {
+    console.warn('[CampusMap] expo-location not available:', e);
+}
 import { useTheme } from '../src/contexts/NewThemeContext';
 import { useUser } from '../src/contexts/UserContext';
 import {
@@ -62,7 +82,7 @@ const UNIVERSITY_TO_CAMPUS: Record<string, string> = {
 export default function CampusMapScreen() {
     const { theme } = useTheme();
     const router = useRouter();
-    const { currentUser } = useUser();
+    const { user: currentUser } = useUser();
 
     const [selectedCampus, setSelectedCampus] = useState<Campus>(SAMPLE_CAMPUSES[0]);
     const [selectedLocation, setSelectedLocation] = useState<CampusLocation | null>(null);
@@ -82,8 +102,9 @@ export default function CampusMapScreen() {
 
     // Auto-select campus based on user's university
     useEffect(() => {
-        if (currentUser?.university) {
-            const campusId = UNIVERSITY_TO_CAMPUS[currentUser.university];
+        const userUniversity = currentUser?.university;
+        if (userUniversity) {
+            const campusId = UNIVERSITY_TO_CAMPUS[userUniversity];
             if (campusId) {
                 const matchedCampus = SAMPLE_CAMPUSES.find(c => c.id === campusId);
                 if (matchedCampus) {
@@ -92,9 +113,9 @@ export default function CampusMapScreen() {
             } else {
                 // Try fuzzy matching - check if university name contains any campus name
                 const matchedCampus = SAMPLE_CAMPUSES.find(c =>
-                    currentUser.university.toLowerCase().includes(c.name.toLowerCase()) ||
-                    currentUser.university.toLowerCase().includes(c.shortName.toLowerCase()) ||
-                    c.name.toLowerCase().includes(currentUser.university.toLowerCase())
+                    userUniversity.toLowerCase().includes(c.name.toLowerCase()) ||
+                    userUniversity.toLowerCase().includes(c.shortName.toLowerCase()) ||
+                    c.name.toLowerCase().includes(userUniversity.toLowerCase())
                 );
                 if (matchedCampus) {
                     setSelectedCampus(matchedCampus);
@@ -138,6 +159,10 @@ export default function CampusMapScreen() {
     // Use current GPS location for new place
     const handleUseMyLocation = async () => {
         try {
+            if (!LOCATION_AVAILABLE || !Location) {
+                Alert.alert('Not Available', 'Location services are not available');
+                return;
+            }
             const { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert('Permission Denied', 'Location permission is needed to use this feature');
@@ -312,40 +337,48 @@ export default function CampusMapScreen() {
 
             {/* Map View */}
             <View style={styles.mapContainer}>
-                <MapView
-                    style={styles.map}
-                    provider={PROVIDER_DEFAULT}
-                    initialRegion={{
-                        latitude: selectedCampus.centerCoordinates.latitude,
-                        longitude: selectedCampus.centerCoordinates.longitude,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01,
-                    }}
-                    region={{
-                        latitude: selectedLocation?.coordinates.latitude || selectedCampus.centerCoordinates.latitude,
-                        longitude: selectedLocation?.coordinates.longitude || selectedCampus.centerCoordinates.longitude,
-                        latitudeDelta: selectedLocation ? 0.005 : 0.01,
-                        longitudeDelta: selectedLocation ? 0.005 : 0.01,
-                    }}
-                    onMapReady={() => setMapReady(true)}
-                    showsUserLocation={true}
-                    showsMyLocationButton={true}
-                    mapType="standard"
-                    onLongPress={handleMapLongPress}
-                >
+                {MAP_AVAILABLE && MapView ? (
+                    <MapView
+                        style={styles.map}
+                        initialRegion={{
+                            latitude: selectedCampus.centerCoordinates.latitude,
+                            longitude: selectedCampus.centerCoordinates.longitude,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                        }}
+                        region={{
+                            latitude: selectedLocation?.coordinates.latitude || selectedCampus.centerCoordinates.latitude,
+                            longitude: selectedLocation?.coordinates.longitude || selectedCampus.centerCoordinates.longitude,
+                            latitudeDelta: selectedLocation ? 0.005 : 0.01,
+                            longitudeDelta: selectedLocation ? 0.005 : 0.01,
+                        }}
+                        onMapReady={() => setMapReady(true)}
+                        showsUserLocation={true}
+                        showsMyLocationButton={true}
+                        mapType="standard"
+                        onLongPress={handleMapLongPress}
+                    >
 
-                    {/* Campus Location Markers */}
-                    {filteredLocations.map(location => (
-                        <Marker
-                            key={location.id}
-                            coordinate={location.coordinates}
-                            title={location.name}
-                            description={location.description}
-                            onPress={() => handleMarkerPress(location)}
-                            pinColor={getLocationTypeColor(location.type)}
-                        />
-                    ))}
-                </MapView>
+                        {/* Campus Location Markers */}
+                        {filteredLocations.map(location => (
+                            <Marker
+                                key={location.id}
+                                coordinate={location.coordinates}
+                                title={location.name}
+                                description={location.description}
+                                onPress={() => handleMarkerPress(location)}
+                                pinColor={getLocationTypeColor(location.type)}
+                            />
+                        ))}
+                    </MapView>
+                ) : (
+                    <View style={[styles.map, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#1a1a2e' }]}>
+                        <Ionicons name="map-outline" size={64} color="#555" />
+                        <Text style={{ color: '#aaa', marginTop: 12, fontSize: 16, textAlign: 'center', paddingHorizontal: 32 }}>
+                            Map not available.{"\n"}Install react-native-maps to enable this feature.
+                        </Text>
+                    </View>
+                )}
 
                 {!mapReady && (
                     <View style={styles.mapLoading}>

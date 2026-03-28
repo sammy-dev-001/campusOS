@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   forgotPasswordText: {
-    color: '#0B3C5D',
+    color: BrandColors.brandGreen,
     fontSize: 14,
     textDecorationLine: 'underline',
   },
@@ -188,12 +188,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent', // force transparent
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2.62,
+    backgroundColor: '#F5F5F7',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   modalOverlay: {
     position: 'absolute',
@@ -394,7 +391,7 @@ const LoginSignUpScreen = () => {
   const router = useRouter();
   const { login, signup, user } = useAuth();
   const { updateUser } = useUser();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
 
   // Signup Step State (1: Identity, 2: Academic)
   const [signupStep, setSignupStep] = useState(1);
@@ -701,7 +698,7 @@ const LoginSignUpScreen = () => {
       style={styles.container}
     >
       <LinearGradient
-        colors={['#E6F0FA', '#FFFFFF']}
+        colors={[backgroundColor, backgroundColor]}
         style={{ flex: 1 }}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
@@ -714,14 +711,17 @@ const LoginSignUpScreen = () => {
         >
           <View style={styles.header}>
             <Image
-              source={require('../../assets/images/edufi-logo.png')}
+              source={isDark
+                ? require('../../assets/images/edufi-logo-white.png')
+                : require('../../assets/images/edufi-logo.png')
+              }
               style={styles.logo}
             />
             {/* <ThemedText style={styles.appTitle} type="title">EDUFI</ThemedText> */}
           </View>
 
           <View style={styles.formContainer}>
-            <View style={[styles.formCard, { backgroundColor: theme.card }]}>
+            <View style={[styles.formCard, { backgroundColor: 'transparent' }]}>
               <ThemedText style={[styles.welcomeText, { color: theme.text }]} type="subtitle">
                 {isLogin ? 'Welcome Back!' : signupStep === 1 ? 'Create Account' : 'Academic Info'}
               </ThemedText>
@@ -976,14 +976,17 @@ const LoginSignUpScreen = () => {
               </View>
 
               <View style={styles.socialButtonsContainer}>
-                <TouchableOpacity onPress={() => handleSocialLogin('google')} style={styles.socialButton}>
-                  <Ionicons name="logo-google" size={30} color={textSecondaryColor} />
+                <TouchableOpacity onPress={() => handleSocialLogin('google')} style={[styles.socialButton, { backgroundColor: cardColor, borderColor: borderColor }]}>
+                  <Image
+                    source={require('../../assets/images/google-icon.png')}
+                    style={{ width: 30, height: 30, resizeMode: 'contain' }}
+                  />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleSocialLogin('facebook')} style={styles.socialButton}>
-                  <Ionicons name="logo-facebook" size={30} color={textSecondaryColor} />
+                <TouchableOpacity onPress={() => handleSocialLogin('facebook')} style={[styles.socialButton, { backgroundColor: cardColor, borderColor: borderColor }]}>
+                  <Ionicons name="logo-facebook" size={30} color="#4267B2" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleSocialLogin('apple')} style={styles.socialButton}>
-                  <Ionicons name="logo-apple" size={30} color={textSecondaryColor} />
+                <TouchableOpacity onPress={() => handleSocialLogin('apple')} style={[styles.socialButton, { backgroundColor: cardColor, borderColor: borderColor }]}>
+                  <Ionicons name="logo-apple" size={30} color={textColor} />
                 </TouchableOpacity>
               </View>
 

@@ -2,7 +2,12 @@
  * AI Service - Gemini Integration
  */
 
+<<<<<<< HEAD
 import { GoogleGenerativeAI } from '@google/generative-ai';
+=======
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_FLASH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+>>>>>>> 20f24d2c4fe605745109b962c2e600c897084aaa
 
 const EDDY_SYSTEM_PROMPT = `You are Eddy, a friendly and knowledgeable AI student companion for Nigerian university students using the EduFi app.
 
@@ -136,6 +141,50 @@ class AIService {
             console.error('Gemini Eddy Chat Error:', error);
             throw new Error(error.message || 'Failed to get AI response');
         }
+    }
+
+    /**
+     * Eddy chat - multi-turn conversation with full history support
+     * Uses gemini-1.5-flash for better performance
+     * @param {string} message - latest user message
+     * @param {Array} history - [{role: 'user'|'assistant', content: string}]
+     */
+    async eddyChat(message, history = []) {
+        if (!this.isAvailable()) {
+            throw new Error('AI service is not configured. Please set GEMINI_API_KEY.');
+        }
+
+        // Build contents array: system primer + history + new message
+        const contents = [
+            { role: 'user', parts: [{ text: EDDY_SYSTEM_PROMPT }] },
+            { role: 'model', parts: [{ text: 'Understood! I am Eddy, ready to help with academic guidance, finance, and wellness.' }] },
+            ...history.slice(-20).map(m => ({
+                role: m.role === 'user' ? 'user' : 'model',
+                parts: [{ text: m.content }],
+            })),
+            { role: 'user', parts: [{ text: message }] },
+        ];
+
+        const response = await fetch(`${GEMINI_FLASH_URL}?key=${this.apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents,
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 500,
+                },
+            }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error?.message || 'Failed to get AI response');
+        }
+
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text
+            || "I'm sorry, I couldn't process that. Please try again.";
     }
 
     parseJSON(response) {

@@ -21,7 +21,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../src/contexts/NewThemeContext';
 import { EduFiColors } from '../src/theme/edufi';
+<<<<<<< HEAD
 import { api } from '../src/contexts/AuthContext';
+=======
+import { API_BASE_URL } from '../src/constants/Config';
+
+// Eddy's backend endpoint - API key lives on the server
+const EDDY_ENDPOINT = `${API_BASE_URL}/ai/eddy`;
+>>>>>>> 20f24d2c4fe605745109b962c2e600c897084aaa
 
 interface Message {
     id: string;
@@ -70,6 +77,7 @@ export default function AIBuddyScreen() {
         setIsLoading(true);
 
         try {
+<<<<<<< HEAD
             // Send message + conversation history to backend — api uses AuthContext to inject token
             const response = await api.post('/v1/ai/eddy', {
                 message: text,
@@ -80,6 +88,27 @@ export default function AIBuddyScreen() {
             });
 
             const data = response.data;
+=======
+            // Send message + conversation history to backend — key stays on server
+            const response = await fetch(EDDY_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: text,
+                    history: messages.slice(1).map(m => ({
+                        role: m.role,
+                        content: m.content,
+                    })),
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to get AI response');
+            }
+
+            const data = await response.json();
+>>>>>>> 20f24d2c4fe605745109b962c2e600c897084aaa
             const aiResponse = data.data?.response ||
                 "I'm sorry, I couldn't process that. Please try again.";
 

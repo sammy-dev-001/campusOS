@@ -21,11 +21,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../src/contexts/NewThemeContext';
 import { EduFiColors } from '../src/theme/edufi';
-import { getGeminiApiKey } from '../src/services/geminiCategorization';
 import { useFinance } from '../src/contexts/FinanceContext';
+import { API_BASE_URL } from '../src/constants/Config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Gemini API endpoint
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// Backend AI chat endpoint
+const CHAT_API_URL = `${API_BASE_URL}/ai/chat`;
 
 interface Message {
     id: string;
@@ -111,16 +112,14 @@ User's Financial Data:
         setIsLoading(true);
 
         try {
-            const apiKey = await getGeminiApiKey();
-            if (!apiKey) {
-                throw new Error('AI is not configured. Please add your Gemini API key in Settings.');
-            }
+            const authData = await AsyncStorage.getItem('authData');
+            const token = authData ? JSON.parse(authData).token : null;
 
             const financeContext = buildFinanceContext();
 
-            // Finance-focused system prompt
+            // Finance-focused system prompt to guide the AI
             const systemPrompt = `You are a helpful AI financial advisor for Nigerian university students using the EduFi app.
-
+ 
 Your role:
 - Analyze spending patterns and give personalized advice
 - Help with budgeting and saving strategies
@@ -138,33 +137,37 @@ ${financeContext}
 
 Important: Base your advice on the user's actual financial data shown above. Be specific about their spending and suggest improvements.`;
 
-            const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+            // Prepare history for backend
+            const history = messages.map(m => ({
+                role: m.role,
+                content: m.content
+            }));
+
+            // Add system prompt as the core instruction by prepending it 
+            // or sending it as a message if the backend supports it.
+            // In our backend aiService, it uses its own system prompt for Campus Buddy,
+            // but we can pass our custom prompt as the first message or combine it.
+            const fullMessage = `${systemPrompt}\n\nUser Question: ${text}`;
+
+            const response = await fetch(CHAT_API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
-                    contents: [
-                        { role: 'user', parts: [{ text: systemPrompt }] },
-                        { role: 'model', parts: [{ text: 'I understand. I will provide personalized financial advice based on your spending data.' }] },
-                        ...messages.slice(1).map(m => ({
-                            role: m.role === 'user' ? 'user' : 'model',
-                            parts: [{ text: m.content }],
-                        })),
-                        { role: 'user', parts: [{ text: text }] },
-                    ],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 500,
-                    },
+                    message: fullMessage,
+                    history: history.slice(1) // Remove the first assistant message from history
                 }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error?.message || 'Failed to get AI response');
+                throw new Error(errorData.message || 'Failed to get AI response');
             }
 
             const data = await response.json();
-            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text ||
+            const aiResponse = data.data?.response ||
                 "I'm sorry, I couldn't process that. Please try again.";
 
             const assistantMessage: Message = {

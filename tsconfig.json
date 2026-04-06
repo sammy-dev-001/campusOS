@@ -49,6 +49,12 @@
     "./components/**/*.tsx",
     "./hooks/**/*.ts",
     "./services/**/*.ts",
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./__tests__/**/*.ts",
+    "./__tests__/**/*.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
     "./types/**/*.d.ts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
@@ -57,15 +63,9 @@
   "exclude": [
     "**/node_modules",
     "**/node_modules/**",
-    "**/__tests__",
-    "**/__mocks__",
     "**/dist",
     "**/build",
     "**/.expo",
-    "**/.next",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/*.spec.ts",
-    "**/*.spec.tsx"
+    "**/.next"
   ]
 }

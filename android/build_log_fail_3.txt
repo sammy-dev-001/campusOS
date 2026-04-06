@@ -1,0 +1,37 @@
+﻿Starting a Gradle Daemon (subsequent builds will be faster)
+Configuration on demand is an incubating feature.
+.\gradlew.bat : 
+At line:1 char:1
++ .\gradlew.bat app:assembleDebug -x lint -x test 
+--configure-on-demand ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [ 
+   ], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAILURE: Build failed with an exception.
+
+* Where:
+Settings file 'C:\Users\USER\Documents\CODE 
+X\EDUFI\campusOS\android\settings.gradle' line: 21
+
+* What went wrong:
+Error resolving plugin [id: 
+'com.facebook.react.settings']
+> A build operation failed.
+      Could not read workspace metadata from C:\Users\US
+ER\.gradle\caches\8.14.3\transforms\c82eb49d1e40a7062eeb
+6dcb22a32921\metadata.bin
+   > Could not read workspace metadata from C:\Users\USE
+R\.gradle\caches\8.14.3\transforms\c82eb49d1e40a7062eeb6
+dcb22a32921\metadata.bin
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log 
+output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 33s

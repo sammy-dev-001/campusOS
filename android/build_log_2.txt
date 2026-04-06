@@ -1,0 +1,3215 @@
+﻿Configuration on demand is an incubating feature.
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:processResources NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-updates-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-updates-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-updates-gradle-plugin:processResources UP-TO-DATE
+> Task :expo-module-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+> Task :expo-module-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :expo-module-gradle-plugin:compileJava NO-SOURCE
+> Task :expo-module-gradle-plugin:classes UP-TO-DATE
+> Task :expo-updates-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :expo-updates-gradle-plugin:compileJava NO-SOURCE
+> Task :expo-updates-gradle-plugin:classes UP-TO-DATE
+> Task :expo-module-gradle-plugin:jar UP-TO-DATE
+> Task :expo-updates-gradle-plugin:jar UP-TO-DATE
+
+> Configure project :
+[32m[ExpoRootProject][0m Using the following versions:
+  - buildTools:  [32m36.0.0[0m
+  - minSdk:      [32m24[0m
+  - compileSdk:  [32m36[0m
+  - targetSdk:   [32m36[0m
+  - ndk:         [32m27.1.12297006[0m
+  - kotlin:      [32m2.1.20[0m
+  - ksp:         [32m2.1.20-2.0.1[0m
+
+> Configure project :app
+ ??  [33mApplying gradle plugin[0m '[32mexpo-updates-gradle-plugin[0m'
+
+> Configure project :expo
+
+Using expo modules
+  - [32mexpo-constants[0m (18.0.13)
+  - [32mexpo-eas-client[0m (1.0.8)
+  - [32mexpo-json-utils[0m (0.15.0)
+  - [32mexpo-manifests[0m (1.0.10)
+  - [32mexpo-modules-core[0m (3.0.29)
+  - [32mexpo-structured-headers[0m (5.0.0)
+  - [32mexpo-updates[0m (29.0.16)
+  - [32mexpo-updates-interface[0m (2.0.0)
+  - [33m[?][0m [32mexpo-application[0m (7.0.8)
+  - [33m[?][0m [32mexpo-asset[0m (12.0.12)
+  - [33m[?][0m [32mexpo-av[0m (16.0.8)
+  - [33m[?][0m [32mexpo-blur[0m (15.0.8)
+  - [33m[?][0m [32mexpo-calendar[0m (15.0.8)
+  - [33m[?][0m [32mexpo-camera[0m (17.0.10)
+  - [33m[?][0m [32mexpo-device[0m (8.0.10)
+  - [33m[?][0m [32mexpo-document-picker[0m (14.0.8)
+  - [33m[?][0m [32mexpo-file-system[0m (19.0.21)
+  - [33m[?][0m [32mexpo-font[0m (14.0.11)
+  - [33m[?][0m [32mexpo-haptics[0m (15.0.8)
+  - [33m[?][0m [32mexpo-image[0m (3.0.11)
+  - [33m[?][0m [32mexpo-image-loader[0m (6.0.0)
+  - [33m[?][0m [32mexpo-image-manipulator[0m (14.0.8)
+  - [33m[?][0m [32mexpo-image-picker[0m (17.0.10)
+  - [33m[?][0m [32mexpo-keep-awake[0m (15.0.8)
+  - [33m[?][0m [32mexpo-linear-gradient[0m (15.0.8)
+  - [33m[?][0m [32mexpo-linking[0m (8.0.11)
+  - [33m[?][0m [32mexpo-local-authentication[0m (17.0.8)
+  - [33m[?][0m [32mexpo-location[0m (19.0.8)
+  - [33m[?][0m [32mexpo-media-library[0m (18.2.1)
+  - [33m[?][0m [32mexpo-navigation-bar[0m (5.0.10)
+  - [33m[?][0m [32mexpo-notifications[0m (0.32.16)
+  - [33m[?][0m [32mexpo-secure-store[0m (15.0.8)
+  - [33m[?][0m [32mexpo-splash-screen[0m (31.0.13)
+  - [33m[?][0m [32mexpo-system-ui[0m (6.0.9)
+  - [33m[?][0m [32mexpo-video-thumbnails[0m (10.0.8)
+  - [33m[?][0m [32mexpo-web-browser[0m (15.0.10)
+
+
+> Configure project :react-native-video
+Kotlin version is correct: 2.1.20
+AndroidX version is correct: 1.9.3
+useExoplayerIMA: false
+useExoplayerSmoothStreaming: true
+useExoplayerDash: true
+useExoplayerHls: true
+useExoplayerRtsp: false
+buildFromSource: false
+
+> Task :expo-structured-headers:preBuild UP-TO-DATE
+> Task :expo-modules-core:preBuild UP-TO-DATE
+> Task :expo-structured-headers:preDebugBuild UP-TO-DATE
+> Task :expo-manifests:preBuild UP-TO-DATE
+> Task :expo-modules-core:preDebugBuild UP-TO-DATE
+> Task :expo-manifests:preDebugBuild UP-TO-DATE
+> Task :expo:generatePackagesList UP-TO-DATE
+> Task :expo:preBuild UP-TO-DATE
+> Task :expo:preDebugBuild UP-TO-DATE
+> Task :app:generateAutolinkingNewArchitectureFiles UP-TO-DATE
+> Task :expo-manifests:writeDebugAarMetadata UP-TO-DATE
+> Task :expo-json-utils:preBuild UP-TO-DATE
+> Task :expo-json-utils:preDebugBuild UP-TO-DATE
+> Task :expo-modules-core:writeDebugAarMetadata UP-TO-DATE
+> Task :expo-updates:preBuild UP-TO-DATE
+> Task :expo:writeDebugAarMetadata UP-TO-DATE
+> Task :expo-updates:preDebugBuild UP-TO-DATE
+> Task :expo-updates-interface:preBuild UP-TO-DATE
+> Task :expo-updates-interface:preDebugBuild UP-TO-DATE
+> Task :expo-json-utils:writeDebugAarMetadata UP-TO-DATE
+> Task :expo-structured-headers:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-android-notification-listener:preBuild UP-TO-DATE
+> Task :react-native-android-notification-listener:preDebugBuild UP-TO-DATE
+> Task :app:generateAutolinkingPackageList UP-TO-DATE
+> Task :expo-updates-interface:writeDebugAarMetadata UP-TO-DATE
+> Task :expo-updates:writeDebugAarMetadata UP-TO-DATE
+> Task :expo-eas-client:preBuild UP-TO-DATE
+> Task :react-native-community_netinfo:preBuild UP-TO-DATE
+> Task :expo-eas-client:preDebugBuild UP-TO-DATE
+> Task :react-native-community_netinfo:preDebugBuild UP-TO-DATE
+> Task :react-native-android-notification-listener:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-get-random-values:preBuild UP-TO-DATE
+> Task :react-native-get-random-values:preDebugBuild UP-TO-DATE
+> Task :expo-eas-client:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-community_netinfo:writeDebugAarMetadata UP-TO-DATE
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :react-native-maps:preBuild UP-TO-DATE
+> Task :react-native-maps:preDebugBuild UP-TO-DATE
+> Task :react-native-get-random-values:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-maps:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :react-native-community_datetimepicker:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-gesture-handler:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-picker_picker:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-pdf:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :app:generateReactNativeEntryPoint UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-async-storage_async-storage:preBuild UP-TO-DATE
+> Task :react-native-async-storage_async-storage:preDebugBuild UP-TO-DATE
+> Task :react-native-community_datetimepicker:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-community_datetimepicker:preBuild UP-TO-DATE
+> Task :react-native-community_datetimepicker:preDebugBuild UP-TO-DATE
+> Task :react-native-async-storage_async-storage:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-community_datetimepicker:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-pdf:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-pdf:preBuild UP-TO-DATE
+> Task :react-native-pdf:preDebugBuild UP-TO-DATE
+> Task :react-native-safe-area-context:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-svg:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-picker_picker:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-gesture-handler:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-gesture-handler:preBuild UP-TO-DATE
+> Task :react-native-picker_picker:preBuild UP-TO-DATE
+> Task :react-native-gesture-handler:preDebugBuild UP-TO-DATE
+> Task :react-native-picker_picker:preDebugBuild UP-TO-DATE
+> Task :react-native-pdf:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-screens:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-video:preBuild UP-TO-DATE
+> Task :react-native-video:preDebugBuild UP-TO-DATE
+> Task :react-native-gesture-handler:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-picker_picker:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-video:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-webview:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :expo:generateDebugResValues UP-TO-DATE
+> Task :expo:generateDebugResources UP-TO-DATE
+> Task :react-native-webview:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-webview:preBuild UP-TO-DATE
+> Task :react-native-webview:preDebugBuild UP-TO-DATE
+> Task :react-native-webview:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-screens:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-screens:preBuild UP-TO-DATE
+> Task :expo-eas-client:generateDebugResValues UP-TO-DATE
+> Task :react-native-screens:preDebugBuild UP-TO-DATE
+> Task :react-native-safe-area-context:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-safe-area-context:preBuild UP-TO-DATE
+> Task :react-native-safe-area-context:preDebugBuild UP-TO-DATE
+> Task :react-native-screens:writeDebugAarMetadata UP-TO-DATE
+> Task :expo:packageDebugResources UP-TO-DATE
+> Task :react-native-safe-area-context:writeDebugAarMetadata UP-TO-DATE
+> Task :expo-json-utils:generateDebugResValues UP-TO-DATE
+> Task :expo-manifests:generateDebugResValues UP-TO-DATE
+> Task :expo-modules-core:generateDebugResValues UP-TO-DATE
+> Task :expo-json-utils:generateDebugResources UP-TO-DATE
+> Task :expo-manifests:generateDebugResources UP-TO-DATE
+> Task :expo-modules-core:generateDebugResources UP-TO-DATE
+> Task :expo-manifests:packageDebugResources UP-TO-DATE
+> Task :expo-json-utils:packageDebugResources UP-TO-DATE
+> Task :expo-modules-core:packageDebugResources UP-TO-DATE
+> Task :expo-structured-headers:generateDebugResValues UP-TO-DATE
+> Task :expo-updates-interface:generateDebugResValues UP-TO-DATE
+> Task :expo-structured-headers:generateDebugResources UP-TO-DATE
+> Task :expo-updates-interface:generateDebugResources UP-TO-DATE
+> Task :expo-eas-client:generateDebugResources UP-TO-DATE
+> Task :expo-updates:generateDebugResValues UP-TO-DATE
+> Task :expo-structured-headers:packageDebugResources UP-TO-DATE
+> Task :expo-updates:generateDebugResources UP-TO-DATE
+> Task :react-native-android-notification-listener:generateDebugResValues UP-TO-DATE
+> Task :expo-eas-client:packageDebugResources UP-TO-DATE
+> Task :react-native-android-notification-listener:generateDebugResources UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateDebugResValues UP-TO-DATE
+> Task :react-native-svg:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-svg:preBuild UP-TO-DATE
+> Task :react-native-svg:preDebugBuild UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateDebugResources UP-TO-DATE
+> Task :react-native-svg:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-community_datetimepicker:generateDebugResValues UP-TO-DATE
+> Task :react-native-android-notification-listener:packageDebugResources UP-TO-DATE
+> Task :react-native-community_datetimepicker:generateDebugResources UP-TO-DATE
+> Task :react-native-async-storage_async-storage:packageDebugResources UP-TO-DATE
+> Task :react-native-community_netinfo:generateDebugResValues UP-TO-DATE
+> Task :react-native-gesture-handler:generateDebugResValues UP-TO-DATE
+> Task :react-native-community_netinfo:generateDebugResources UP-TO-DATE
+> Task :react-native-gesture-handler:generateDebugResources UP-TO-DATE
+> Task :expo-updates:packageDebugResources UP-TO-DATE
+> Task :react-native-community_datetimepicker:packageDebugResources UP-TO-DATE
+> Task :react-native-get-random-values:generateDebugResValues UP-TO-DATE
+> Task :expo-updates-interface:packageDebugResources UP-TO-DATE
+> Task :react-native-maps:generateDebugResValues UP-TO-DATE
+> Task :react-native-get-random-values:generateDebugResources UP-TO-DATE
+> Task :react-native-community_netinfo:packageDebugResources UP-TO-DATE
+> Task :react-native-maps:generateDebugResources UP-TO-DATE
+> Task :react-native-pdf:generateDebugResValues UP-TO-DATE
+> Task :react-native-picker_picker:generateDebugResValues UP-TO-DATE
+> Task :react-native-pdf:generateDebugResources UP-TO-DATE
+> Task :react-native-gesture-handler:packageDebugResources UP-TO-DATE
+> Task :react-native-picker_picker:generateDebugResources UP-TO-DATE
+> Task :react-native-safe-area-context:generateDebugResValues UP-TO-DATE
+> Task :react-native-safe-area-context:generateDebugResources UP-TO-DATE
+> Task :react-native-maps:packageDebugResources UP-TO-DATE
+> Task :react-native-screens:generateDebugResValues UP-TO-DATE
+> Task :react-native-pdf:packageDebugResources UP-TO-DATE
+> Task :react-native-picker_picker:packageDebugResources UP-TO-DATE
+> Task :react-native-video:generateDebugResValues UP-TO-DATE
+> Task :react-native-svg:generateDebugResValues UP-TO-DATE
+> Task :react-native-get-random-values:packageDebugResources UP-TO-DATE
+> Task :react-native-safe-area-context:packageDebugResources UP-TO-DATE
+> Task :react-native-webview:generateDebugResValues UP-TO-DATE
+> Task :react-native-svg:generateDebugResources UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :react-native-video:generateDebugResources UP-TO-DATE
+> Task :react-native-webview:generateDebugResources UP-TO-DATE
+> Task :react-native-screens:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-svg:packageDebugResources UP-TO-DATE
+> Task :react-native-video:packageDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :expo:extractDeepLinksDebug UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-eas-client:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-json-utils:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-eas-client:processDebugManifest UP-TO-DATE
+> Task :expo-manifests:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-webview:packageDebugResources UP-TO-DATE
+> Task :expo:processDebugManifest UP-TO-DATE
+> Task :expo-json-utils:processDebugManifest UP-TO-DATE
+> Task :expo-modules-core:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-updates:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-structured-headers:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-screens:packageDebugResources UP-TO-DATE
+> Task :expo-manifests:processDebugManifest UP-TO-DATE
+> Task :react-native-android-notification-listener:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-updates-interface:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-updates:processDebugManifest UP-TO-DATE
+> Task :expo-structured-headers:processDebugManifest UP-TO-DATE
+> Task :react-native-async-storage_async-storage:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-android-notification-listener:processDebugManifest UP-TO-DATE
+> Task :react-native-community_datetimepicker:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-community_netinfo:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-modules-core:processDebugManifest UP-TO-DATE
+> Task :expo-updates-interface:processDebugManifest UP-TO-DATE
+> Task :react-native-gesture-handler:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-async-storage_async-storage:processDebugManifest UP-TO-DATE
+> Task :react-native-community_datetimepicker:processDebugManifest UP-TO-DATE
+> Task :react-native-get-random-values:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-maps:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-community_netinfo:processDebugManifest UP-TO-DATE
+> Task :react-native-pdf:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-picker_picker:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-gesture-handler:processDebugManifest UP-TO-DATE
+> Task :react-native-get-random-values:processDebugManifest UP-TO-DATE
+> Task :react-native-screens:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-safe-area-context:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-pdf:processDebugManifest UP-TO-DATE
+> Task :react-native-maps:processDebugManifest UP-TO-DATE
+> Task :react-native-picker_picker:processDebugManifest UP-TO-DATE
+> Task :react-native-svg:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-video:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-webview:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-safe-area-context:processDebugManifest UP-TO-DATE
+> Task :react-native-svg:processDebugManifest UP-TO-DATE
+> Task :react-native-video:processDebugManifest UP-TO-DATE
+> Task :expo:compileDebugLibraryResources UP-TO-DATE
+> Task :expo-eas-client:compileDebugLibraryResources UP-TO-DATE
+> Task :expo-json-utils:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-webview:processDebugManifest UP-TO-DATE
+> Task :expo-eas-client:parseDebugLocalResources UP-TO-DATE
+> Task :expo-manifests:compileDebugLibraryResources UP-TO-DATE
+> Task :expo:parseDebugLocalResources UP-TO-DATE
+> Task :expo-json-utils:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-screens:processDebugManifest UP-TO-DATE
+> Task :expo-modules-core:compileDebugLibraryResources UP-TO-DATE
+> Task :expo-manifests:parseDebugLocalResources UP-TO-DATE
+> Task :expo-eas-client:generateDebugRFile UP-TO-DATE
+> Task :expo-json-utils:generateDebugRFile UP-TO-DATE
+> Task :expo-structured-headers:compileDebugLibraryResources UP-TO-DATE
+> Task :expo-updates:compileDebugLibraryResources UP-TO-DATE
+> Task :expo-modules-core:parseDebugLocalResources UP-TO-DATE
+> Task :expo-structured-headers:parseDebugLocalResources UP-TO-DATE
+> Task :expo-manifests:generateDebugRFile UP-TO-DATE
+> Task :expo-updates:parseDebugLocalResources UP-TO-DATE
+> Task :expo-modules-core:generateDebugRFile UP-TO-DATE
+> Task :expo-structured-headers:generateDebugRFile UP-TO-DATE
+> Task :expo-updates-interface:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-android-notification-listener:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-async-storage_async-storage:compileDebugLibraryResources UP-TO-DATE
+> Task :expo-updates:generateDebugRFile UP-TO-DATE
+> Task :expo-updates-interface:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-android-notification-listener:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-community_datetimepicker:compileDebugLibraryResources UP-TO-DATE
+> Task :expo:generateDebugRFile UP-TO-DATE
+> Task :react-native-async-storage_async-storage:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-community_netinfo:compileDebugLibraryResources UP-TO-DATE
+> Task :expo-updates-interface:generateDebugRFile UP-TO-DATE
+> Task :react-native-community_datetimepicker:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-android-notification-listener:generateDebugRFile UP-TO-DATE
+> Task :react-native-community_netinfo:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateDebugRFile UP-TO-DATE
+> Task :react-native-get-random-values:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-maps:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-community_datetimepicker:generateDebugRFile UP-TO-DATE
+> Task :react-native-get-random-values:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-maps:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-community_netinfo:generateDebugRFile UP-TO-DATE
+> Task :react-native-pdf:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-picker_picker:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-pdf:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-gesture-handler:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-picker_picker:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-pdf:generateDebugRFile UP-TO-DATE
+> Task :react-native-safe-area-context:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-picker_picker:generateDebugRFile UP-TO-DATE
+> Task :react-native-safe-area-context:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-maps:generateDebugRFile UP-TO-DATE
+> Task :react-native-screens:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-svg:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-gesture-handler:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-get-random-values:generateDebugRFile UP-TO-DATE
+> Task :react-native-svg:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-gesture-handler:generateDebugRFile UP-TO-DATE
+> Task :react-native-video:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-webview:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-svg:generateDebugRFile UP-TO-DATE
+> Task :react-native-webview:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-video:parseDebugLocalResources UP-TO-DATE
+> Task :expo:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-modules-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-webview:generateDebugRFile UP-TO-DATE
+> Task :react-native-video:generateDebugRFile UP-TO-DATE
+> Task :expo-eas-client:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-json-utils:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-screens:parseDebugLocalResources UP-TO-DATE
+> Task :expo-modules-core:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-json-utils:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-eas-client:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-json-utils:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-screens:generateDebugRFile UP-TO-DATE
+> Task :expo-structured-headers:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-manifests:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-eas-client:javaPreCompileDebug UP-TO-DATE
+> Task :expo-updates:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-manifests:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-structured-headers:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-manifests:javaPreCompileDebug UP-TO-DATE
+> Task :expo-updates-interface:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-structured-headers:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-safe-area-context:generateDebugRFile UP-TO-DATE
+> Task :expo-updates-interface:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-updates-interface:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-android-notification-listener:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-android-notification-listener:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-async-storage_async-storage:javaPreCompileDebug UP-TO-DATE
+> Task :expo-updates:generateDebugBuildConfig UP-TO-DATE
+> Task :expo:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-community_datetimepicker:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-community_datetimepicker:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-updates:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-community_netinfo:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-community_netinfo:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-async-storage_async-storage:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-async-storage_async-storage:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-android-notification-listener:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-android-notification-listener:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-gesture-handler:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-community_netinfo:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-gesture-handler:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-svg:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-community_netinfo:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-svg:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-get-random-values:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-maps:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-get-random-values:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-maps:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-svg:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-svg:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-maps:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-pdf:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-maps:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-pdf:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-picker_picker:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-community_datetimepicker:compileDebugKotlin UP-TO-DATE
+> Task :react-native-community_datetimepicker:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-pdf:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-picker_picker:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-pdf:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-get-random-values:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-get-random-values:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-screens:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-community_datetimepicker:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-screens:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-community_datetimepicker:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-video:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-picker_picker:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-video:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-picker_picker:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-webview:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-webview:generateDebugBuildConfig UP-TO-DATE
+> Task :expo-modules-core:compileDebugKotlin UP-TO-DATE
+> Task :expo-modules-core:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-safe-area-context:compileDebugKotlin UP-TO-DATE
+> Task :react-native-safe-area-context:javaPreCompileDebug UP-TO-DATE
+> Task :expo-modules-core:compileDebugJavaWithJavac UP-TO-DATE
+> Task :expo-modules-core:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-safe-area-context:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-screens:compileDebugKotlin UP-TO-DATE
+> Task :expo-structured-headers:compileDebugKotlin NO-SOURCE
+> Task :react-native-video:compileDebugKotlin UP-TO-DATE
+> Task :react-native-webview:compileDebugKotlin UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-screens:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-screens:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-screens:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-video:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-worklets:assertMinimalReactNativeVersionTask
+> Task :react-native-worklets:assertNewArchitectureEnabledTask SKIPPED
+> Task :react-native-worklets:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-worklets:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-worklets:prepareWorkletsHeadersForPrefabs UP-TO-DATE
+> Task :react-native-worklets:preBuild
+> Task :react-native-worklets:preDebugBuild
+> Task :react-native-video:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-worklets:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-video:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-worklets:generateDebugResValues UP-TO-DATE
+> Task :react-native-webview:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-worklets:generateDebugResources UP-TO-DATE
+> Task :react-native-worklets:packageDebugResources UP-TO-DATE
+> Task :react-native-worklets:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-worklets:processDebugManifest UP-TO-DATE
+> Task :react-native-worklets:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-webview:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-webview:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:createDebugUpdatesResources UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :expo:mergeDebugShaders UP-TO-DATE
+> Task :react-native-worklets:parseDebugLocalResources UP-TO-DATE
+> Task :expo:compileDebugShaders NO-SOURCE
+> Task :expo:generateDebugAssets UP-TO-DATE
+> Task :react-native-worklets:generateDebugRFile UP-TO-DATE
+> Task :expo:mergeDebugAssets UP-TO-DATE
+> Task :react-native-worklets:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-worklets:javaPreCompileDebug UP-TO-DATE
+> Task :expo-eas-client:mergeDebugShaders UP-TO-DATE
+> Task :expo-eas-client:compileDebugShaders NO-SOURCE
+> Task :expo-eas-client:generateDebugAssets UP-TO-DATE
+> Task :expo-eas-client:mergeDebugAssets UP-TO-DATE
+> Task :expo-json-utils:mergeDebugShaders UP-TO-DATE
+> Task :expo-json-utils:compileDebugShaders NO-SOURCE
+> Task :expo-json-utils:generateDebugAssets UP-TO-DATE
+> Task :expo-json-utils:mergeDebugAssets UP-TO-DATE
+> Task :expo-manifests:mergeDebugShaders UP-TO-DATE
+> Task :expo-manifests:compileDebugShaders NO-SOURCE
+> Task :expo-manifests:generateDebugAssets UP-TO-DATE
+> Task :expo-manifests:mergeDebugAssets UP-TO-DATE
+> Task :expo-modules-core:mergeDebugShaders UP-TO-DATE
+> Task :expo-modules-core:compileDebugShaders NO-SOURCE
+> Task :expo-modules-core:generateDebugAssets UP-TO-DATE
+> Task :expo-modules-core:mergeDebugAssets UP-TO-DATE
+> Task :expo-updates:mergeDebugShaders UP-TO-DATE
+> Task :expo-updates:compileDebugShaders NO-SOURCE
+> Task :expo-updates:generateDebugAssets UP-TO-DATE
+> Task :expo-updates:mergeDebugAssets UP-TO-DATE
+> Task :react-native-android-notification-listener:mergeDebugShaders UP-TO-DATE
+> Task :react-native-android-notification-listener:compileDebugShaders NO-SOURCE
+> Task :react-native-android-notification-listener:generateDebugAssets UP-TO-DATE
+.\gradlew.bat : The NODE_ENV environment variable is 
+required but was not specified. Ensure the project is 
+bundled with Expo CLI or NODE_ENV is set. Using only 
+.env.local and .env
+At line:1 char:1
++ .\gradlew.bat app:assembleDebug -x lint -x test 
+--configure-on-demand ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (The NODE_E 
+   NV en....local and .env:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+> Task :react-native-android-notification-listener:mergeDebugAssets UP-TO-DATE
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask
+
+> Task :expo-constants:createExpoConfig
+env: load .env
+env: export EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+
+> Task :react-native-async-storage_async-storage:mergeDebugShaders UP-TO-DATE
+> Task :react-native-async-storage_async-storage:compileDebugShaders NO-SOURCE
+> Task :react-native-async-storage_async-storage:generateDebugAssets UP-TO-DATE
+> Task :react-native-reanimated:assertNewArchitectureEnabledTask SKIPPED
+> Task :react-native-worklets:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugAssets UP-TO-DATE
+> Task :react-native-worklets:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-community_datetimepicker:mergeDebugShaders UP-TO-DATE
+> Task :react-native-community_netinfo:mergeDebugShaders UP-TO-DATE
+> Task :react-native-community_datetimepicker:compileDebugShaders NO-SOURCE
+> Task :react-native-community_datetimepicker:generateDebugAssets UP-TO-DATE
+> Task :react-native-community_netinfo:compileDebugShaders NO-SOURCE
+> Task :react-native-community_netinfo:generateDebugAssets UP-TO-DATE
+> Task :react-native-community_netinfo:mergeDebugAssets UP-TO-DATE
+> Task :react-native-gesture-handler:mergeDebugShaders UP-TO-DATE
+> Task :react-native-gesture-handler:compileDebugShaders NO-SOURCE
+> Task :react-native-gesture-handler:generateDebugAssets UP-TO-DATE
+> Task :react-native-community_datetimepicker:mergeDebugAssets UP-TO-DATE
+> Task :react-native-gesture-handler:mergeDebugAssets UP-TO-DATE
+> Task :react-native-get-random-values:mergeDebugShaders UP-TO-DATE
+> Task :react-native-get-random-values:compileDebugShaders NO-SOURCE
+> Task :react-native-get-random-values:generateDebugAssets UP-TO-DATE
+> Task :react-native-maps:mergeDebugShaders UP-TO-DATE
+> Task :react-native-get-random-values:mergeDebugAssets UP-TO-DATE
+> Task :react-native-maps:compileDebugShaders NO-SOURCE
+> Task :react-native-maps:generateDebugAssets UP-TO-DATE
+> Task :react-native-pdf:mergeDebugShaders UP-TO-DATE
+> Task :react-native-pdf:compileDebugShaders NO-SOURCE
+> Task :react-native-pdf:generateDebugAssets UP-TO-DATE
+> Task :react-native-maps:mergeDebugAssets UP-TO-DATE
+> Task :react-native-pdf:mergeDebugAssets UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugShaders UP-TO-DATE
+> Task :react-native-picker_picker:mergeDebugShaders UP-TO-DATE
+> Task :react-native-picker_picker:compileDebugShaders NO-SOURCE
+> Task :react-native-picker_picker:generateDebugAssets UP-TO-DATE
+> Task :react-native-safe-area-context:compileDebugShaders NO-SOURCE
+> Task :react-native-safe-area-context:generateDebugAssets UP-TO-DATE
+> Task :react-native-picker_picker:mergeDebugAssets UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugAssets UP-TO-DATE
+> Task :react-native-screens:mergeDebugShaders UP-TO-DATE
+> Task :react-native-screens:compileDebugShaders NO-SOURCE
+> Task :react-native-svg:mergeDebugShaders UP-TO-DATE
+> Task :react-native-screens:generateDebugAssets UP-TO-DATE
+> Task :react-native-svg:compileDebugShaders NO-SOURCE
+> Task :react-native-svg:generateDebugAssets UP-TO-DATE
+> Task :react-native-screens:mergeDebugAssets UP-TO-DATE
+> Task :react-native-video:mergeDebugShaders UP-TO-DATE
+> Task :react-native-video:compileDebugShaders NO-SOURCE
+> Task :react-native-video:generateDebugAssets UP-TO-DATE
+> Task :react-native-video:mergeDebugAssets UP-TO-DATE
+> Task :react-native-webview:mergeDebugShaders UP-TO-DATE
+> Task :react-native-svg:mergeDebugAssets UP-TO-DATE
+> Task :react-native-worklets:mergeDebugShaders UP-TO-DATE
+> Task :react-native-worklets:compileDebugShaders NO-SOURCE
+> Task :react-native-worklets:generateDebugAssets UP-TO-DATE
+> Task :react-native-worklets:mergeDebugAssets UP-TO-DATE
+> Task :react-native-webview:compileDebugShaders NO-SOURCE
+> Task :react-native-webview:generateDebugAssets UP-TO-DATE
+> Task :react-native-community_datetimepicker:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-webview:mergeDebugAssets UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-screens:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-video:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-webview:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-community_netinfo:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-picker_picker:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-android-notification-listener:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-get-random-values:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-maps:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-pdf:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-svg:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-worklets:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :expo-modules-core:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :expo-modules-core:processDebugJavaRes UP-TO-DATE
+> Task :react-native-android-notification-listener:processDebugJavaRes NO-SOURCE
+> Task :react-native-async-storage_async-storage:processDebugJavaRes NO-SOURCE
+> Task :react-native-community_datetimepicker:processDebugJavaRes UP-TO-DATE
+> Task :react-native-community_netinfo:processDebugJavaRes NO-SOURCE
+> Task :react-native-get-random-values:processDebugJavaRes NO-SOURCE
+> Task :react-native-maps:processDebugJavaRes NO-SOURCE
+> Task :react-native-pdf:processDebugJavaRes NO-SOURCE
+> Task :react-native-picker_picker:processDebugJavaRes NO-SOURCE
+> Task :react-native-safe-area-context:processDebugJavaRes UP-TO-DATE
+> Task :react-native-screens:processDebugJavaRes UP-TO-DATE
+> Task :react-native-svg:processDebugJavaRes NO-SOURCE
+> Task :react-native-video:processDebugJavaRes UP-TO-DATE
+> Task :react-native-webview:processDebugJavaRes UP-TO-DATE
+> Task :react-native-worklets:processDebugJavaRes NO-SOURCE
+> Task :expo-constants:preBuild
+> Task :expo-constants:preDebugBuild
+> Task :expo-constants:writeDebugAarMetadata UP-TO-DATE
+> Task :expo-constants:generateDebugResValues UP-TO-DATE
+> Task :expo-constants:generateDebugResources UP-TO-DATE
+> Task :expo-constants:packageDebugResources UP-TO-DATE
+> Task :expo-constants:extractDeepLinksDebug UP-TO-DATE
+> Task :expo-constants:processDebugManifest UP-TO-DATE
+> Task :expo-constants:compileDebugLibraryResources UP-TO-DATE
+> Task :expo-constants:parseDebugLocalResources UP-TO-DATE
+> Task :expo-constants:generateDebugRFile UP-TO-DATE
+> Task :expo-constants:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-constants:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :expo-constants:javaPreCompileDebug UP-TO-DATE
+> Task :expo-constants:mergeDebugShaders UP-TO-DATE
+> Task :expo-constants:compileDebugShaders NO-SOURCE
+> Task :expo-constants:generateDebugAssets UP-TO-DATE
+> Task :expo-constants:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :react-native-community_datetimepicker:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-screens:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-reanimated:assertWorkletsVersionTask
+> Task :react-native-video:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-reanimated:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-reanimated:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-webview:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs UP-TO-DATE
+> Task :react-native-reanimated:preBuild
+> Task :react-native-reanimated:preDebugBuild
+> Task :react-native-reanimated:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-reanimated:generateDebugResValues UP-TO-DATE
+> Task :react-native-reanimated:generateDebugResources UP-TO-DATE
+> Task :react-native-reanimated:packageDebugResources UP-TO-DATE
+> Task :react-native-reanimated:extractDeepLinksDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :react-native-reanimated:processDebugManifest UP-TO-DATE
+> Task :react-native-reanimated:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-reanimated:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-reanimated:generateDebugRFile UP-TO-DATE
+> Task :react-native-reanimated:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-reanimated:javaPreCompileDebug UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :react-native-reanimated:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-reanimated:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :react-native-gesture-handler:compileDebugKotlin UP-TO-DATE
+> Task :react-native-gesture-handler:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-gesture-handler:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-reanimated:mergeDebugShaders UP-TO-DATE
+> Task :react-native-reanimated:compileDebugShaders NO-SOURCE
+> Task :react-native-reanimated:generateDebugAssets UP-TO-DATE
+> Task :react-native-reanimated:mergeDebugAssets UP-TO-DATE
+> Task :react-native-gesture-handler:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-reanimated:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :react-native-gesture-handler:processDebugJavaRes UP-TO-DATE
+> Task :react-native-reanimated:processDebugJavaRes NO-SOURCE
+> Task :react-native-gesture-handler:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-community_netinfo:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-picker_picker:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-android-notification-listener:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-get-random-values:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-maps:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-pdf:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-reanimated:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-svg:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-worklets:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :expo-modules-core:bundleLibRuntimeToDirDebug UP-TO-DATE
+
+> Task :expo-json-utils:compileDebugKotlin
+e: Daemon compilation failed: null
+java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$Ca
+llResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$Ca
+llResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:2
+40)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCom
+pilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRu
+nnerWithWorkers$GradleKotlinCompilerWorkAction.execute(G
+radleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.exec
+ute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.exe
+cuteInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Ab
+stractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Ab
+stractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$CallableBuildOperationWorker.execute(DefaultBuild
+OperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$CallableBuildOperationWorker.execute(DefaultBuild
+OperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWr
+appedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.la
+mbda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(Future
+Task.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.runExecution(DefaultConditionalExe
+cutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.access$700(DefaultConditionalExecu
+tionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner$1.run(DefaultConditionalExecutionQ
+ueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.jav
+a:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.w
+ithLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.r
+unAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.r
+unAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.runBatch(DefaultConditionalExecuti
+onQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.run(DefaultConditionalExecutionQue
+ue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAda
+pter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(Future
+Task.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchA
+ndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecut
+or$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.ru
+nWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Wo
+rker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.lang.AssertionError: 
+java.lang.Exception: Could not close incremental caches 
+in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_mo
+dules\expo-json-utils\android\build\kotlin\compileDebugK
+otlin\cacheable\caches-jvm\jvm\kotlin: 
+internal-name-to-source.tab
+	at org.jetbrains.kotlin.com.google.common.io.Closer.clo
+se(Closer.java:218)
+	at org.jetbrains.kotlin.incremental.IncrementalCachesMa
+nager.close(IncrementalCachesManager.kt:55)
+	at kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compileNonIncrementally(IncrementalCompilerRunner
+.kt:302)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compile(IncrementalCompilerRunner.kt:137)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.e
+xecIncrementalCompiler(CompileServiceImpl.kt:678)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.a
+ccess$execIncrementalCompiler(CompileServiceImpl.kt:92)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compi
+le(CompileServiceImpl.kt:1805)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorI
+mpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorI
+mpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAcces
+sorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.jav
+a:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(Un
+icastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport
+.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport
+.java:197)
+	at java.base/java.security.AccessController.doPrivilege
+d(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Tra
+nsport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMe
+ssages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivilege
+d(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.run(TCPTransport.java:704)
+	... 3 more
+Caused by: java.lang.Exception: Could not close 
+incremental caches in C:\Users\USER\Documents\CODE X\EDU
+FI\campusOS\node_modules\expo-json-utils\android\build\k
+otlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin
+: internal-name-to-source.tab
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOw
+ner.forEachMapSafe(BasicMapsOwner.kt:95)
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOw
+ner.close(BasicMapsOwner.kt:53)
+	at org.jetbrains.kotlin.com.google.common.io.Closer.clo
+se(Closer.java:205)
+	... 24 more
+	Suppressed: java.lang.IllegalStateException: Storage 
+for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_
+modules\expo-json-utils\android\build\kotlin\compileDebu
+gKotlin\cacheable\caches-jvm\jvm\kotlin\internal-name-to
+-source.tab] is already registered
+		at org.jetbrains.kotlin.com.intellij.util.io.FilePageC
+ache.registerPagedFileStorage(FilePageCache.java:410)
+		at org.jetbrains.kotlin.com.intellij.util.io.PagedFile
+Storage.<init>(PagedFileStorage.java:72)
+		at org.jetbrains.kotlin.com.intellij.util.io.Resizeabl
+eMappedFile.<init>(ResizeableMappedFile.java:55)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:1
+28)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tEnumerator.createDefaultEnumerator(PersistentEnumerator
+.java:52)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapImpl.<init>(PersistentMapImpl.java:165)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapImpl.<init>(PersistentMapImpl.java:140)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapBuilder.buildImplementation(PersistentMapBuilder.jav
+a:88)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapBuilder.build(PersistentMapBuilder.java:71)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tHashMap.<init>(PersistentHashMap.java:45)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tHashMap.<init>(PersistentHashMap.java:71)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.createMap(LazyStorage.kt:62)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.getStorageOrCreateNew(LazyStorage.kt:59)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.set(LazyStorage.kt:80)
+		at org.jetbrains.kotlin.incremental.storage.InMemorySt
+orage.applyChanges(InMemoryStorage.kt:108)
+		at org.jetbrains.kotlin.incremental.storage.Appendable
+InMemoryStorage.applyChanges(InMemoryStorage.kt:179)
+		at org.jetbrains.kotlin.incremental.storage.InMemorySt
+orage.close(InMemoryStorage.kt:136)
+		at org.jetbrains.kotlin.incremental.storage.Persistent
+StorageWrapper.close(PersistentStorage.kt:124)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.forEachMapSafe(BasicMapsOwner.kt:87)
+		... 26 more
+		Suppressed: java.lang.Exception: 
+Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\no
+de_modules\expo-json-utils\android\build\kotlin\compileD
+ebugKotlin\cacheable\caches-jvm\jvm\kotlin\internal-name
+-to-source.tab] registration stack trace
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePage
+Cache.registerPagedFileStorage(FilePageCache.java:437)
+			... 46 more
+	Suppressed: java.lang.Exception: Could not close 
+incremental caches in C:\Users\USER\Documents\CODE X\EDU
+FI\campusOS\node_modules\expo-json-utils\android\build\k
+otlin\compileDebugKotlin\cacheable\caches-jvm\lookups: 
+file-to-id.tab
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.forEachMapSafe(BasicMapsOwner.kt:95)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.close(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.LookupStorage.clos
+e(LookupStorage.kt:155)
+		... 25 more
+		Suppressed: java.lang.IllegalStateException: Storage 
+for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_
+modules\expo-json-utils\android\build\kotlin\compileDebu
+gKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] is 
+already registered
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePage
+Cache.registerPagedFileStorage(FilePageCache.java:410)
+			at org.jetbrains.kotlin.com.intellij.util.io.PagedFil
+eStorage.<init>(PagedFileStorage.java:72)
+			at org.jetbrains.kotlin.com.intellij.util.io.Resizeab
+leMappedFile.<init>(ResizeableMappedFile.java:55)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:
+128)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntEnumerator.createDefaultEnumerator(PersistentEnumerato
+r.java:52)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapImpl.<init>(PersistentMapImpl.java:165)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapImpl.<init>(PersistentMapImpl.java:140)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapBuilder.buildImplementation(PersistentMapBuilder.ja
+va:88)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapBuilder.build(PersistentMapBuilder.java:71)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntHashMap.<init>(PersistentHashMap.java:45)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntHashMap.<init>(PersistentHashMap.java:71)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.createMap(LazyStorage.kt:62)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.getStorageOrCreateNew(LazyStorage.kt:59)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.set(LazyStorage.kt:80)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryS
+torage.applyChanges(InMemoryStorage.kt:108)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryS
+torage.close(InMemoryStorage.kt:136)
+			at org.jetbrains.kotlin.incremental.storage.Persisten
+tStorageWrapper.close(PersistentStorage.kt:124)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner.forEachMapSafe(BasicMapsOwner.kt:87)
+			... 27 more
+			Suppressed: java.lang.Exception: 
+Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\no
+de_modules\expo-json-utils\android\build\kotlin\compileD
+ebugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] 
+registration stack trace
+				at org.jetbrains.kotlin.com.intellij.util.io.FilePag
+eCache.registerPagedFileStorage(FilePageCache.java:437)
+				... 46 more
+
+Failed to compile with Kotlin daemon: java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:240)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCompilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.lang.AssertionError: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-json-utils\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin: internal-name-to-source.tab
+	at org.jetbrains.kotlin.com.google.common.io.Closer.close(Closer.java:218)
+	at org.jetbrains.kotlin.incremental.IncrementalCachesManager.close(IncrementalCachesManager.kt:55)
+	at kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:302)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:137)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:678)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:92)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1805)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	... 3 more
+Caused by: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-json-utils\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin: internal-name-to-source.tab
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:95)
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.close(BasicMapsOwner.kt:53)
+	at org.jetbrains.kotlin.com.google.common.io.Closer.close(Closer.java:205)
+	... 24 more
+	Suppressed: java.lang.IllegalStateException: Storage for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-json-utils\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin\internal-name-to-source.tab] is already registered
+		at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:410)
+		at org.jetbrains.kotlin.com.intellij.util.io.PagedFileStorage.<init>(PagedFileStorage.java:72)
+		at org.jetbrains.kotlin.com.intellij.util.io.ResizeableMappedFile.<init>(ResizeableMappedFile.java:55)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:128)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+		at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+		at org.jetbrains.kotlin.incremental.storage.AppendableInMemoryStorage.applyChanges(InMemoryStorage.kt:179)
+		at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+		at org.jetbrains.kotlin.incremental.storage.PersistentStorageWrapper.close(PersistentStorage.kt:124)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+		... 26 more
+		Suppressed: java.lang.Exception: Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-json-utils\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin\internal-name-to-source.tab] registration stack trace
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:437)
+			... 46 more
+	Suppressed: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-json-utils\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups: file-to-id.tab
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:95)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.close(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.LookupStorage.close(LookupStorage.kt:155)
+		... 25 more
+		Suppressed: java.lang.IllegalStateException: Storage for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-json-utils\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] is already registered
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:410)
+			at org.jetbrains.kotlin.com.intellij.util.io.PagedFileStorage.<init>(PagedFileStorage.java:72)
+			at org.jetbrains.kotlin.com.intellij.util.io.ResizeableMappedFile.<init>(ResizeableMappedFile.java:55)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:128)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+			at org.jetbrains.kotlin.incremental.storage.PersistentStorageWrapper.close(PersistentStorage.kt:124)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+			... 27 more
+			Suppressed: java.lang.Exception: Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-json-utils\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] registration stack trace
+				at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:437)
+				... 46 more
+Using fallback strategy: Compile without Kotlin daemon
+Try ./gradlew --stop if this issue persists
+If it does not look related to your configuration, please file an issue with logs to https://kotl.in/issue
+
+> Task :react-native-worklets:configureCMakeDebug[arm64-v8a]
+
+> Task :expo-eas-client:compileDebugKotlin
+e: Daemon compilation failed: null
+java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$Ca
+llResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$Ca
+llResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:2
+40)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCom
+pilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRu
+nnerWithWorkers$GradleKotlinCompilerWorkAction.execute(G
+radleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.exec
+ute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.exe
+cuteInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Ab
+stractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Ab
+stractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$CallableBuildOperationWorker.execute(DefaultBuild
+OperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$CallableBuildOperationWorker.execute(DefaultBuild
+OperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWr
+appedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.la
+mbda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(Future
+Task.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.runExecution(DefaultConditionalExe
+cutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.access$700(DefaultConditionalExecu
+tionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner$1.run(DefaultConditionalExecutionQ
+ueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.jav
+a:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.w
+ithLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.r
+unAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.r
+unAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.runBatch(DefaultConditionalExecuti
+onQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.run(DefaultConditionalExecutionQue
+ue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAda
+pter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(Future
+Task.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchA
+ndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecut
+or$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.ru
+nWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Wo
+rker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.lang.AssertionError: 
+java.lang.Exception: Could not close incremental caches 
+in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_mo
+dules\expo-eas-client\android\build\kotlin\compileDebugK
+otlin\cacheable\caches-jvm\jvm\kotlin: 
+class-fq-name-to-source.tab
+	at org.jetbrains.kotlin.com.google.common.io.Closer.clo
+se(Closer.java:218)
+	at org.jetbrains.kotlin.incremental.IncrementalCachesMa
+nager.close(IncrementalCachesManager.kt:55)
+	at kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compileNonIncrementally(IncrementalCompilerRunner
+.kt:302)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compile(IncrementalCompilerRunner.kt:137)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.e
+xecIncrementalCompiler(CompileServiceImpl.kt:678)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.a
+ccess$execIncrementalCompiler(CompileServiceImpl.kt:92)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compi
+le(CompileServiceImpl.kt:1805)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorI
+mpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorI
+mpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAcces
+sorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.jav
+a:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(Un
+icastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport
+.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport
+.java:197)
+	at java.base/java.security.AccessController.doPrivilege
+d(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Tra
+nsport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMe
+ssages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivilege
+d(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.run(TCPTransport.java:704)
+	... 3 more
+Caused by: java.lang.Exception: Could not close 
+incremental caches in C:\Users\USER\Documents\CODE X\EDU
+FI\campusOS\node_modules\expo-eas-client\android\build\k
+otlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin
+: class-fq-name-to-source.tab
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOw
+ner.forEachMapSafe(BasicMapsOwner.kt:95)
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOw
+ner.close(BasicMapsOwner.kt:53)
+	at org.jetbrains.kotlin.com.google.common.io.Closer.clo
+se(Closer.java:205)
+	... 24 more
+	Suppressed: java.lang.IllegalStateException: Storage 
+for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_
+modules\expo-eas-client\android\build\kotlin\compileDebu
+gKotlin\cacheable\caches-jvm\jvm\kotlin\class-fq-name-to
+-source.tab] is already registered
+		at org.jetbrains.kotlin.com.intellij.util.io.FilePageC
+ache.registerPagedFileStorage(FilePageCache.java:410)
+		at org.jetbrains.kotlin.com.intellij.util.io.PagedFile
+Storage.<init>(PagedFileStorage.java:72)
+		at org.jetbrains.kotlin.com.intellij.util.io.Resizeabl
+eMappedFile.<init>(ResizeableMappedFile.java:55)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:1
+28)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tEnumerator.createDefaultEnumerator(PersistentEnumerator
+.java:52)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapImpl.<init>(PersistentMapImpl.java:165)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapImpl.<init>(PersistentMapImpl.java:140)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapBuilder.buildImplementation(PersistentMapBuilder.jav
+a:88)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapBuilder.build(PersistentMapBuilder.java:71)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tHashMap.<init>(PersistentHashMap.java:45)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tHashMap.<init>(PersistentHashMap.java:71)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.createMap(LazyStorage.kt:62)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.getStorageOrCreateNew(LazyStorage.kt:59)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.set(LazyStorage.kt:80)
+		at org.jetbrains.kotlin.incremental.storage.InMemorySt
+orage.applyChanges(InMemoryStorage.kt:108)
+		at org.jetbrains.kotlin.incremental.storage.InMemorySt
+orage.close(InMemoryStorage.kt:136)
+		at org.jetbrains.kotlin.incremental.storage.Persistent
+StorageWrapper.close(PersistentStorage.kt:124)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.forEachMapSafe(BasicMapsOwner.kt:87)
+		... 26 more
+		Suppressed: java.lang.Exception: 
+Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\no
+de_modules\expo-eas-client\android\build\kotlin\compileD
+ebugKotlin\cacheable\caches-jvm\jvm\kotlin\class-fq-name
+-to-source.tab] registration stack trace
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePage
+Cache.registerPagedFileStorage(FilePageCache.java:437)
+			... 45 more
+	Suppressed: java.lang.Exception: Could not close 
+incremental caches in C:\Users\USER\Documents\CODE X\EDU
+FI\campusOS\node_modules\expo-eas-client\android\build\k
+otlin\compileDebugKotlin\cacheable\caches-jvm\lookups: 
+file-to-id.tab
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.forEachMapSafe(BasicMapsOwner.kt:95)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.close(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.LookupStorage.clos
+e(LookupStorage.kt:155)
+		... 25 more
+		Suppressed: java.lang.IllegalStateException: Storage 
+for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_
+modules\expo-eas-client\android\build\kotlin\compileDebu
+gKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] is 
+already registered
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePage
+Cache.registerPagedFileStorage(FilePageCache.java:410)
+			at org.jetbrains.kotlin.com.intellij.util.io.PagedFil
+eStorage.<init>(PagedFileStorage.java:72)
+			at org.jetbrains.kotlin.com.intellij.util.io.Resizeab
+leMappedFile.<init>(ResizeableMappedFile.java:55)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:
+128)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntEnumerator.createDefaultEnumerator(PersistentEnumerato
+r.java:52)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapImpl.<init>(PersistentMapImpl.java:165)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapImpl.<init>(PersistentMapImpl.java:140)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapBuilder.buildImplementation(PersistentMapBuilder.ja
+va:88)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapBuilder.build(PersistentMapBuilder.java:71)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntHashMap.<init>(PersistentHashMap.java:45)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntHashMap.<init>(PersistentHashMap.java:71)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.createMap(LazyStorage.kt:62)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.getStorageOrCreateNew(LazyStorage.kt:59)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.set(LazyStorage.kt:80)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryS
+torage.applyChanges(InMemoryStorage.kt:108)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryS
+torage.close(InMemoryStorage.kt:136)
+			at org.jetbrains.kotlin.incremental.storage.Persisten
+tStorageWrapper.close(PersistentStorage.kt:124)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner.forEachMapSafe(BasicMapsOwner.kt:87)
+			... 27 more
+			Suppressed: java.lang.Exception: 
+Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\no
+de_modules\expo-eas-client\android\build\kotlin\compileD
+ebugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] 
+registration stack trace
+				at org.jetbrains.kotlin.com.intellij.util.io.FilePag
+eCache.registerPagedFileStorage(FilePageCache.java:437)
+				... 46 more
+
+Failed to compile with Kotlin daemon: java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:240)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCompilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.lang.AssertionError: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-eas-client\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin: class-fq-name-to-source.tab
+	at org.jetbrains.kotlin.com.google.common.io.Closer.close(Closer.java:218)
+	at org.jetbrains.kotlin.incremental.IncrementalCachesManager.close(IncrementalCachesManager.kt:55)
+	at kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:302)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:137)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:678)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:92)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1805)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	... 3 more
+Caused by: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-eas-client\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin: class-fq-name-to-source.tab
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:95)
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.close(BasicMapsOwner.kt:53)
+	at org.jetbrains.kotlin.com.google.common.io.Closer.close(Closer.java:205)
+	... 24 more
+	Suppressed: java.lang.IllegalStateException: Storage for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-eas-client\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin\class-fq-name-to-source.tab] is already registered
+		at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:410)
+		at org.jetbrains.kotlin.com.intellij.util.io.PagedFileStorage.<init>(PagedFileStorage.java:72)
+		at org.jetbrains.kotlin.com.intellij.util.io.ResizeableMappedFile.<init>(ResizeableMappedFile.java:55)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:128)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+		at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+		at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+		at org.jetbrains.kotlin.incremental.storage.PersistentStorageWrapper.close(PersistentStorage.kt:124)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+		... 26 more
+		Suppressed: java.lang.Exception: Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-eas-client\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin\class-fq-name-to-source.tab] registration stack trace
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:437)
+			... 45 more
+	Suppressed: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-eas-client\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups: file-to-id.tab
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:95)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.close(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.LookupStorage.close(LookupStorage.kt:155)
+		... 25 more
+		Suppressed: java.lang.IllegalStateException: Storage for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-eas-client\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] is already registered
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:410)
+			at org.jetbrains.kotlin.com.intellij.util.io.PagedFileStorage.<init>(PagedFileStorage.java:72)
+			at org.jetbrains.kotlin.com.intellij.util.io.ResizeableMappedFile.<init>(ResizeableMappedFile.java:55)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:128)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+			at org.jetbrains.kotlin.incremental.storage.PersistentStorageWrapper.close(PersistentStorage.kt:124)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+			... 27 more
+			Suppressed: java.lang.Exception: Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-eas-client\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] registration stack trace
+				at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:437)
+				... 46 more
+Using fallback strategy: Compile without Kotlin daemon
+Try ./gradlew --stop if this issue persists
+If it does not look related to your configuration, please file an issue with logs to https://kotl.in/issue
+
+> Task :react-native-worklets:configureCMakeDebug[armeabi-v7a]
+
+> Task :expo-constants:compileDebugKotlin
+w: file:///C:/Users/USER/Documents/CODE%20X/EDUFI/campusOS/node_modules/expo-constants/android/src/main/java/expo/modules/constants/ConstantsModule.kt:12:5 'fun Constants(legacyConstantsProvider: () -> Map<String, Any?>): Unit' is deprecated. Use `Constant` or `Property` instead.
+e: Daemon compilation failed: null
+java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$Ca
+llResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$Ca
+llResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:2
+40)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCom
+pilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRu
+nnerWithWorkers$GradleKotlinCompilerWorkAction.execute(G
+radleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.exec
+ute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.exe
+cuteInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Ab
+stractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Ab
+stractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$CallableBuildOperationWorker.execute(DefaultBuild
+OperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$CallableBuildOperationWorker.execute(DefaultBuild
+OperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWr
+appedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.la
+mbda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(Future
+Task.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.runExecution(DefaultConditionalExe
+cutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.access$700(DefaultConditionalExecu
+tionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner$1.run(DefaultConditionalExecutionQ
+ueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.jav
+a:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.w
+ithLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.r
+unAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.r
+unAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.runBatch(DefaultConditionalExecuti
+onQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.run(DefaultConditionalExecutionQue
+ue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAda
+pter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(Future
+Task.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchA
+ndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecut
+or$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.ru
+nWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Wo
+rker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.lang.AssertionError: 
+java.lang.Exception: Could not close incremental caches 
+in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_mo
+dules\expo-constants\android\build\kotlin\compileDebugKo
+tlin\cacheable\caches-jvm\jvm\kotlin: supertypes.tab, 
+internal-name-to-source.tab
+	at org.jetbrains.kotlin.com.google.common.io.Closer.clo
+se(Closer.java:218)
+	at org.jetbrains.kotlin.incremental.IncrementalCachesMa
+nager.close(IncrementalCachesManager.kt:55)
+	at kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compileNonIncrementally(IncrementalCompilerRunner
+.kt:302)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compile(IncrementalCompilerRunner.kt:137)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.e
+xecIncrementalCompiler(CompileServiceImpl.kt:678)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.a
+ccess$execIncrementalCompiler(CompileServiceImpl.kt:92)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compi
+le(CompileServiceImpl.kt:1805)
+	at jdk.internal.reflect.GeneratedMethodAccessor14.invok
+e(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAcces
+sorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.jav
+a:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(Un
+icastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport
+.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport
+.java:197)
+	at java.base/java.security.AccessController.doPrivilege
+d(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Tra
+nsport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMe
+ssages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivilege
+d(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.run(TCPTransport.java:704)
+	... 3 more
+Caused by: java.lang.Exception: Could not close 
+incremental caches in C:\Users\USER\Documents\CODE X\EDU
+FI\campusOS\node_modules\expo-constants\android\build\ko
+tlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin:
+ supertypes.tab, internal-name-to-source.tab
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOw
+ner.forEachMapSafe(BasicMapsOwner.kt:95)
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOw
+ner.close(BasicMapsOwner.kt:53)
+	at org.jetbrains.kotlin.com.google.common.io.Closer.clo
+se(Closer.java:205)
+	... 23 more
+	Suppressed: org.jetbrains.kotlin.com.intellij.util.io.C
+orruptedException: Storage corrupted 
+C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modul
+es\expo-constants\android\build\kotlin\compileDebugKotli
+n\cacheable\caches-jvm\jvm\kotlin\supertypes.tab
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tEnumeratorBase.<init>(PersistentEnumeratorBase.java:189
+)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:1
+21)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tEnumerator.createDefaultEnumerator(PersistentEnumerator
+.java:52)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapImpl.<init>(PersistentMapImpl.java:165)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapImpl.<init>(PersistentMapImpl.java:140)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapBuilder.buildImplementation(PersistentMapBuilder.jav
+a:88)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapBuilder.build(PersistentMapBuilder.java:71)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tHashMap.<init>(PersistentHashMap.java:45)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tHashMap.<init>(PersistentHashMap.java:71)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.createMap(LazyStorage.kt:62)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.getStorageOrCreateNew(LazyStorage.kt:59)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.set(LazyStorage.kt:80)
+		at org.jetbrains.kotlin.incremental.storage.InMemorySt
+orage.applyChanges(InMemoryStorage.kt:108)
+		at org.jetbrains.kotlin.incremental.storage.Appendable
+InMemoryStorage.applyChanges(InMemoryStorage.kt:179)
+		at org.jetbrains.kotlin.incremental.storage.InMemorySt
+orage.close(InMemoryStorage.kt:136)
+		at org.jetbrains.kotlin.incremental.storage.Appendable
+SetBasicMap.close(BasicMap.kt:157)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.forEachMapSafe(BasicMapsOwner.kt:87)
+		... 25 more
+	Suppressed: java.lang.IllegalStateException: Storage 
+for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_
+modules\expo-constants\android\build\kotlin\compileDebug
+Kotlin\cacheable\caches-jvm\jvm\kotlin\internal-name-to-
+source.tab] is already registered
+		at org.jetbrains.kotlin.com.intellij.util.io.FilePageC
+ache.registerPagedFileStorage(FilePageCache.java:410)
+		at org.jetbrains.kotlin.com.intellij.util.io.PagedFile
+Storage.<init>(PagedFileStorage.java:72)
+		at org.jetbrains.kotlin.com.intellij.util.io.Resizeabl
+eMappedFile.<init>(ResizeableMappedFile.java:55)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:1
+28)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tEnumerator.createDefaultEnumerator(PersistentEnumerator
+.java:52)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapImpl.<init>(PersistentMapImpl.java:165)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapImpl.<init>(PersistentMapImpl.java:140)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapBuilder.buildImplementation(PersistentMapBuilder.jav
+a:88)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tMapBuilder.build(PersistentMapBuilder.java:71)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tHashMap.<init>(PersistentHashMap.java:45)
+		at org.jetbrains.kotlin.com.intellij.util.io.Persisten
+tHashMap.<init>(PersistentHashMap.java:71)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.createMap(LazyStorage.kt:62)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.getStorageOrCreateNew(LazyStorage.kt:59)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorag
+e.set(LazyStorage.kt:80)
+		at org.jetbrains.kotlin.incremental.storage.InMemorySt
+orage.applyChanges(InMemoryStorage.kt:108)
+		at org.jetbrains.kotlin.incremental.storage.Appendable
+InMemoryStorage.applyChanges(InMemoryStorage.kt:179)
+		at org.jetbrains.kotlin.incremental.storage.InMemorySt
+orage.close(InMemoryStorage.kt:136)
+		at org.jetbrains.kotlin.incremental.storage.Persistent
+StorageWrapper.close(PersistentStorage.kt:124)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.forEachMapSafe(BasicMapsOwner.kt:87)
+		... 25 more
+		Suppressed: java.lang.Exception: 
+Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\no
+de_modules\expo-constants\android\build\kotlin\compileDe
+bugKotlin\cacheable\caches-jvm\jvm\kotlin\internal-name-
+to-source.tab] registration stack trace
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePage
+Cache.registerPagedFileStorage(FilePageCache.java:437)
+			at org.jetbrains.kotlin.com.intellij.util.io.PagedFil
+eStorage.<init>(PagedFileStorage.java:72)
+			at org.jetbrains.kotlin.com.intellij.util.io.Resizeab
+leMappedFile.<init>(ResizeableMappedFile.java:55)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:
+128)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntEnumerator.createDefaultEnumerator(PersistentEnumerato
+r.java:52)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapImpl.<init>(PersistentMapImpl.java:165)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapImpl.<init>(PersistentMapImpl.java:140)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapBuilder.buildImplementation(PersistentMapBuilder.ja
+va:88)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapBuilder.build(PersistentMapBuilder.java:71)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntHashMap.<init>(PersistentHashMap.java:45)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntHashMap.<init>(PersistentHashMap.java:71)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.createMap(LazyStorage.kt:62)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.getStorageOrCreateNew(LazyStorage.kt:59)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.set(LazyStorage.kt:80)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryS
+torage.applyChanges(InMemoryStorage.kt:108)
+			at org.jetbrains.kotlin.incremental.storage.Appendabl
+eInMemoryStorage.applyChanges(InMemoryStorage.kt:179)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryS
+torage.close(InMemoryStorage.kt:136)
+			at org.jetbrains.kotlin.incremental.storage.Persisten
+tStorageWrapper.close(PersistentStorage.kt:124)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner.forEachMapSafe(BasicMapsOwner.kt:87)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner.close(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.com.google.common.io.Closer.c
+lose(Closer.java:205)
+			at org.jetbrains.kotlin.incremental.IncrementalCaches
+Manager.close(IncrementalCachesManager.kt:55)
+			at 
+kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+			at org.jetbrains.kotlin.incremental.IncrementalCompil
+erRunner.compileNonIncrementally(IncrementalCompilerRunn
+er.kt:302)
+			at org.jetbrains.kotlin.incremental.IncrementalCompil
+erRunner.compile(IncrementalCompilerRunner.kt:137)
+			at org.jetbrains.kotlin.daemon.CompileServiceImplBase
+.execIncrementalCompiler(CompileServiceImpl.kt:678)
+			at org.jetbrains.kotlin.daemon.CompileServiceImplBase
+.access$execIncrementalCompiler(CompileServiceImpl.kt:92
+)
+			at org.jetbrains.kotlin.daemon.CompileServiceImpl.com
+pile(CompileServiceImpl.kt:1805)
+			at java.base/jdk.internal.reflect.NativeMethodAccesso
+rImpl.invoke0(Native Method)
+			at java.base/jdk.internal.reflect.NativeMethodAccesso
+rImpl.invoke(NativeMethodAccessorImpl.java:77)
+			... 15 more
+	Suppressed: java.lang.Exception: Could not close 
+incremental caches in C:\Users\USER\Documents\CODE X\EDU
+FI\campusOS\node_modules\expo-constants\android\build\ko
+tlin\compileDebugKotlin\cacheable\caches-jvm\lookups: 
+file-to-id.tab
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.forEachMapSafe(BasicMapsOwner.kt:95)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsO
+wner.close(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.LookupStorage.clos
+e(LookupStorage.kt:155)
+		... 24 more
+		Suppressed: java.lang.IllegalStateException: Storage 
+for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_
+modules\expo-constants\android\build\kotlin\compileDebug
+Kotlin\cacheable\caches-jvm\lookups\file-to-id.tab] is 
+already registered
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePage
+Cache.registerPagedFileStorage(FilePageCache.java:410)
+			at org.jetbrains.kotlin.com.intellij.util.io.PagedFil
+eStorage.<init>(PagedFileStorage.java:72)
+			at org.jetbrains.kotlin.com.intellij.util.io.Resizeab
+leMappedFile.<init>(ResizeableMappedFile.java:55)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:
+128)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntEnumerator.createDefaultEnumerator(PersistentEnumerato
+r.java:52)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapImpl.<init>(PersistentMapImpl.java:165)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapImpl.<init>(PersistentMapImpl.java:140)
+Failed to compile with Kotlin daemon: java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:240)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCompilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.lang.AssertionError: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-constants\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin: supertypes.tab, internal-name-to-source.tab
+	at org.jetbrains.kotlin.com.google.common.io.Closer.close(Closer.java:218)
+	at org.jetbrains.kotlin.incremental.IncrementalCachesManager.close(IncrementalCachesManager.kt:55)
+	at kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:302)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:137)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:678)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:92)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1805)
+	at jdk.internal.reflect.GeneratedMethodAccessor14.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	... 3 more
+Caused by: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-constants\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin: supertypes.tab, internal-name-to-source.tab
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:95)
+	at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.close(BasicMapsOwner.kt:53)
+	at org.jetbrains.kotlin.com.google.common.io.Closer.close(Closer.java:205)
+	... 23 more
+	Suppressed: org.jetbrains.kotlin.com.intellij.util.io.CorruptedException: Storage corrupted C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-constants\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin\supertypes.tab
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.<init>(PersistentEnumeratorBase.java:189)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:121)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+		at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+		at org.jetbrains.kotlin.incremental.storage.AppendableInMemoryStorage.applyChanges(InMemoryStorage.kt:179)
+		at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+		at org.jetbrains.kotlin.incremental.storage.AppendableSetBasicMap.close(BasicMap.kt:157)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+		... 25 more
+	Suppressed: java.lang.IllegalStateException: Storage for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-constants\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin\internal-name-to-source.tab] is already registered
+		at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:410)
+		at org.jetbrains.kotlin.com.intellij.util.io.PagedFileStorage.<init>(PagedFileStorage.java:72)
+		at org.jetbrains.kotlin.com.intellij.util.io.ResizeableMappedFile.<init>(ResizeableMappedFile.java:55)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:128)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+		at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+		at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+		at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+		at org.jetbrains.kotlin.incremental.storage.AppendableInMemoryStorage.applyChanges(InMemoryStorage.kt:179)
+		at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+		at org.jetbrains.kotlin.incremental.storage.PersistentStorageWrapper.close(PersistentStorage.kt:124)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapBuilder.buildImplementation(PersistentMapBuilder.ja
+va:88)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntMapBuilder.build(PersistentMapBuilder.java:71)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntHashMap.<init>(PersistentHashMap.java:45)
+			at org.jetbrains.kotlin.com.intellij.util.io.Persiste
+ntHashMap.<init>(PersistentHashMap.java:71)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.createMap(LazyStorage.kt:62)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.getStorageOrCreateNew(LazyStorage.kt:59)
+			at org.jetbrains.kotlin.incremental.storage.LazyStora
+ge.set(LazyStorage.kt:80)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryS
+torage.applyChanges(InMemoryStorage.kt:108)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryS
+torage.close(InMemoryStorage.kt:136)
+			at org.jetbrains.kotlin.incremental.storage.Persisten
+tStorageWrapper.close(PersistentStorage.kt:124)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMaps
+Owner.forEachMapSafe(BasicMapsOwner.kt:87)
+			... 26 more
+			Suppressed: java.lang.Exception: 
+Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\no
+de_modules\expo-constants\android\build\kotlin\compileDe
+bugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] 
+registration stack trace
+				at org.jetbrains.kotlin.com.intellij.util.io.FilePag
+eCache.registerPagedFileStorage(FilePageCache.java:437)
+				at org.jetbrains.kotlin.com.intellij.util.io.PagedFi
+leStorage.<init>(PagedFileStorage.java:72)
+				at org.jetbrains.kotlin.com.intellij.util.io.Resizea
+bleMappedFile.<init>(ResizeableMappedFile.java:55)
+				at org.jetbrains.kotlin.com.intellij.util.io.Persist
+entBTreeEnumerator.<init>(PersistentBTreeEnumerator.java
+:128)
+				at org.jetbrains.kotlin.com.intellij.util.io.Persist
+entEnumerator.createDefaultEnumerator(PersistentEnumerat
+or.java:52)
+				at org.jetbrains.kotlin.com.intellij.util.io.Persist
+entMapImpl.<init>(PersistentMapImpl.java:165)
+				at org.jetbrains.kotlin.com.intellij.util.io.Persist
+entMapImpl.<init>(PersistentMapImpl.java:140)
+				at org.jetbrains.kotlin.com.intellij.util.io.Persist
+entMapBuilder.buildImplementation(PersistentMapBuilder.j
+ava:88)
+				at org.jetbrains.kotlin.com.intellij.util.io.Persist
+entMapBuilder.build(PersistentMapBuilder.java:71)
+				at org.jetbrains.kotlin.com.intellij.util.io.Persist
+entHashMap.<init>(PersistentHashMap.java:45)
+				at org.jetbrains.kotlin.com.intellij.util.io.Persist
+entHashMap.<init>(PersistentHashMap.java:71)
+				at org.jetbrains.kotlin.incremental.storage.LazyStor
+age.createMap(LazyStorage.kt:62)
+				at org.jetbrains.kotlin.incremental.storage.LazyStor
+age.getStorageOrCreateNew(LazyStorage.kt:59)
+				at org.jetbrains.kotlin.incremental.storage.LazyStor
+age.set(LazyStorage.kt:80)
+				at org.jetbrains.kotlin.incremental.storage.InMemory
+Storage.applyChanges(InMemoryStorage.kt:108)
+				at org.jetbrains.kotlin.incremental.storage.InMemory
+Storage.close(InMemoryStorage.kt:136)
+				at org.jetbrains.kotlin.incremental.storage.Persiste
+ntStorageWrapper.close(PersistentStorage.kt:124)
+				at org.jetbrains.kotlin.incremental.storage.BasicMap
+sOwner$close$1.invoke(BasicMapsOwner.kt:53)
+				at org.jetbrains.kotlin.incremental.storage.BasicMap
+sOwner$close$1.invoke(BasicMapsOwner.kt:53)
+				at org.jetbrains.kotlin.incremental.storage.BasicMap
+sOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+				at org.jetbrains.kotlin.incremental.storage.BasicMap
+sOwner.close(BasicMapsOwner.kt:53)
+				at org.jetbrains.kotlin.incremental.LookupStorage.cl
+ose(LookupStorage.kt:155)
+				at org.jetbrains.kotlin.com.google.common.io.Closer.
+close(Closer.java:205)
+				at org.jetbrains.kotlin.incremental.IncrementalCache
+sManager.close(IncrementalCachesManager.kt:55)
+				at 
+kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+				at org.jetbrains.kotlin.incremental.IncrementalCompi
+lerRunner.compileNonIncrementally(IncrementalCompilerRun
+ner.kt:302)
+				at org.jetbrains.kotlin.incremental.IncrementalCompi
+lerRunner.compile(IncrementalCompilerRunner.kt:137)
+				at org.jetbrains.kotlin.daemon.CompileServiceImplBas
+e.execIncrementalCompiler(CompileServiceImpl.kt:678)
+				at org.jetbrains.kotlin.daemon.CompileServiceImplBas
+e.access$execIncrementalCompiler(CompileServiceImpl.kt:9
+2)
+				at org.jetbrains.kotlin.daemon.CompileServiceImpl.co
+mpile(CompileServiceImpl.kt:1805)
+				at java.base/jdk.internal.reflect.NativeMethodAccess
+orImpl.invoke0(Native Method)
+				at java.base/jdk.internal.reflect.NativeMethodAccess
+orImpl.invoke(NativeMethodAccessorImpl.java:77)
+				... 15 more
+
+		... 25 more
+		Suppressed: java.lang.Exception: Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-constants\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\jvm\kotlin\internal-name-to-source.tab] registration stack trace
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:437)
+			at org.jetbrains.kotlin.com.intellij.util.io.PagedFileStorage.<init>(PagedFileStorage.java:72)
+			at org.jetbrains.kotlin.com.intellij.util.io.ResizeableMappedFile.<init>(ResizeableMappedFile.java:55)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:128)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+			at org.jetbrains.kotlin.incremental.storage.AppendableInMemoryStorage.applyChanges(InMemoryStorage.kt:179)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+			at org.jetbrains.kotlin.incremental.storage.PersistentStorageWrapper.close(PersistentStorage.kt:124)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.close(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.com.google.common.io.Closer.close(Closer.java:205)
+			at org.jetbrains.kotlin.incremental.IncrementalCachesManager.close(IncrementalCachesManager.kt:55)
+			at kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+			at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:302)
+			at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:137)
+			at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:678)
+			at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:92)
+			at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1805)
+			at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+			at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+			... 15 more
+	Suppressed: java.lang.Exception: Could not close incremental caches in C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-constants\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups: file-to-id.tab
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:95)
+		at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.close(BasicMapsOwner.kt:53)
+		at org.jetbrains.kotlin.incremental.LookupStorage.close(LookupStorage.kt:155)
+		... 24 more
+		Suppressed: java.lang.IllegalStateException: Storage for [C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-constants\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] is already registered
+			at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:410)
+			at org.jetbrains.kotlin.com.intellij.util.io.PagedFileStorage.<init>(PagedFileStorage.java:72)
+			at org.jetbrains.kotlin.com.intellij.util.io.ResizeableMappedFile.<init>(ResizeableMappedFile.java:55)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:128)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+			at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+			at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+			at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+			at org.jetbrains.kotlin.incremental.storage.PersistentStorageWrapper.close(PersistentStorage.kt:124)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+			at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+			... 26 more
+			Suppressed: java.lang.Exception: Storage[C:\Users\USER\Documents\CODE X\EDUFI\campusOS\node_modules\expo-constants\android\build\kotlin\compileDebugKotlin\cacheable\caches-jvm\lookups\file-to-id.tab] registration stack trace
+				at org.jetbrains.kotlin.com.intellij.util.io.FilePageCache.registerPagedFileStorage(FilePageCache.java:437)
+				at org.jetbrains.kotlin.com.intellij.util.io.PagedFileStorage.<init>(PagedFileStorage.java:72)
+				at org.jetbrains.kotlin.com.intellij.util.io.ResizeableMappedFile.<init>(ResizeableMappedFile.java:55)
+				at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.<init>(PersistentBTreeEnumerator.java:128)
+				at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumerator.createDefaultEnumerator(PersistentEnumerator.java:52)
+				at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:165)
+				at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.<init>(PersistentMapImpl.java:140)
+				at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.buildImplementation(PersistentMapBuilder.java:88)
+				at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapBuilder.build(PersistentMapBuilder.java:71)
+				at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:45)
+				at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.<init>(PersistentHashMap.java:71)
+				at org.jetbrains.kotlin.incremental.storage.LazyStorage.createMap(LazyStorage.kt:62)
+				at org.jetbrains.kotlin.incremental.storage.LazyStorage.getStorageOrCreateNew(LazyStorage.kt:59)
+				at org.jetbrains.kotlin.incremental.storage.LazyStorage.set(LazyStorage.kt:80)
+				at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.applyChanges(InMemoryStorage.kt:108)
+				at org.jetbrains.kotlin.incremental.storage.InMemoryStorage.close(InMemoryStorage.kt:136)
+				at org.jetbrains.kotlin.incremental.storage.PersistentStorageWrapper.close(PersistentStorage.kt:124)
+				at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+				at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$close$1.invoke(BasicMapsOwner.kt:53)
+				at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+				at org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.close(BasicMapsOwner.kt:53)
+				at org.jetbrains.kotlin.incremental.LookupStorage.close(LookupStorage.kt:155)
+				at org.jetbrains.kotlin.com.google.common.io.Closer.close(Closer.java:205)
+				at org.jetbrains.kotlin.incremental.IncrementalCachesManager.close(IncrementalCachesManager.kt:55)
+				at kotlin.io.CloseableKt.closeFinally(Closeable.kt:46)
+				at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:302)
+				at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:137)
+				at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:678)
+				at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:92)
+				at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1805)
+				at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+				at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+				... 15 more
+Using fallback strategy: Compile without Kotlin daemon
+Try ./gradlew --stop if this issue persists
+If it does not look related to your configuration, please file an issue with logs to https://kotl.in/issue
+
+> Task :expo-structured-headers:compileDebugJavaWithJavac
+> Task :expo-updates-interface:compileDebugKotlin
+> Task :app:processDebugResources
+> Task :expo-json-utils:compileDebugJavaWithJavac
+> Task :expo-json-utils:bundleLibCompileToJarDebug
+
+> Task :expo-constants:compileDebugKotlin
+exception: c:\Users\USER\Documents\CODE X\EDUFI\campusOS
+\node_modules\expo-constants\android\src\main\java\expo\
+modules\constants\ConstantsModule.kt:12:5: warning: 
+'fun Constants(legacyConstantsProvider: () -> 
+Map<String, Any?>): Unit' is deprecated. Use `Constant` 
+or `Property` instead.
+exception:     Constants {
+exception:     ^^^^^^^^^
+
+> Task :expo-updates-interface:compileDebugJavaWithJavac
+> Task :expo-updates-interface:bundleLibCompileToJarDebug
+> Task :expo-updates-interface:mergeDebugShaders UP-TO-DATE
+> Task :expo-updates-interface:compileDebugShaders NO-SOURCE
+> Task :expo-updates-interface:generateDebugAssets UP-TO-DATE
+> Task :expo-updates-interface:mergeDebugAssets UP-TO-DATE
+
+> Task :expo-manifests:compileDebugKotlin
+w: file:///C:/Users/USER/Documents/CODE%20X/EDUFI/campusOS/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/EmbeddedManifest.kt:19:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///C:/Users/USER/Documents/CODE%20X/EDUFI/campusOS/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/EmbeddedManifest.kt:19:86 'fun getLegacyID(): String' is deprecated. Prefer scopeKey or projectId depending on use case.
+w: file:///C:/Users/USER/Documents/CODE%20X/EDUFI/campusOS/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/ExpoUpdatesManifest.kt:16:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///C:/Users/USER/Documents/CODE%20X/EDUFI/campusOS/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/Manifest.kt:13:3 Deprecations and opt-ins on a method overridden from 'Any' may not be reported.
+w: file:///C:/Users/USER/Documents/CODE%20X/EDUFI/campusOS/node_modules/expo-manifests/android/src/main/java/expo/modules/manifests/core/Manifest.kt:15:12 'fun getRawJson(): JSONObject' is deprecated. Prefer to use specific field getters.
+
+> Task :expo-eas-client:compileDebugJavaWithJavac
+> Task :react-native-worklets:configureCMakeDebug[x86]
+> Task :expo-eas-client:bundleLibCompileToJarDebug
+> Task :expo-json-utils:bundleLibRuntimeToJarDebug
+> Task :expo-eas-client:bundleLibRuntimeToJarDebug
+> Task :expo-constants:compileDebugJavaWithJavac
+> Task :expo-updates-interface:bundleLibRuntimeToJarDebug
+> Task :expo-constants:bundleLibCompileToJarDebug
+> Task :expo-constants:bundleLibRuntimeToJarDebug
+> Task :expo-constants:processDebugJavaRes
+> Task :expo-eas-client:processDebugJavaRes
+> Task :expo-json-utils:processDebugJavaRes
+> Task :expo-updates-interface:processDebugJavaRes
+> Task :expo-constants:bundleLibRuntimeToDirDebug
+> Task :expo-eas-client:bundleLibRuntimeToDirDebug
+> Task :expo-json-utils:bundleLibRuntimeToDirDebug
+> Task :expo-structured-headers:mergeDebugShaders UP-TO-DATE
+> Task :expo-structured-headers:compileDebugShaders NO-SOURCE
+> Task :expo-structured-headers:generateDebugAssets UP-TO-DATE
+> Task :expo-structured-headers:mergeDebugAssets UP-TO-DATE
+> Task :expo-structured-headers:bundleLibCompileToJarDebug
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :expo-updates-interface:bundleLibRuntimeToDirDebug
+> Task :expo-structured-headers:processDebugJavaRes NO-SOURCE
+> Task :expo-structured-headers:bundleLibRuntimeToJarDebug
+> Task :app:mergeDebugJniLibFolders
+> Task :expo:mergeDebugJniLibFolders UP-TO-DATE
+> Task :expo:mergeDebugNativeLibs NO-SOURCE
+> Task :expo:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :expo-constants:mergeDebugJniLibFolders UP-TO-DATE
+> Task :expo-constants:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-constants:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :expo-eas-client:mergeDebugJniLibFolders UP-TO-DATE
+> Task :expo-eas-client:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-eas-client:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :expo-json-utils:mergeDebugJniLibFolders UP-TO-DATE
+> Task :expo-json-utils:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-json-utils:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :expo-structured-headers:mergeDebugJniLibFolders UP-TO-DATE
+> Task :expo-structured-headers:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-structured-headers:bundleLibRuntimeToDirDebug
+> Task :expo-structured-headers:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :expo-updates:mergeDebugJniLibFolders UP-TO-DATE
+> Task :expo-updates:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-updates:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :expo-updates-interface:mergeDebugJniLibFolders UP-TO-DATE
+> Task :expo-updates-interface:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-updates-interface:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-android-notification-listener:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-android-notification-listener:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-android-notification-listener:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-community_datetimepicker:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-community_datetimepicker:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-community_datetimepicker:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-community_netinfo:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-community_netinfo:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-community_netinfo:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-gesture-handler:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-get-random-values:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-get-random-values:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-get-random-values:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-maps:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-maps:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-maps:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-pdf:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-pdf:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-pdf:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-picker_picker:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-picker_picker:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-picker_picker:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-reanimated:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-safe-area-context:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :expo-modules-core:configureCMakeDebug[arm64-v8a]
+> Task :react-native-screens:configureCMakeDebug[arm64-v8a]
+> Task :react-native-svg:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-svg:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-svg:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-video:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-video:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-video:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-webview:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-webview:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-webview:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :expo-manifests:compileDebugJavaWithJavac
+> Task :expo-manifests:bundleLibCompileToJarDebug
+> Task :expo-manifests:bundleLibRuntimeToJarDebug
+> Task :expo-manifests:processDebugJavaRes
+> Task :react-native-screens:buildCMakeDebug[arm64-v8a]
+> Task :expo-manifests:mergeDebugJniLibFolders UP-TO-DATE
+> Task :expo-manifests:mergeDebugNativeLibs NO-SOURCE
+> Task :expo-manifests:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :expo-manifests:bundleLibRuntimeToDirDebug
+> Task :expo-modules-core:buildCMakeDebug[arm64-v8a]
+> Task :react-native-screens:configureCMakeDebug[armeabi-v7a]
+> Task :react-native-screens:buildCMakeDebug[armeabi-v7a]
+> Task :expo-modules-core:configureCMakeDebug[armeabi-v7a]
+> Task :react-native-screens:configureCMakeDebug[x86]
+> Task :react-native-worklets:configureCMakeDebug[x86_64]
+> Task :react-native-worklets:generateJsonModelDebug
+> Task :react-native-worklets:prefabDebugConfigurePackage
+> Task :react-native-worklets:buildCMakeDebug[arm64-v8a][worklets]
+> Task :expo-updates:kspDebugKotlin
+> Task :expo-modules-core:buildCMakeDebug[armeabi-v7a]
+> Task :react-native-screens:buildCMakeDebug[x86]
+> Task :react-native-reanimated:configureCMakeDebug[arm64-v8a]
+> Task :react-native-worklets:buildCMakeDebug[armeabi-v7a][worklets]
+> Task :expo-updates:compileDebugKotlin
+> Task :react-native-screens:configureCMakeDebug[x86_64]
+
+> Task :expo-updates:compileDebugKotlin
+e: Daemon compilation failed: null
+java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$Ca
+llResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$Ca
+llResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:2
+40)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCom
+pilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinComp
+ilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRu
+nnerWithWorkers$GradleKotlinCompilerWorkAction.execute(G
+radleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.exec
+ute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.exe
+cuteInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Ab
+stractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(Ab
+stractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$CallableBuildOperationWorker.execute(DefaultBuild
+OperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$CallableBuildOperationWorker.execute(DefaultBuild
+OperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperation
+Runner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWr
+appedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory
+$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.la
+mbda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(Future
+Task.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.runExecution(DefaultConditionalExe
+cutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.access$700(DefaultConditionalExecu
+tionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner$1.run(DefaultConditionalExecutionQ
+ueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.jav
+a:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.w
+ithLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.r
+unAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.r
+unAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.runBatch(DefaultConditionalExecuti
+onQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecution
+Queue$ExecutionRunner.run(DefaultConditionalExecutionQue
+ue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAda
+pter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(Future
+Task.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchA
+ndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecut
+or$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.ru
+nWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Wo
+rker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.io.IOException: There is not enough 
+space on the disk
+	at 
+java.base/sun.nio.ch.FileDispatcherImpl.write0(Native 
+Method)
+	at java.base/sun.nio.ch.FileDispatcherImpl.write(FileDi
+spatcherImpl.java:68)
+	at java.base/sun.nio.ch.IOUtil.writeFromNativeBuffer(IO
+Util.java:132)
+	at java.base/sun.nio.ch.IOUtil.write(IOUtil.java:97)
+	at java.base/sun.nio.ch.IOUtil.write(IOUtil.java:67)
+	at java.base/sun.nio.ch.FileChannelImpl.write(FileChann
+elImpl.java:288)
+	at java.base/java.nio.channels.Channels.writeFullyImpl(
+Channels.java:74)
+	at java.base/java.nio.channels.Channels.writeFully(Chan
+nels.java:96)
+	at java.base/java.nio.channels.Channels$1.write(Channel
+s.java:171)
+	at java.base/java.nio.file.Files.write(Files.java:3517)
+	at org.jetbrains.kotlin.incremental.CompilationTransact
+ionKt.writeBytes$lambda$0(CompilationTransaction.kt:68)
+	at org.jetbrains.kotlin.incremental.CompilationTransact
+ionKt.write(CompilationTransaction.kt:56)
+	at org.jetbrains.kotlin.incremental.CompilationTransact
+ionKt.writeBytes(CompilationTransaction.kt:64)
+	at org.jetbrains.kotlin.incremental.CompilationTransact
+ionKt.writeText(CompilationTransaction.kt:60)
+	at org.jetbrains.kotlin.incremental.dirtyFiles.DirtyFil
+esCachedHistory.store(DirtyFilesCachedHistory.kt:24)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.doCompile(IncrementalCompilerRunner.kt:525)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compileImpl(IncrementalCompilerRunner.kt:431)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compileNonIncrementally(IncrementalCompilerRunner
+.kt:310)
+	at org.jetbrains.kotlin.incremental.IncrementalCompiler
+Runner.compile(IncrementalCompilerRunner.kt:137)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.e
+xecIncrementalCompiler(CompileServiceImpl.kt:678)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.a
+ccess$execIncrementalCompiler(CompileServiceImpl.kt:92)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compi
+le(CompileServiceImpl.kt:1805)
+	at jdk.internal.reflect.GeneratedMethodAccessor14.invok
+e(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAcces
+sorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.jav
+a:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(Un
+icastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport
+.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport
+.java:197)
+	at java.base/java.security.AccessController.doPrivilege
+d(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Tra
+nsport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMe
+ssages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivilege
+d(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$Connecti
+onHandler.run(TCPTransport.java:704)
+	... 3 more
+
+Failed to compile with Kotlin daemon: java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:240)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCompilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.io.IOException: There is not enough space on the disk
+	at java.base/sun.nio.ch.FileDispatcherImpl.write0(Native Method)
+	at java.base/sun.nio.ch.FileDispatcherImpl.write(FileDispatcherImpl.java:68)
+	at java.base/sun.nio.ch.IOUtil.writeFromNativeBuffer(IOUtil.java:132)
+	at java.base/sun.nio.ch.IOUtil.write(IOUtil.java:97)
+	at java.base/sun.nio.ch.IOUtil.write(IOUtil.java:67)
+	at java.base/sun.nio.ch.FileChannelImpl.write(FileChannelImpl.java:288)
+	at java.base/java.nio.channels.Channels.writeFullyImpl(Channels.java:74)
+	at java.base/java.nio.channels.Channels.writeFully(Channels.java:96)
+	at java.base/java.nio.channels.Channels$1.write(Channels.java:171)
+	at java.base/java.nio.file.Files.write(Files.java:3517)
+	at org.jetbrains.kotlin.incremental.CompilationTransactionKt.writeBytes$lambda$0(CompilationTransaction.kt:68)
+	at org.jetbrains.kotlin.incremental.CompilationTransactionKt.write(CompilationTransaction.kt:56)
+	at org.jetbrains.kotlin.incremental.CompilationTransactionKt.writeBytes(CompilationTransaction.kt:64)
+	at org.jetbrains.kotlin.incremental.CompilationTransactionKt.writeText(CompilationTransaction.kt:60)
+	at org.jetbrains.kotlin.incremental.dirtyFiles.DirtyFilesCachedHistory.store(DirtyFilesCachedHistory.kt:24)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.doCompile(IncrementalCompilerRunner.kt:525)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileImpl(IncrementalCompilerRunner.kt:431)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:310)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:137)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:678)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:92)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1805)
+	at jdk.internal.reflect.GeneratedMethodAccessor14.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	... 3 more
+Using fallback strategy: Compile without Kotlin daemon
+Try ./gradlew --stop if this issue persists
+If it does not look related to your configuration, please file an issue with logs to https://kotl.in/issue
+
+> Task :expo-modules-core:configureCMakeDebug[x86] FAILED
+> Task :react-native-worklets:buildCMakeDebug[armeabi-v7a][worklets] FAILED
+> Task :react-native-screens:buildCMakeDebug[x86_64]
+> Task :react-native-screens:buildCMakeDebug[x86_64] FAILED
+
+> Task :expo-updates:compileDebugKotlin
+exception: exception: java.io.IOException: There is not 
+enough space on the disk
+exception: 	at 
+java.base/java.io.FileOutputStream.writeBytes(Native 
+Method)
+exception: 	at java.base/java.io.FileOutputStream.write(
+FileOutputStream.java:349)
+exception: 	at org.jetbrains.kotlin.com.intellij.openapi
+.util.io.FileUtil.writeToFile(FileUtil.java:1132)
+exception: 	at org.jetbrains.kotlin.com.intellij.openapi
+.util.io.FileUtil.writeToFile(FileUtil.java:1125)
+exception: 	at org.jetbrains.kotlin.com.intellij.openapi
+.util.io.FileUtil.writeToFile(FileUtil.java:1105)
+exception: 	at org.jetbrains.kotlin.cli.common.output.Ou
+tputUtilsKt.writeAll(outputUtils.kt:33)
+exception: 	at org.jetbrains.kotlin.cli.common.output.Ou
+tputUtilsKt.writeAllTo(outputUtils.kt:47)
+exception: 	at org.jetbrains.kotlin.cli.common.output.Ou
+tputUtilsKt.writeAll(outputUtils.kt:52)
+exception: 	at org.jetbrains.kotlin.cli.jvm.compiler.Cli
+CompilerUtilsKt.writeOutput(cliCompilerUtils.kt:113)
+exception: 	at org.jetbrains.kotlin.cli.jvm.compiler.Cli
+CompilerUtilsKt.createOutputFilesFlushingCallbackIfPossi
+ble$lambda$7(cliCompilerUtils.kt:78)
+exception: 	at org.jetbrains.kotlin.codegen.state.Genera
+tionState.afterIndependentPart(GenerationState.kt:131)
+exception: 	at org.jetbrains.kotlin.backend.jvm.JvmIrCod
+egenFactory.invokeCodegen(JvmIrCodegenFactory.kt:379)
+exception: 	at org.jetbrains.kotlin.cli.jvm.compiler.Kot
+linToJVMBytecodeCompiler.runCodegen$cli(KotlinToJVMBytec
+odeCompiler.kt:413)
+exception: 	at org.jetbrains.kotlin.cli.pipeline.jvm.Jvm
+BackendPipelinePhase.executePhase(JvmBackendPipelinePhas
+e.kt:98)
+exception: 	at org.jetbrains.kotlin.cli.pipeline.jvm.Jvm
+BackendPipelinePhase.executePhase(JvmBackendPipelinePhas
+e.kt:30)
+exception: 	at org.jetbrains.kotlin.cli.pipeline.Pipelin
+ePhase.phaseBody(PipelinePhase.kt:68)
+exception: 	at org.jetbrains.kotlin.cli.pipeline.Pipelin
+ePhase.phaseBody(PipelinePhase.kt:58)
+exception: 	at org.jetbrains.kotlin.config.phaser.Simple
+NamedCompilerPhase.phaseBody(CompilerPhase.kt:215)
+exception: 	at org.jetbrains.kotlin.config.phaser.NamedC
+ompilerPhase.invoke(CompilerPhase.kt:111)
+exception: 	at org.jetbrains.kotlin.backend.common.phase
+r.CompositePhase.invoke(PhaseBuilders.kt:28)
+exception: 	at org.jetbrains.kotlin.config.phaser.Compil
+erPhaseKt.invokeToplevel(CompilerPhase.kt:62)
+exception: 	at org.jetbrains.kotlin.cli.pipeline.Abstrac
+tCliPipeline.runPhasedPipeline(AbstractCliPipeline.kt:10
+6)
+exception: 	at org.jetbrains.kotlin.cli.pipeline.Abstrac
+tCliPipeline.execute(AbstractCliPipeline.kt:65)
+exception: 	at org.jetbrains.kotlin.cli.jvm.K2JVMCompile
+r.doExecutePhased(K2JVMCompiler.kt:61)
+exception: 	at org.jetbrains.kotlin.cli.jvm.K2JVMCompile
+r.doExecutePhased(K2JVMCompiler.kt:36)
+exception: 	at org.jetbrains.kotlin.cli.common.CLICompil
+er.execImpl(CLICompiler.kt:80)
+exception: 	at org.jetbrains.kotlin.cli.common.CLICompil
+er.exec(CLICompiler.kt:337)
+exception: 	at org.jetbrains.kotlin.cli.common.CLICompil
+er.exec(CLICompiler.kt:315)
+exception: 	at org.jetbrains.kotlin.cli.common.CLICompil
+er.exec(CLICompiler.kt:279)
+exception: 	at org.jetbrains.kotlin.cli.common.CLICompil
+er$Companion.doMainNoExit(CLICompiler.kt:416)
+exception: 	at org.jetbrains.kotlin.cli.common.CLICompil
+er$Companion.doMainNoExit$default(CLICompiler.kt:409)
+exception: 	at org.jetbrains.kotlin.cli.common.CLICompil
+er$Companion.doMain(CLICompiler.kt:403)
+exception: 	at org.jetbrains.kotlin.cli.jvm.K2JVMCompile
+r$Companion.main(K2JVMCompiler.kt:233)
+exception: 	at org.jetbrains.kotlin.cli.jvm.K2JVMCompile
+r.main(K2JVMCompiler.kt)
+exception: 
+
+> Task :expo-updates:compileDebugKotlin FAILED
+
+FAILURE: Build completed with 5 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task 
+':expo-modules-core:configureCMakeDebug[x86]'.
+> java.io.IOException: There is not enough space on the 
+disk
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log 
+output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+========================================================
+======================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':react-native-worklets:buildC
+MakeDebug[armeabi-v7a][worklets]'.
+> com.android.ide.common.process.ProcessException: 
+ninja: Entering directory `C:\Users\USER\Documents\CODE 
+X\EDUFI\campusOS\node_modules\react-native-worklets\andr
+oid\.cxx\Debug\4t5g2m3i\armeabi-v7a'
+  [0/2] Re-checking globbed directories...
+  [1/33] Building CXX object CMakeFiles/worklets.dir/5e3
+a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Resour
+ces/SynchronizableUnpacker.cpp.o
+  [2/33] Building CXX object CMakeFiles/worklets.dir/5e3
+a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Resour
+ces/ValueUnpacker.cpp.o
+  [3/33] Building CXX object CMakeFiles/worklets.dir/5e3
+a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Regist
+ries/WorkletRuntimeRegistry.cpp.o
+  [4/33] Building CXX object CMakeFiles/worklets.dir/6cf
+b1a0d9cceef51765e1feadfba48cf/react-native-worklets/Comm
+on/cpp/worklets/Tools/FeatureFlags.cpp.o
+  [5/33] Building CXX object CMakeFiles/worklets.dir/5e3
+a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Shared
+Items/SynchronizableAccess.cpp.o
+  [6/33] Building CXX object CMakeFiles/worklets.dir/6cf
+b1a0d9cceef51765e1feadfba48cf/react-native-worklets/Comm
+on/cpp/worklets/RunLoop/AsyncQueueImpl.cpp.o
+  [7/33] Building CXX object CMakeFiles/worklets.dir/5e3
+a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Shared
+Items/Synchronizable.cpp.o
+  [8/33] Building CXX object CMakeFiles/worklets.dir/6cf
+b1a0d9cceef51765e1feadfba48cf/react-native-worklets/Comm
+on/cpp/worklets/RunLoop/EventLoop.cpp.o
+  [9/33] Building CXX object CMakeFiles/worklets.dir/6cf
+b1a0d9cceef51765e1feadfba48cf/react-native-worklets/Comm
+on/cpp/worklets/Tools/UIScheduler.cpp.o
+  [10/33] Building CXX object CMakeFiles/worklets.dir/6c
+fb1a0d9cceef51765e1feadfba48cf/react-native-worklets/Com
+mon/cpp/worklets/Tools/JSLogger.cpp.o
+  [11/33] Building CXX object CMakeFiles/worklets.dir/6c
+fb1a0d9cceef51765e1feadfba48cf/react-native-worklets/Com
+mon/cpp/worklets/Tools/JSISerializer.cpp.o
+  [12/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Share
+dItems/Serializable.cpp.o
+  [13/33] Building CXX object CMakeFiles/worklets.dir/6c
+fb1a0d9cceef51765e1feadfba48cf/react-native-worklets/Com
+mon/cpp/worklets/Tools/JSScheduler.cpp.o
+  [14/33] Building CXX object CMakeFiles/worklets.dir/6c
+fb1a0d9cceef51765e1feadfba48cf/react-native-worklets/Com
+mon/cpp/worklets/Tools/WorkletsJSIUtils.cpp.o
+  [15/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Workl
+etRuntime/RuntimeData.cpp.o
+  [16/33] Building CXX object CMakeFiles/worklets.dir/6c
+fb1a0d9cceef51765e1feadfba48cf/react-native-worklets/Com
+mon/cpp/worklets/Tools/WorkletsVersion.cpp.o
+  [17/33] Building CXX object CMakeFiles/worklets.dir/6c
+fb1a0d9cceef51765e1feadfba48cf/react-native-worklets/Com
+mon/cpp/worklets/Tools/VersionUtils.cpp.o
+  [18/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Workl
+etRuntime/UIRuntimeDecorator.cpp.o
+  [19/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Tools
+/WorkletEventHandler.cpp.o
+  [20/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Workl
+etRuntime/WorkletHermesRuntime.cpp.o
+  [21/33] Building CXX object CMakeFiles/worklets.dir/sr
+c/main/cpp/worklets/android/PlatformLogger.cpp.o
+  [22/33] Building CXX object CMakeFiles/worklets.dir/sr
+c/main/cpp/worklets/android/AndroidUIScheduler.cpp.o
+  [23/33] Building CXX object CMakeFiles/worklets.dir/80
+b5573a939fab1a437c5ac5b4e7cf7f/cpp/worklets/AnimationFra
+meQueue/AnimationFrameBatchinator.cpp.o
+  [24/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Workl
+etRuntime/RNRuntimeWorkletDecorator.cpp.o
+  [25/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Workl
+etRuntime/RuntimeManager.cpp.o
+  [26/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Workl
+etRuntime/WorkletRuntime.cpp.o
+  [27/33] Building CXX object CMakeFiles/worklets.dir/sr
+c/main/cpp/worklets/android/WorkletsOnLoad.cpp.o
+  [28/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Regis
+tries/EventHandlerRegistry.cpp.o
+  [29/33] Building CXX object CMakeFiles/worklets.dir/sr
+c/main/cpp/worklets/android/WorkletsModule.cpp.o
+  [30/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Workl
+etRuntime/WorkletRuntimeDecorator.cpp.o
+  FAILED: CMakeFiles/worklets.dir/5e3a542f615eb4645ff6b3
+394aebbc83/Common/cpp/worklets/WorkletRuntime/WorkletRun
+timeDecorator.cpp.o 
+  C:\Users\USER\AppData\Local\Android\Sdk\ndk\27.1.12297
+006\toolchains\llvm\prebuilt\windows-x86_64\bin\clang++.
+exe --target=armv7-none-linux-androideabi24 --sysroot=C:
+/Users/USER/AppData/Local/Android/Sdk/ndk/27.1.12297006/
+toolchains/llvm/prebuilt/windows-x86_64/sysroot 
+-DRN_SERIALIZABLE_STATE -Dworklets_EXPORTS 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native-worklets/android/../Common/cpp" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native-worklets/android/src/main/cpp" 
+-I"C:/Users/USER/Documents/CODE 
+X/EDUFI/campusOS/node_modules/react-native/ReactCommon" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/yoga" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactAndroid/src/main/jni/react/turbo
+module" -I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS
+/node_modules/react-native/ReactCommon/react/nativemodul
+e/core/ReactCommon" -I"C:/Users/USER/Documents/CODE X/ED
+UFI/campusOS/node_modules/react-native/ReactCommon/calli
+nvoker" -I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS
+/node_modules/react-native/ReactCommon/runtimeexecutor" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/jsiexecutor" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/react/renderer/graphics/p
+latform/cxx" -isystem C:/Users/USER/.gradle/caches/8.14.
+3/transforms/86c4502a02865a420bd555f1139b6766/transforme
+d/react-android-0.81.5-debug/prefab/modules/jsi/include 
+-isystem C:/Users/USER/.gradle/caches/8.14.3/transforms/
+cb1814ed6e2359b86fc0f824dfc20795/transformed/fbjni-0.7.0
+/prefab/modules/fbjni/include -isystem C:/Users/USER/.gr
+adle/caches/8.14.3/transforms/86c4502a02865a420bd555f113
+9b6766/transformed/react-android-0.81.5-debug/prefab/mod
+ules/reactnative/include -isystem C:/Users/USER/.gradle/
+caches/8.14.3/transforms/df7623e365398d34df5c1e10d6dccf3
+8/transformed/hermes-android-0.81.5-debug/prefab/modules
+/libhermes/include -isystem C:/Users/USER/.gradle/caches
+/8.14.3/transforms/86c4502a02865a420bd555f1139b6766/tran
+sformed/react-android-0.81.5-debug/prefab/modules/hermes
+tooling/include -g -DANDROID -fdata-sections 
+-ffunction-sections -funwind-tables 
+-fstack-protector-strong -no-canonical-prefixes 
+-D__BIONIC_NO_PAGE_SIZE_MACRO -D_FORTIFY_SOURCE=2 
+-march=armv7-a -mthumb -Wformat -Werror=format-security 
+  -DREACT_NATIVE_MINOR_VERSION=81         
+-DWORKLETS_VERSION=0.5.1         -DWORKLETS_FEATURE_FLAG
+S="[RUNTIME_TEST_FLAG:false][IOS_DYNAMIC_FRAMERATE_ENABL
+ED:true]" -fno-omit-frame-pointer -fstack-protector-all 
+-DJS_RUNTIME_HERMES=1 -DHERMES_ENABLE_DEBUGGER=1 
+-fno-limit-debug-info  -fPIC -DFOLLY_NO_CONFIG=1 
+-DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_USE_LIBCPP=1 
+-DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_MOBILE=1 
+-DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 
+-DFOLLY_HAVE_XSI_STRERROR_R=1 -Wall -Werror 
+-fexceptions -frtti -std=c++20 
+-DLOG_TAG=\"ReactNative\" -std=gnu++20 -MD -MT CMakeFile
+s/worklets.dir/5e3a542f615eb4645ff6b3394aebbc83/Common/c
+pp/worklets/WorkletRuntime/WorkletRuntimeDecorator.cpp.o
+ -MF CMakeFiles\worklets.dir\5e3a542f615eb4645ff6b3394ae
+bbc83\Common\cpp\worklets\WorkletRuntime\WorkletRuntimeD
+ecorator.cpp.o.d -o CMakeFiles/worklets.dir/5e3a542f615e
+b4645ff6b3394aebbc83/Common/cpp/worklets/WorkletRuntime/
+WorkletRuntimeDecorator.cpp.o -c 
+"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_modu
+les/react-native-worklets/Common/cpp/worklets/WorkletRun
+time/WorkletRuntimeDecorator.cpp"
+  fatal error: error in backend: IO failure on output 
+stream: No space left on device
+  PLEASE submit a bug report to 
+https://github.com/android-ndk/ndk/issues and include 
+the crash backtrace, preprocessed source, and 
+associated run script.
+  Stack dump:
+  0.	Program arguments: C:\\Users\\USER\\AppData\\Local\
+\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\pre
+built\\windows-x86_64\\bin\\clang++.exe 
+--target=armv7-none-linux-androideabi24 --sysroot=C:/Use
+rs/USER/AppData/Local/Android/Sdk/ndk/27.1.12297006/tool
+chains/llvm/prebuilt/windows-x86_64/sysroot 
+-DRN_SERIALIZABLE_STATE -Dworklets_EXPORTS 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native-worklets/android/../Common/cpp" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native-worklets/android/src/main/cpp" 
+"-IC:/Users/USER/Documents/CODE 
+X/EDUFI/campusOS/node_modules/react-native/ReactCommon" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/yoga" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactAndroid/src/main/jni/react/turbo
+module" "-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS
+/node_modules/react-native/ReactCommon/react/nativemodul
+e/core/ReactCommon" "-IC:/Users/USER/Documents/CODE X/ED
+UFI/campusOS/node_modules/react-native/ReactCommon/calli
+nvoker" "-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS
+/node_modules/react-native/ReactCommon/runtimeexecutor" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/jsiexecutor" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/react/renderer/graphics/p
+latform/cxx" -isystem C:/Users/USER/.gradle/caches/8.14.
+3/transforms/86c4502a02865a420bd555f1139b6766/transforme
+d/react-android-0.81.5-debug/prefab/modules/jsi/include 
+-isystem C:/Users/USER/.gradle/caches/8.14.3/transforms/
+cb1814ed6e2359b86fc0f824dfc20795/transformed/fbjni-0.7.0
+/prefab/modules/fbjni/include -isystem C:/Users/USER/.gr
+adle/caches/8.14.3/transforms/86c4502a02865a420bd555f113
+9b6766/transformed/react-android-0.81.5-debug/prefab/mod
+ules/reactnative/include -isystem C:/Users/USER/.gradle/
+caches/8.14.3/transforms/df7623e365398d34df5c1e10d6dccf3
+8/transformed/hermes-android-0.81.5-debug/prefab/modules
+/libhermes/include -isystem C:/Users/USER/.gradle/caches
+/8.14.3/transforms/86c4502a02865a420bd555f1139b6766/tran
+sformed/react-android-0.81.5-debug/prefab/modules/hermes
+tooling/include -g -DANDROID -fdata-sections 
+-ffunction-sections -funwind-tables 
+-fstack-protector-strong -no-canonical-prefixes 
+-D__BIONIC_NO_PAGE_SIZE_MACRO -D_FORTIFY_SOURCE=2 
+-march=armv7-a -mthumb -Wformat -Werror=format-security 
+-DREACT_NATIVE_MINOR_VERSION=81 
+-DWORKLETS_VERSION=0.5.1 -DWORKLETS_FEATURE_FLAGS=[RUNTI
+ME_TEST_FLAG:false][IOS_DYNAMIC_FRAMERATE_ENABLED:true] 
+-fno-omit-frame-pointer -fstack-protector-all 
+-DJS_RUNTIME_HERMES=1 -DHERMES_ENABLE_DEBUGGER=1 
+-fno-limit-debug-info -fPIC -DFOLLY_NO_CONFIG=1 
+-DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_USE_LIBCPP=1 
+-DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_MOBILE=1 
+-DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 
+-DFOLLY_HAVE_XSI_STRERROR_R=1 -Wall -Werror 
+-fexceptions -frtti -std=c++20 
+-DLOG_TAG=\"ReactNative\" -std=gnu++20 -MD -MT CMakeFile
+s/worklets.dir/5e3a542f615eb4645ff6b3394aebbc83/Common/c
+pp/worklets/WorkletRuntime/WorkletRuntimeDecorator.cpp.o
+ -MF CMakeFiles\\worklets.dir\\5e3a542f615eb4645ff6b3394
+aebbc83\\Common\\cpp\\worklets\\WorkletRuntime\\WorkletR
+untimeDecorator.cpp.o.d -o CMakeFiles/worklets.dir/5e3a5
+42f615eb4645ff6b3394aebbc83/Common/cpp/worklets/WorkletR
+untime/WorkletRuntimeDecorator.cpp.o -c 
+"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_modu
+les/react-native-worklets/Common/cpp/worklets/WorkletRun
+time/WorkletRuntimeDecorator.cpp"
+  1.	<eof> parser at end of file
+  Exception Code: 0xE0000001
+   #0 0x00007ffeba2da80a 
+(C:\WINDOWS\System32\KERNELBASE.dll+0xca80a)
+   #1 0x00007ff73821b02a (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x5fb02a)
+   #2 0x00007ff7382534ed (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x6334ed)
+   #3 0x00007ff737d5f1f7 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x13f1f7)
+   #4 0x00007ff73821c83a (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x5fc83a)
+   #5 0x00007ff738248d4e (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x628d4e)
+   #6 0x00007ff738247c2d (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x627c2d)
+   #7 0x00007ff7392e0b02 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x16c0b02)
+   #8 0x00007ff73963d857 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x1a1d857)
+   #9 0x00007ff73b413614 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x37f3614)
+  #10 0x00007ff73957916e (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x195916e)
+  #11 0x00007ff73833d000 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x71d000)
+  #12 0x00007ff7383d3c05 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x7b3c05)
+  #13 0x00007ff737d5e070 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x13e070)
+  #14 0x00007ff737d5b180 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x13b180)
+  #15 0x00007ff7392fa27d (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x16da27d)
+  #16 0x00007ff73821affd (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x5faffd)
+  #17 0x00007ff7392f9ca5 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x16d9ca5)
+  #18 0x00007ff7382ec463 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x6cc463)
+  #19 0x00007ff73830f96d (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x6ef96d)
+  #20 0x00007ff737d5a2e2 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x13a2e2)
+  #21 0x00007ff737d6b027 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x14b027)
+  #22 0x00007ff737c21395 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x1395)
+  #23 0x00007ff737c214c8 (C:\Users\USER\AppData\Local\An
+droid\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\win
+dows-x86_64\bin\clang++.exe+0x14c8)
+  #24 0x00007ffebca2e8d7 
+(C:\WINDOWS\System32\KERNEL32.DLL+0x2e8d7)
+  #25 0x00007ffebcd0c53c 
+(C:\WINDOWS\SYSTEM32\ntdll.dll+0x8c53c)
+  [31/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Nativ
+eModules/WorkletsModuleProxy.cpp.o
+  [32/33] Building CXX object CMakeFiles/worklets.dir/5e
+3a542f615eb4645ff6b3394aebbc83/Common/cpp/worklets/Nativ
+eModules/JSIWorkletsModuleProxy.cpp.o
+  FAILED: CMakeFiles/worklets.dir/5e3a542f615eb4645ff6b3
+394aebbc83/Common/cpp/worklets/NativeModules/JSIWorklets
+ModuleProxy.cpp.o 
+  C:\Users\USER\AppData\Local\Android\Sdk\ndk\27.1.12297
+006\toolchains\llvm\prebuilt\windows-x86_64\bin\clang++.
+exe --target=armv7-none-linux-androideabi24 --sysroot=C:
+/Users/USER/AppData/Local/Android/Sdk/ndk/27.1.12297006/
+toolchains/llvm/prebuilt/windows-x86_64/sysroot 
+-DRN_SERIALIZABLE_STATE -Dworklets_EXPORTS 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native-worklets/android/../Common/cpp" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native-worklets/android/src/main/cpp" 
+-I"C:/Users/USER/Documents/CODE 
+X/EDUFI/campusOS/node_modules/react-native/ReactCommon" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/yoga" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactAndroid/src/main/jni/react/turbo
+module" -I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS
+/node_modules/react-native/ReactCommon/react/nativemodul
+e/core/ReactCommon" -I"C:/Users/USER/Documents/CODE X/ED
+UFI/campusOS/node_modules/react-native/ReactCommon/calli
+nvoker" -I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS
+/node_modules/react-native/ReactCommon/runtimeexecutor" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/jsiexecutor" 
+-I"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/react/renderer/graphics/p
+latform/cxx" -isystem C:/Users/USER/.gradle/caches/8.14.
+3/transforms/86c4502a02865a420bd555f1139b6766/transforme
+d/react-android-0.81.5-debug/prefab/modules/jsi/include 
+-isystem C:/Users/USER/.gradle/caches/8.14.3/transforms/
+cb1814ed6e2359b86fc0f824dfc20795/transformed/fbjni-0.7.0
+/prefab/modules/fbjni/include -isystem C:/Users/USER/.gr
+adle/caches/8.14.3/transforms/86c4502a02865a420bd555f113
+9b6766/transformed/react-android-0.81.5-debug/prefab/mod
+ules/reactnative/include -isystem C:/Users/USER/.gradle/
+caches/8.14.3/transforms/df7623e365398d34df5c1e10d6dccf3
+8/transformed/hermes-android-0.81.5-debug/prefab/modules
+/libhermes/include -isystem C:/Users/USER/.gradle/caches
+/8.14.3/transforms/86c4502a02865a420bd555f1139b6766/tran
+sformed/react-android-0.81.5-debug/prefab/modules/hermes
+tooling/include -g -DANDROID -fdata-sections 
+-ffunction-sections -funwind-tables 
+-fstack-protector-strong -no-canonical-prefixes 
+-D__BIONIC_NO_PAGE_SIZE_MACRO -D_FORTIFY_SOURCE=2 
+-march=armv7-a -mthumb -Wformat -Werror=format-security 
+  -DREACT_NATIVE_MINOR_VERSION=81         
+-DWORKLETS_VERSION=0.5.1         -DWORKLETS_FEATURE_FLAG
+S="[RUNTIME_TEST_FLAG:false][IOS_DYNAMIC_FRAMERATE_ENABL
+ED:true]" -fno-omit-frame-pointer -fstack-protector-all 
+-DJS_RUNTIME_HERMES=1 -DHERMES_ENABLE_DEBUGGER=1 
+-fno-limit-debug-info  -fPIC -DFOLLY_NO_CONFIG=1 
+-DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_USE_LIBCPP=1 
+-DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_MOBILE=1 
+-DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 
+-DFOLLY_HAVE_XSI_STRERROR_R=1 -Wall -Werror 
+-fexceptions -frtti -std=c++20 
+-DLOG_TAG=\"ReactNative\" -std=gnu++20 -MD -MT CMakeFile
+s/worklets.dir/5e3a542f615eb4645ff6b3394aebbc83/Common/c
+pp/worklets/NativeModules/JSIWorkletsModuleProxy.cpp.o 
+-MF CMakeFiles\worklets.dir\5e3a542f615eb4645ff6b3394aeb
+bc83\Common\cpp\worklets\NativeModules\JSIWorkletsModule
+Proxy.cpp.o.d -o CMakeFiles/worklets.dir/5e3a542f615eb46
+45ff6b3394aebbc83/Common/cpp/worklets/NativeModules/JSIW
+orkletsModuleProxy.cpp.o -c 
+"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_modu
+les/react-native-worklets/Common/cpp/worklets/NativeModu
+les/JSIWorkletsModuleProxy.cpp"
+  fatal error: error in backend: IO failure on output 
+stream: No space left on device
+  PLEASE submit a bug report to 
+https://github.com/android-ndk/ndk/issues and include 
+the crash backtrace, preprocessed source, and 
+associated run script.
+  Stack dump:
+  0.	Program arguments: C:\\Users\\USER\\AppData\\Local\
+\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\pre
+built\\windows-x86_64\\bin\\clang++.exe 
+--target=armv7-none-linux-androideabi24 --sysroot=C:/Use
+rs/USER/AppData/Local/Android/Sdk/ndk/27.1.12297006/tool
+chains/llvm/prebuilt/windows-x86_64/sysroot 
+-DRN_SERIALIZABLE_STATE -Dworklets_EXPORTS 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native-worklets/android/../Common/cpp" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native-worklets/android/src/main/cpp" 
+"-IC:/Users/USER/Documents/CODE 
+X/EDUFI/campusOS/node_modules/react-native/ReactCommon" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/yoga" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactAndroid/src/main/jni/react/turbo
+module" "-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS
+/node_modules/react-native/ReactCommon/react/nativemodul
+e/core/ReactCommon" "-IC:/Users/USER/Documents/CODE X/ED
+UFI/campusOS/node_modules/react-native/ReactCommon/calli
+nvoker" "-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS
+/node_modules/react-native/ReactCommon/runtimeexecutor" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/jsiexecutor" 
+"-IC:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_mo
+dules/react-native/ReactCommon/react/renderer/graphics/p
+latform/cxx" -isystem C:/Users/USER/.gradle/caches/8.14.
+3/transforms/86c4502a02865a420bd555f1139b6766/transforme
+d/react-android-0.81.5-debug/prefab/modules/jsi/include 
+-isystem C:/Users/USER/.gradle/caches/8.14.3/transforms/
+cb1814ed6e2359b86fc0f824dfc20795/transformed/fbjni-0.7.0
+/prefab/modules/fbjni/include -isystem C:/Users/USER/.gr
+adle/caches/8.14.3/transforms/86c4502a02865a420bd555f113
+9b6766/transformed/react-android-0.81.5-debug/prefab/mod
+ules/reactnative/include -isystem C:/Users/USER/.gradle/
+caches/8.14.3/transforms/df7623e365398d34df5c1e10d6dccf3
+8/transformed/hermes-android-0.81.5-debug/prefab/modules
+/libhermes/include -isystem C:/Users/USER/.gradle/caches
+/8.14.3/transforms/86c4502a02865a420bd555f1139b6766/tran
+sformed/react-android-0.81.5-debug/prefab/modules/hermes
+tooling/include -g -DANDROID -fdata-sections 
+-ffunction-sections -funwind-tables 
+-fstack-protector-strong -no-canonical-prefixes 
+-D__BIONIC_NO_PAGE_SIZE_MACRO -D_FORTIFY_SOURCE=2 
+-march=armv7-a -mthumb -Wformat -Werror=format-security 
+-DREACT_NATIVE_MINOR_VERSION=81 
+-DWORKLETS_VERSION=0.5.1 -DWORKLETS_FEATURE_FLAGS=[RUNTI
+ME_TEST_FLAG:false][IOS_DYNAMIC_FRAMERATE_ENABLED:true] 
+-fno-omit-frame-pointer -fstack-protector-all 
+-DJS_RUNTIME_HERMES=1 -DHERMES_ENABLE_DEBUGGER=1 
+-fno-limit-debug-info -fPIC -DFOLLY_NO_CONFIG=1 
+-DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_USE_LIBCPP=1 
+-DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_MOBILE=1 
+-DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 
+-DFOLLY_HAVE_XSI_STRERROR_R=1 -Wall -Werror 
+-fexceptions -frtti -std=c++20 
+-DLOG_TAG=\"ReactNative\" -std=gnu++20 -MD -MT CMakeFile
+s/worklets.dir/5e3a542f615eb4645ff6b3394aebbc83/Common/c
+pp/worklets/NativeModules/JSIWorkletsModuleProxy.cpp.o 
+-MF CMakeFiles\\worklets.dir\\5e3a542f615eb4645ff6b3394a
+ebbc83\\Common\\cpp\\worklets\\NativeModules\\JSIWorklet
+sModuleProxy.cpp.o.d -o CMakeFiles/worklets.dir/5e3a542f
+615eb4645ff6b3394aebbc83/Common/cpp/worklets/NativeModul
+es/JSIWorkletsModuleProxy.cpp.o -c 
+"C:/Users/USER/Documents/CODE X/EDUFI/campusOS/node_modu
+les/react-native-worklets/Common/cpp/worklets/NativeModu
+les/JSIWorkletsModuleProxy.cpp"
+  Exception Code: 0xE0000001
+  ninja: build stopped: subcommand failed.
+  
+  C++ build system [build] failed while executing:
+      @echo off
+      "C:\\Users\\USER\\AppData\\Local\\Android\\Sdk\\cm
+ake\\3.22.1\\bin\\ninja.exe" ^
+        -C ^
+        "C:\\Users\\USER\\Documents\\CODE X\\EDUFI\\camp
+usOS\\node_modules\\react-native-worklets\\android\\.cxx
+\\Debug\\4t5g2m3i\\armeabi-v7a" ^
+        worklets
+    from C:\Users\USER\Documents\CODE X\EDUFI\campusOS\n
+ode_modules\react-native-worklets\android
+
+* Try:

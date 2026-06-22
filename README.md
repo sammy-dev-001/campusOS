@@ -1,6 +1,6 @@
 # CampusOS (EduFi) 🎓📱
 
-CampusOS (EduFi) is a comprehensive, all-in-one student finance and campus companion application. Built using React Native and Expo, it provides students with tools to manage their academics, organize their finances, navigate the campus, collaborate with peers, and stay connected with university events.
+CampusOS is a student-focused, all-in-one platform designed to make campus life easier, smarter, and more organized. It provides tools that help students manage academics, connect with peers, and stay productive—all in one place. Also known as EduFi, this application is built using React Native and Expo, offering comprehensive features for student finance, campus navigation, peer collaboration, and academic management.
 
 It supports native deployment on **iOS** and **Android**, as well as a fully featured **web application**.
 

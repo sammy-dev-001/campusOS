@@ -1,5 +1,6 @@
 {
   "name": "campusos",
+  "description": "CampusOS is a student-focused all-in-one platform designed to make campus life easier, smarter, and more organized. It provides tools that help students manage academics, connect with peers, and stay productive—all in one place",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "expo": {

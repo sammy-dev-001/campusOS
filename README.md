@@ -1,50 +1,90 @@
-# Welcome to your Expo app 👋
+# CampusOS (EduFi) 🎓📱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+CampusOS (EduFi) is a comprehensive, all-in-one student finance and campus companion application. Built using React Native and Expo, it provides students with tools to manage their academics, organize their finances, navigate the campus, collaborate with peers, and stay connected with university events.
 
-## Get started
+It supports native deployment on **iOS** and **Android**, as well as a fully featured **web application**.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## 🚀 Key Features
 
-2. Start the app
+### 💰 Smart Student Finance
+* **Personal Finance Tracker**: Monitor your daily expenses, set category-specific budgets, and view visual analytics of your spending habits.
+* **AI Financial Buddy**: Ask our specialized AI financial advisor for money-saving tips, budgeting strategies, and smart campus shopping recommendations.
 
-   ```bash
-   npx expo start
-   ```
+### 🤖 AI Academic Assistant
+* **AI Chat Buddy**: A built-in virtual companion to help you draft emails, explain academic concepts, get study tips, and ask general campus questions.
 
-In the output, you'll find options to open the app in a
+### 📍 Campus Navigation
+* **Interactive Wayfinding Map**: Explore classrooms, administrative buildings, libraries, and campus services with an interactive map (supports native and web fallbacks).
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 📚 Academic Hub
+* **Class Timetable & Reminders**: Organize your class schedule and receive timely notifications so you never miss a lecture.
+* **GPA Tracker**: Log your course grades, monitor your semester GPAs, and keep track of your graduation requirements.
+* **Resource Sharing**: Upload and download shared lecture notes, study guides, and past exam questions.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 🤝 Social & Peer Collaboration
+* **Student Discussion Forums**: Participate in topic-based communities to talk about courses, campus life, hobbies, and more.
+* **Study Buddy Matcher**: Find study groups or match with study partners taking the same courses.
+* **Tutor Finder**: Seek assistance from student tutors or offer your own tutoring services.
+* **Roommate Finder**: Connect with compatible roommates on campus.
+* **Campus Marketplace**: Buy and sell textbooks, room decor, electronics, and school supplies directly with other students.
 
-## Get a fresh project
+### 📢 Student Engagement
+* **Campus Announcements**: Stay updated with real-time official university announcements and event posts.
+* **Polls & Surveys**: Create and vote in interactive student-run polls and surveys.
 
-When you're ready, run:
+---
 
+## 🛠️ Tech Stack
+* **Framework**: [Expo](https://expo.dev/) (React Native)
+* **Language**: TypeScript
+* **State Management**: React Contexts
+* **Database**: Local SQLite/Postgres support
+* **UI Components**: React Native Paper, React Native Vector Icons, SVG Support
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+Ensure you have [Node.js](https://nodejs.org/) installed on your machine.
+
+### 2. Install Dependencies
+Clone the repository and install the project dependencies:
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 3. Running the App
+Start the Metro bundler to run the application:
+```bash
+# Start Expo development server (can scan QR code for Expo Go on iOS/Android)
+npx expo start
 
-## Learn more
+# Run directly on Android emulator/device
+npm run android
 
-To learn more about developing your project with Expo, look at the following resources:
+# Run directly on iOS simulator/device
+npm run ios
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Run the web version in your browser
+npm run web
+```
 
-## Join the community
+### 4. Running Tests
+Run the unit and integration tests using Jest:
+```bash
+npm test
+```
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📂 Project Directory Structure
+* `/app` - File-based routing pages (Expo Router navigation screens)
+* `/components` - Shared reusable React Native UI components
+* `/constants` - Theme configurations, app colors, settings, and endpoints
+* `/contexts` - Global state context providers (Auth, Theme, etc.)
+* `/hooks` - Custom React hooks
+* `/services` - API request helpers and integration files
+* `/scripts` - Utilities, database setup, and debug scripts

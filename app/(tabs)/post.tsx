@@ -584,7 +584,11 @@ export default function PostScreen() {
     try {
       console.log(`[API] Fetching comments for post ${postId}`);
       const response = await api.posts.getComments(postId);
-      const commentsData = Array.isArray(response) ? response : response?.data?.comments || [];
+      const commentsData = Array.isArray(response) 
+        ? response 
+        : Array.isArray(response?.data) 
+          ? response.data 
+          : response?.data?.comments || [];
 
       // Transform comments to ensure they have all required fields
       const processedComments = commentsData.map((comment: Comment) => ({
@@ -1390,7 +1394,7 @@ export default function PostScreen() {
 
       <CommentsModal
         visible={showComments}
-        comments={selectedPost ? comments[selectedPost.id] || [] : []}
+        comments={selectedPost ? buildCommentTree(comments[selectedPost.id] || []) : []}
         commentText={commentText}
         onClose={() => setShowComments(false)}
         onChangeText={setCommentText}

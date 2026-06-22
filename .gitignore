@@ -40,4 +40,7 @@ app-example
 
 .vercel
 
-.vercel
+# local SQLite databases
+database.db
+*.db
+

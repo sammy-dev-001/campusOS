@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "edufi",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sammydev001.edufi",
@@ -20,9 +19,9 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0B3C5D"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.sammydev001.edufi",
       "softwareKeyboardLayoutMode": "resize",
+      "allowBackup": true,
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES",
@@ -51,10 +50,15 @@
         }
       ],
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      "expo-image",
+      "expo-secure-store",
+      "expo-status-bar"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "newArchEnabled": true
     },
     "extra": {
       "router": {},

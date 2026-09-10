@@ -22,44 +22,17 @@ Your personality:
 
 Important: You handle ACADEMICS, FINANCE, and WELLNESS. Be helpful across all these domains.`;
 
+// Pinned to a stable, actively-maintained model that supports systemInstruction.
+// gemini-2.0-flash: fast, free-tier friendly, confirmed working on v1beta.
+const EDDY_MODEL = 'gemini-2.0-flash';
+const GENERAL_MODEL = 'gemini-2.0-flash';
+
 class AIService {
     constructor() {
         this.apiKey = process.env.GEMINI_API_KEY || process.env.EXPO_PUBLIC_GEMINI_API_KEY;
         if (this.apiKey) {
             this.genAI = new GoogleGenerativeAI(this.apiKey);
         }
-        this.cachedModelName = null;
-    }
-
-    async getBestModel() {
-        if (this.cachedModelName) return this.cachedModelName;
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`);
-            if (res.ok) {
-                const data = await res.json();
-                const availableModels = data.models
-                    .filter(m => m.supportedGenerationMethods.includes('generateContent'))
-                    .map(m => m.name.replace('models/', ''));
-                
-                // Prioritize stable 1.5/pro models, EXCLUDE 2.0 to avoid Free Tier 429 errors
-                const priority = ['gemini-1.5-pro', 'gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-pro', 'gemini-1.0-pro'];
-                for (const p of priority) {
-                    if (availableModels.includes(p)) {
-                        this.cachedModelName = p;
-                        console.log(`[AI Discovery] Selected supported model: ${p}`);
-                        return p;
-                    }
-                }
-                
-                if (availableModels.length > 0) {
-                    this.cachedModelName = availableModels[0];
-                    return availableModels[0];
-                }
-            }
-        } catch (e) {
-            console.error('[AI Discovery Error] Network or parse error:', e.message);
-        }
-        return 'gemini-1.5-pro'; // Fallback to pro if completely failed
     }
 
     isAvailable() {
@@ -72,9 +45,8 @@ class AIService {
         }
 
         try {
-            const targetModel = await this.getBestModel();
             const model = this.genAI.getGenerativeModel({
-                model: targetModel,
+                model: GENERAL_MODEL,
                 generationConfig: {
                     temperature: options.temperature || 0.7,
                     maxOutputTokens: options.maxTokens || 2048,
@@ -91,7 +63,8 @@ class AIService {
 
     /**
      * Eddy chat - multi-turn conversation with full history support
-     * Uses dynamically verified models for better performance
+     * Pinned to EDDY_MODEL (gemini-2.0-flash) — do not use dynamic discovery here
+     * as deprecated models pass the list filter but fail at generateContent time.
      * @param {string} message - latest user message
      * @param {Array} history - [{role: 'user'|'assistant', content: string}]
      */
@@ -101,9 +74,8 @@ class AIService {
         }
 
         try {
-            const targetModel = await this.getBestModel();
             const model = this.genAI.getGenerativeModel({
-                model: targetModel,
+                model: EDDY_MODEL,
                 systemInstruction: EDDY_SYSTEM_PROMPT,
                 generationConfig: {
                     temperature: 0.7,
@@ -116,10 +88,7 @@ class AIService {
                 parts: [{ text: m.content }],
             }));
 
-            const chat = model.startChat({
-                history: formattedHistory
-            });
-
+            const chat = model.startChat({ history: formattedHistory });
             const result = await chat.sendMessage(message);
             return result.response.text();
         } catch (error) {
